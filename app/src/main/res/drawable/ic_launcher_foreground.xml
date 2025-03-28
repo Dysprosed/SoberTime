@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Background Circle - Sky gradient -->
+    <path
+        android:fillColor="#3949AB"
+        android:pathData="M0,0h108v108h-108z" />
+    
+    <!-- Gradient Sky Overlay -->
+    <path
+        android:fillColor="#FF5252"
+        android:pathData="M0,108V70C30,60 80,65 108,75V108H0Z"
+        android:alpha="0.3" />
+    
+    <!-- Sun rays -->
+    <path
+        android:fillColor="#FFEB3B"
+        android:pathData="M54,90C34,90 20,78 20,69C20,60 34,58 54,58C74,58 88,60 88,69C88,78 74,90 54,90Z"
+        android:alpha="0.9" />
+    
+    <!-- Sun -->
+    <path
+        android:fillColor="#FFC107"
+        android:pathData="M54,69m-14,0a14,14 0,1 1,28 0a14,14 0,1 1,-28 0" />
+    
+    <!-- Horizon line -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:pathData="M20,69h68"
+        android:alpha="0.7" />
+    
+    <!-- Ray 1 -->
+    <path
+        android:strokeColor="#FFEB3B"
+        android:strokeWidth="2"
+        android:pathData="M54,40L54,30"
+        android:alpha="0.8" />
+    
+    <!-- Ray 2 -->
+    <path
+        android:strokeColor="#FFEB3B"
+        android:strokeWidth="2"
+        android:pathData="M69,44L76,36"
+        android:alpha="0.8" />
+    
+    <!-- Ray 3 -->
+    <path
+        android:strokeColor="#FFEB3B"
+        android:strokeWidth="2"
+        android:pathData="M39,44L32,36"
+        android:alpha="0.8" />
+    
+    <!-- Ray 4 -->
+    <path
+        android:strokeColor="#FFEB3B"
+        android:strokeWidth="2"
+        android:pathData="M78,54L88,54"
+        android:alpha="0.8" />
+    
+    <!-- Ray 5 -->
+    <path
+        android:strokeColor="#FFEB3B"
+        android:strokeWidth="2"
+        android:pathData="M30,54L20,54"
+        android:alpha="0.8" />
+</vector>

@@ -220,17 +220,26 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Safely finds a CardView by ID, returning null if it doesn't exist
-     * instead of crashing with a NullPointerException
+     * instead of crashing with a NullPointerException.
+     * This method catches exceptions to handle cases where the view might not exist
+     * or is not of the expected type, ensuring the app remains stable.
      */
     private androidx.cardview.widget.CardView findCardViewSafely(int id) {
         try {
-            return findViewById(id);
+            View view = findViewById(id);
+            if (view instanceof androidx.cardview.widget.CardView) {
+                return (androidx.cardview.widget.CardView) view;
+            } else {
+                String resourceName = getResources().getResourceEntryName(id);
+                Log.d("MainActivity", "View with id " + id + " (" + resourceName + ") is not a CardView");
+                return null;
+            }
         } catch (Exception e) {
             try {
                 String resourceName = getResources().getResourceEntryName(id);
                 Log.d("MainActivity", "View with id " + id + " (" + resourceName + ") not found");
-            } catch (Exception e) {
-                Log.d("MainActivity", "View with id " + id + " not found, and resource name could not be retrieved");
+            } catch (Exception e2) {
+                Log.d("MainActivity", "View with id " + id + " not found. Resource name could not be retrieved.");
             }
             return null;
         }

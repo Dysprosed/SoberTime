@@ -8,6 +8,7 @@
     <!-- Light theme colors -->
     <color name="colorBackground">#F5F5F5</color>
     <color name="colorSurface">#FFFFFF</color>
+    <color name="colorOnSurface">#FFFFFF</color>
     <color name="colorText">#212121</color>
     <color name="colorTextLight">#757575</color>
 

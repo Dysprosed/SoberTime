@@ -8,6 +8,7 @@
     <!-- Dark Theme UI Colors -->
     <color name="colorBackground">#121212</color>
     <color name="colorSurface">#1F1F1F</color>
+    <color name="colorOnSurface">#1F1F1F</color>
     <color name="colorText">#E0E0E0</color>
     <color name="colorTextLight">#9E9E9E</color>
     

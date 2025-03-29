@@ -207,7 +207,7 @@ public class MainActivity extends AppCompatActivity {
         resetDateButton = findViewById(R.id.resetDateButton);
 
         // Safely try to find the milestone progress bar
-        milestoneProgressBar = findViewSafely(R.id.milestoneProgressBar);
+        milestoneProgressBar = findCardViewSafely(R.id.milestoneProgressBar);
 
         // Safely try to find all CardViews - no compile errors whether they exist or not
         journalCardView = findCardViewSafely(R.id.journalCardView);

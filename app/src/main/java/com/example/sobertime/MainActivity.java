@@ -207,7 +207,7 @@ public class MainActivity extends AppCompatActivity {
         resetDateButton = findViewById(R.id.resetDateButton);
 
         // Safely try to find the milestone progress bar
-        milestoneProgressBar = findCardViewSafely(R.id.milestoneProgressBar);
+        milestoneProgressBar = findProgressBarSafely(R.id.milestoneProgressBar);
 
         // Safely try to find all CardViews - no compile errors whether they exist or not
         journalCardView = findCardViewSafely(R.id.journalCardView);
@@ -235,6 +235,24 @@ public class MainActivity extends AppCompatActivity {
             return null;
         }
     }
+
+    /**
+      * Safely finds a ProgressBar by ID, returning null if it doesn't exist
+      * instead of crashing with a NullPointerException
+      */
+    private ProgressBar findProgressBarSafely(int id) {
+            try {
+                return findViewById(id);
+            } catch (Exception e) {
+                try {
+                    String resourceName = getResources().getResourceEntryName(id);
+                    Log.d("MainActivity", "View with id " + id + " (" + resourceName + ") not found");
+                } catch (Exception e) {
+                    Log.d("MainActivity", "View with id " + id + " not found, and resource name could not be retrieved");
+                }
+                return null;
+            }
+        }
 
     // Method to setup all card click listeners
     private void setupClickListeners() {

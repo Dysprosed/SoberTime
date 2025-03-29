@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorBackground"
+    android:background="@color/colorBackground"
     tools:context=".MainActivity">
 
     <!-- Background Sunrise Image (semi-transparent) -->
@@ -28,7 +28,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:text="New Dawn"
-        android:textColor="?attr/colorOnSurface"
+        android:textColor="@color/colorOnSurface"
         android:textSize="24sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
@@ -41,7 +41,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:text="Days Sober"
-        android:textColor="?attr/colorOnSurface"
+        android:textColor="@color/colorOnSurface"
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -61,7 +61,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:cardCornerRadius="60dp"
-            app:cardBackgroundColor="?attr/colorPrimary"
+            app:cardBackgroundColor="@color/colorPrimary"
             android:alpha="0.2" />
 
         <TextView
@@ -70,7 +70,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:text="326"
-            android:textColor="?attr/colorPrimary"
+            android:textColor="@color/colorPrimary"
             android:textSize="48sp"
             android:textStyle="bold" />
     </FrameLayout>
@@ -81,7 +81,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="Sober since: May 6, 2024"
-        android:textColor="?attr/colorTextLight"
+        android:textColor="@color/colorTextLight"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -123,7 +123,7 @@
                         android:layout_gravity="center_vertical"
                         android:layout_marginEnd="16dp"
                         android:src="@drawable/ic_motivation"
-                        app:tint="?attr/colorPrimary" />
+                        app:tint="@color/colorPrimary" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -135,7 +135,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Today's Motivation"
-                            android:textColor="?attr/colorPrimary" />
+                            android:textColor="@color/colorPrimary" />
 
                         <TextView
                             android:id="@+id/motivationTextView"
@@ -166,7 +166,7 @@
                         android:layout_gravity="center_vertical"
                         android:layout_marginEnd="16dp"
                         android:src="@drawable/ic_milestone"
-                        app:tint="?attr/colorPrimary" />
+                        app:tint="@color/colorPrimary" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -178,7 +178,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Milestone Progress"
-                            android:textColor="?attr/colorPrimary" />
+                            android:textColor="@color/colorPrimary" />
 
                         <TextView
                             android:id="@+id/nextMilestoneTextView"
@@ -194,7 +194,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
-                            android:progressTint="?attr/colorPrimary"
+                            android:progressTint="@color/colorPrimary"
                             android:progress="89" />
                     </LinearLayout>
                 </LinearLayout>
@@ -515,7 +515,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:contentDescription="Settings"
-        app:backgroundTint="?attr/colorPrimary"
+        app:backgroundTint="@color/colorPrimary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/ic_settings"

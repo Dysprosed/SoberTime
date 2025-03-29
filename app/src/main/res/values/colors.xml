@@ -17,10 +17,18 @@
     <color name="colorTextDark">#EEEEEE</color>
     <color name="colorTextLightDark">#B0B0B0</color>
 
-    <!-- Other app-specific colors -->
+    <!-- Category Colors -->
     <color name="colorPhysical">#2196F3</color>
-    <color name="colorMental">#FF9800</color>
-    <color name="colorFinancial">#673AB7</color>
-    <color name="celebrationBackground">#E1F5FE</color>
-    <color name="celebrationText">#0288D1</color>
+    <color name="colorMental">#E91E63</color>
+    <color name="colorFinancial">#FFC107</color>
+    
+    <!-- Progress Colors -->
+    <color name="colorProgress">#4CAF50</color>
+    
+    <!-- Card Colors -->
+    <color name="cardBorder">#E0E0E0</color>
+    
+    <!-- Other UI Colors -->
+    <color name="celebrationBackground">#E8F5E9</color>
+    <color name="celebrationText">#1B5E20</color>
 </resources>

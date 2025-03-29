@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Custom theme attributes -->
+    <attr name="colorBackground" format="color" />
     <attr name="colorBackgroundNight" format="color" />
     <attr name="colorOnSurface" format="color" />
     <attr name="colorTextLight" format="color" />

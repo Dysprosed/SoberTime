@@ -232,7 +232,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/colorPrimary"
+                android:background="@color/colorSurface"
                 android:text="Custom Notification Times"
                 android:textColor="@color/colorPrimary"
                 android:textSize="18sp"

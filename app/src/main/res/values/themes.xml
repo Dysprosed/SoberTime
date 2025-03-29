@@ -1,6 +1,6 @@
 <resources>
     <!-- Base theme -->
-    <style name="Theme.AppCompat.Light.DarkActionBar.NewDawn" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="Theme.AppCompat.Light.DarkActionBar.NewDawn" parent="Theme.MaterialComponents.Light.DarkActionBar">
         <!-- Primary colors -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
@@ -16,7 +16,7 @@
     </style>
     
     <!-- Dark theme -->
-    <style name="Theme.AppCompat.DarkActionBar.NewDawn" parent="Theme.AppCompat">
+    <style name="Theme.AppCompat.DarkActionBar.NewDawn" parent="Theme.MaterialComponents">
         <!-- Primary colors -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>

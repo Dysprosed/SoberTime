@@ -36,7 +36,7 @@ dependencies {
     implementation libs.constraintlayout
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.cardview:cardview:1.0.0'
-    implementation 'com.google.android.material:material:1.9.0'
+    implementation 'com.google.android.material:material:1.10.0'  // Use the latest version
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit

@@ -247,14 +247,12 @@
                 android:orientation="vertical"
                 android:layout_marginBottom="8dp" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/addCustomTimeButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Add Custom Time"
-                android:textColor="@android:color/white"
-                android:background="@drawable/button_rounded"
-                android:drawablePadding="8dp"
+                app:cornerRadius="12dp"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
                 android:layout_marginBottom="24dp" />
@@ -481,13 +479,12 @@
                 android:textStyle="bold"
                 android:layout_marginBottom="16dp" />
             
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/backupRestoreButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Backup &amp; Restore Data"
-                android:textColor="@android:color/white"
-                android:background="@drawable/button_rounded"
+                app:cornerRadius="12dp"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
                 android:layout_marginBottom="24dp" />

@@ -218,26 +218,25 @@ public class MainActivity extends AppCompatActivity {
         progressReportCardView = findCardViewSafely(R.id.progressReportCardView);
     }
 
-    // Helper method to safely find CardViews
-    private CardView findCardViewSafely(int resId) {
+    /**
+     * Safely finds a CardView by ID, returning null if it doesn't exist
+     * instead of crashing with a NullPointerException
+     */
+    private androidx.cardview.widget.CardView findCardViewSafely(int id) {
         try {
-            return findViewById(resId);
+            return findViewById(id);
         } catch (Exception e) {
-            Log.d("MainActivity", "CardView with id " + resId + " not found");
+            try {
+                String resourceName = getResources().getResourceEntryName(id);
+                Log.d("MainActivity", "View with id " + id + " (" + resourceName + ") not found");
+            } catch (Exception e) {
+                Log.d("MainActivity", "View with id " + id + " not found, and resource name could not be retrieved");
+            }
             return null;
         }
     }
 
-    // Generic helper method for any type of view
-    private <T extends View> T findViewSafely(int resId) {
-        try {
-            return findViewById(resId);
-        } catch (Exception e) {
-            Log.d("MainActivity", "View with id " + resId + " not found");
-            return null;
-        }
-    }
-
+    // Method to setup all card click listeners
     private void setupClickListeners() {
         milestonesCardView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -249,7 +248,7 @@ public class MainActivity extends AppCompatActivity {
                     startActivity(intent);
                 } catch (Exception e) {
                     // Log error and show toast to user
-                    e.printStackTrace();
+                    Log.e("MainActivity", "Couldn't open Milestones", e);
                     Toast.makeText(MainActivity.this,
                             "Couldn't open Milestones: " + e.getMessage(),
                             Toast.LENGTH_SHORT).show();
@@ -267,7 +266,7 @@ public class MainActivity extends AppCompatActivity {
                     startActivity(intent);
                 } catch (Exception e) {
                     // Log error and show toast to user
-                    e.printStackTrace();
+                    Log.e("MainActivity", "Couldn't open Health Benefits", e);
                     Toast.makeText(MainActivity.this,
                             "Couldn't open Health Benefits: " + e.getMessage(),
                             Toast.LENGTH_SHORT).show();
@@ -275,133 +274,25 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Set up click listeners for the new CardViews only if they exist
-        if (journalCardView != null) {
-            journalCardView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    try {
-                        // Open journal activity
-                        Intent intent = new Intent(MainActivity.this, JournalActivity.class);
-                        startActivity(intent);
-                    } catch (Exception e) {
-                        // Log error and show toast to user
-                        e.printStackTrace();
-                        Toast.makeText(MainActivity.this,
-                                "Couldn't open Journal: " + e.getMessage(),
-                                Toast.LENGTH_SHORT).show();
-                    }
-                }
-            });
-        }
-
-        if (achievementsCardView != null) {
-            achievementsCardView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    try {
-                        // Open achievements activity
-                        Intent intent = new Intent(MainActivity.this, AchievementsActivity.class);
-                        startActivity(intent);
-                    } catch (Exception e) {
-                        // Log error and show toast to user
-                        e.printStackTrace();
-                        Toast.makeText(MainActivity.this,
-                                "Couldn't open Achievements: " + e.getMessage(),
-                                Toast.LENGTH_SHORT).show();
-                    }
-                }
-            });
-        }
-
-        if (emergencyHelpCardView != null) {
-            emergencyHelpCardView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    try {
-                        // Open emergency help activity
-                        Intent intent = new Intent(MainActivity.this, EmergencyHelpActivity.class);
-                        startActivity(intent);
-                    } catch (Exception e) {
-                        // Log error and show toast to user
-                        e.printStackTrace();
-                        Toast.makeText(MainActivity.this,
-                                "Couldn't open Emergency Help: " + e.getMessage(),
-                                Toast.LENGTH_SHORT).show();
-                    }
-                }
-            });
-        }
-
-        if (inspirationCardView != null) {
-            inspirationCardView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    try {
-                        // Open inspiration activity
-                        Intent intent = new Intent(MainActivity.this, InspirationActivity.class);
-                        startActivity(intent);
-                    } catch (Exception e) {
-                        // Log error and show toast to user
-                        e.printStackTrace();
-                        Toast.makeText(MainActivity.this,
-                                "Couldn't open Inspirational Quotes: " + e.getMessage(),
-                                Toast.LENGTH_SHORT).show();
-                    }
-                }
-            });
-        }
-
-        if (communityCardView != null) {
-            communityCardView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    try {
-                        // Open community support activity
-                        Intent intent = new Intent(MainActivity.this, CommunitySupportActivity.class);
-                        startActivity(intent);
-                    } catch (Exception e) {
-                        // Log error and show toast to user
-                        e.printStackTrace();
-                        Toast.makeText(MainActivity.this,
-                                "Couldn't open Community Support: " + e.getMessage(),
-                                Toast.LENGTH_SHORT).show();
-                    }
-                }
-            });
-        }
-
-        if (progressReportCardView != null) {
-            progressReportCardView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    try {
-                        // Open progress report activity
-                        Intent intent = new Intent(MainActivity.this, ProgressReportActivity.class);
-                        startActivity(intent);
-                    } catch (Exception e) {
-                        // Log error and show toast to user
-                        e.printStackTrace();
-                        Toast.makeText(MainActivity.this,
-                                "Couldn't open Progress Report: " + e.getMessage(),
-                                Toast.LENGTH_SHORT).show();
-                    }
-                }
-            });
-        }
+        // Initialize click listeners for optional CardViews
+        setupCardViewClickListener(journalCardView, JournalActivity.class, "Journal");
+        setupCardViewClickListener(achievementsCardView, AchievementsActivity.class, "Achievements");
+        setupCardViewClickListener(emergencyHelpCardView, EmergencyHelpActivity.class, "Emergency Help");
+        setupCardViewClickListener(inspirationCardView, InspirationActivity.class, "Inspirational Quotes");
+        setupCardViewClickListener(communityCardView, CommunitySupportActivity.class, "Community Support");
+        setupCardViewClickListener(progressReportCardView, ProgressReportActivity.class, "Progress Report");
 
         settingsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                try {
-                    // Open settings activity
-                    Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                if (intent.resolveActivity(getPackageManager()) != null) {
                     startActivity(intent);
-                } catch (Exception e) {
-                    // Log error and show toast to user
-                    e.printStackTrace();
+                } else {
+                    // Log error and show user-friendly message
+                    Log.e("MainActivity", "SettingsActivity is missing or misconfigured");
                     Toast.makeText(MainActivity.this,
-                            "Couldn't open Settings: " + e.getMessage(),
+                            "Settings feature is currently unavailable. Please try again later.",
                             Toast.LENGTH_SHORT).show();
                 }
             }
@@ -410,9 +301,38 @@ public class MainActivity extends AppCompatActivity {
         resetDateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showDatePickerDialog();
+                try {
+                    showDatePickerDialog();
+                } catch (Exception e) {
+                    Log.e("MainActivity", "Failed to show DatePickerDialog", e);
+                    Toast.makeText(MainActivity.this,
+                            "An error occurred while opening the date picker. Please try again.",
+                            Toast.LENGTH_SHORT).show();
+                }
             }
         });
+    }
+
+    /**
+     * Helper method to set up click listeners for CardViews that might not exist yet
+     */
+    private <T> void setupCardViewClickListener(CardView cardView, Class<T> activityClass, String activityName) {
+        if (cardView != null) {
+            cardView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    try {
+                        Intent intent = new Intent(MainActivity.this, activityClass);
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        Log.e("MainActivity", "Couldn't open " + activityName + ": " + e.getMessage(), e);
+                        Toast.makeText(MainActivity.this,
+                                "Couldn't open " + activityName + ". Please try again later.",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        }
     }
 
     private void showDatePickerDialog() {

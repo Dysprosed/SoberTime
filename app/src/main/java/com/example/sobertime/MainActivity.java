@@ -250,18 +250,18 @@ public class MainActivity extends AppCompatActivity {
       * instead of crashing with a NullPointerException
       */
     private ProgressBar findProgressBarSafely(int id) {
+        try {
+            return findViewById(id);
+        } catch (Exception e) {
             try {
-                return findViewById(id);
-            } catch (Exception e) {
-                try {
-                    String resourceName = getResources().getResourceEntryName(id);
-                    Log.d("MainActivity", "View with id " + id + " (" + resourceName + ") not found");
-                } catch (Exception e) {
-                    Log.d("MainActivity", "View with id " + id + " not found, and resource name could not be retrieved");
-                }
-                return null;
+                String resourceName = getResources().getResourceEntryName(id);
+                Log.d("MainActivity", "View with id " + id + " (" + resourceName + ") not found");
+            } catch (Exception e2) {  // Renamed from e to e2 to fix redefinition error
+                Log.d("MainActivity", "View with id " + id + " not found, and resource name could not be retrieved");
             }
+            return null;
         }
+    }
 
     // Method to setup all card click listeners
     private void setupClickListeners() {

@@ -1,49 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Base colors -->
-    <color name="colorPrimary">#5C6BC0</color>
-    <color name="colorPrimaryDark">#3949AB</color>
-    <color name="colorAccent">#FF5252</color>
-    
-    <!-- Night mode colors - slightly lighter/brighter variations -->
-    <color name="colorPrimaryNight">#7986CB</color>
-    <color name="colorPrimaryDarkNight">#5C6BC0</color>
-    <color name="colorAccentNight">#FF8A80</color>
+    <!-- Primary colors -->
+    <color name="colorPrimary">#4CAF50</color>
+    <color name="colorPrimaryDark">#388E3C</color>
+    <color name="colorAccent">#8BC34A</color>
 
-    <!-- App-specific colors -->
-    <color name="colorBackground">#F5F5F7</color>
-    <color name="colorBackgroundNight">#121212</color>
-    <color name="colorText">#333333</color>
-    <color name="colorTextNight">#E0E0E0</color>
-    <color name="colorTextLight">#757575</color>
-    <color name="colorTextLightNight">#9E9E9E</color>
-    
-    <!-- Card backgrounds -->
-    <color name="cardBackground">#FFFFFF</color>
-    <color name="cardBackgroundNight">#242424</color>
-    <color name="cardBorder">#EEEEEE</color>
-    <color name="cardBorderNight">#333333</color>
-
-    <!-- Category colors -->
-    <color name="colorPhysical">#4CAF50</color>
-    <color name="colorPhysicalNight">#66BB6A</color>
-    <color name="colorMental">#2196F3</color>
-    <color name="colorMentalNight">#42A5F5</color>
-    <color name="colorFinancial">#FF9800</color>
-    <color name="colorFinancialNight">#FFA726</color>
-
-    <!-- Celebration colors -->
-    <color name="celebrationBackground">#F8F2FF</color>
-    <color name="celebrationBackgroundNight">#331B54</color>
-    <color name="celebrationText">#6A1B9A</color>
-    <color name="celebrationTextNight">#CE93D8</color>
-
-    <!-- Status colors -->
-    <color name="achieved">#4CAF50</color>
-    <color name="achievedNight">#66BB6A</color>
-    <color name="upcoming">#BDBDBD</color>
-    <color name="upcomingNight">#757575</color>
-    <color name="today">#FF5252</color>
-    <color name="todayNight">#FF8A80</color>
+    <!-- Light theme colors -->
+    <color name="colorBackground">#F5F5F5</color>
     <color name="colorSurface">#FFFFFF</color>
+    <color name="colorText">#212121</color>
+    <color name="colorTextLight">#757575</color>
+
+    <!-- Dark theme colors -->
+    <color name="colorBackgroundDark">#121212</color>
+    <color name="colorSurfaceDark">#1F1F1F</color>
+    <color name="colorTextDark">#EEEEEE</color>
+    <color name="colorTextLightDark">#B0B0B0</color>
+
+    <!-- Other app-specific colors -->
+    <color name="colorPhysical">#2196F3</color>
+    <color name="colorMental">#FF9800</color>
+    <color name="colorFinancial">#673AB7</color>
+    <color name="celebrationBackground">#E1F5FE</color>
+    <color name="celebrationText">#0288D1</color>
 </resources>

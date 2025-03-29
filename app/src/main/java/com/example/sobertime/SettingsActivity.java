@@ -250,10 +250,11 @@ public class SettingsActivity extends AppCompatActivity {
             // Theme toggle switch listener - only if it exists
             // In your setupListeners() method, add this for theme switch
             if (themeToggleSwitch != null) {
+                // In SettingsActivity.java, within the theme toggle switch listener
                 themeToggleSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        // Save preference in main preferences
+                        // Save preference
                         SharedPreferences prefs = getSharedPreferences("SobrietyTrackerPrefs", MODE_PRIVATE);
                         SharedPreferences.Editor editor = prefs.edit();
                         editor.putBoolean("night_mode_enabled", isChecked);
@@ -266,7 +267,7 @@ public class SettingsActivity extends AppCompatActivity {
                             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
                         }
 
-                        // Recreate activity for theme to take effect
+                        // Recreate activity to apply theme
                         recreate();
                     }
                 });

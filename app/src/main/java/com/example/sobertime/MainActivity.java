@@ -22,9 +22,13 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import android.util.Log;
+
 import androidx.cardview.widget.CardView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -49,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
     private CardView communityCardView;
     private CardView progressReportCardView;
 
-    private Button settingsButton;
+    private FloatingActionButton settingsButton;
     private Button resetDateButton;
     private ProgressBar milestoneProgressBar;
 
@@ -197,52 +201,41 @@ public class MainActivity extends AppCompatActivity {
         motivationTextView = findViewById(R.id.motivationTextView);
         milestonesCardView = findViewById(R.id.milestonesCardView);
         statsCardView = findViewById(R.id.statsCardView);
+
+        // Change Button to FloatingActionButton to fix the class cast exception
         settingsButton = findViewById(R.id.settingsButton);
         resetDateButton = findViewById(R.id.resetDateButton);
 
         // Safely try to find the milestone progress bar
+        milestoneProgressBar = findViewSafely(R.id.milestoneProgressBar);
+
+        // Safely try to find all CardViews - no compile errors whether they exist or not
+        journalCardView = findCardViewSafely(R.id.journalCardView);
+        achievementsCardView = findCardViewSafely(R.id.achievementsCardView);
+        emergencyHelpCardView = findCardViewSafely(R.id.emergencyHelpCardView);
+        inspirationCardView = findCardViewSafely(R.id.inspirationCardView);
+        communityCardView = findCardViewSafely(R.id.communityCardView);
+        progressReportCardView = findCardViewSafely(R.id.progressReportCardView);
+    }
+
+    // Helper method to safely find CardViews
+    private CardView findCardViewSafely(int resId) {
         try {
-            milestoneProgressBar = findViewById(R.id.milestoneProgressBar);
+            return findViewById(resId);
         } catch (Exception e) {
-            // It's okay if this doesn't exist yet
+            Log.d("MainActivity", "CardView with id " + resId + " not found");
+            return null;
         }
+    }
 
-        // Safely try to find the new CardViews
-       // try {
-       //     journalCardView = findViewById(R.id.journalCardView);
-       // } catch (Exception e) {
-            // It's okay if this doesn't exist yet
-       // }
-
-       // try {
-       //     achievementsCardView = findViewById(R.id.achievementsCardView);
-       // } catch (Exception e) {
-            // It's okay if this doesn't exist yet
-       // }
-
-      //  try {
-      //      emergencyHelpCardView = findViewById(R.id.emergencyHelpCardView);
-      //  } catch (Exception e) {
-            // It's okay if this doesn't exist yet
-      //  }
-
-      //  try {
-      //      inspirationCardView = findViewById(R.id.inspirationCardView);
-      //  } catch (Exception e) {
-            // It's okay if this doesn't exist yet
-      //  }
-
-      //  try {
-      //      communityCardView = findViewById(R.id.communityCardView);
-      //  } catch (Exception e) {
-            // It's okay if this doesn't exist yet
-      //  }
-
-      //  try {
-      //      progressReportCardView = findViewById(R.id.progressReportCardView);
-      //  } catch (Exception e) {
-            // It's okay if this doesn't exist yet
-      //  }
+    // Generic helper method for any type of view
+    private <T extends View> T findViewSafely(int resId) {
+        try {
+            return findViewById(resId);
+        } catch (Exception e) {
+            Log.d("MainActivity", "View with id " + resId + " not found");
+            return null;
+        }
     }
 
     private void setupClickListeners() {

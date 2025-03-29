@@ -242,6 +242,7 @@
                 android:id="@+id/customTimesContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@color/colorSurface"
                 android:orientation="vertical"
                 android:layout_marginBottom="8dp" />
 
@@ -250,7 +251,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Add Custom Time"
-                android:textColor="@android:color/white"
+                android:textColor="@color/colorPrimary"
                 android:background="@drawable/button_rounded"
                 android:drawablePadding="8dp"
                 android:paddingStart="16dp"

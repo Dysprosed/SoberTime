@@ -5,6 +5,7 @@ import android.view.MenuItem;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+import android.util.Log;
 import main.java.com.example.sobertime.BaseActivity;
 
 import java.text.NumberFormat;

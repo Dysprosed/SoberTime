@@ -1,4 +1,4 @@
-package main.java.com.example.sobertime;
+package com.example.sobertime;
 
 import android.os.Bundle;
 import android.util.Log;

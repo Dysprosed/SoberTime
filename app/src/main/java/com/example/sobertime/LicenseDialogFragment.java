@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import android.graphics.Color;
 import android.webkit.WebView;
+import android.content.res.Configuration;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,14 +27,17 @@ public class LicenseDialogFragment extends DialogFragment {
         View view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_license, null);
         builder.setView(view);
         
-        // Get references to the views - replace TextView with WebView in your layout
+        // Get references to the views
         WebView licenseWebView = view.findViewById(R.id.licenseWebView);
         Button closeButton = view.findViewById(R.id.closeButton);
         
         // Configure WebView
         licenseWebView.setBackgroundColor(Color.TRANSPARENT);
-        // This ensures text color adapts to theme
-        String textColor = ThemeUtils.isDarkTheme(requireContext()) ? "#FFFFFF" : "#000000";
+        
+        // Check if dark theme is enabled
+        int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        boolean isDarkTheme = currentNightMode == Configuration.UI_MODE_NIGHT_YES;
+        String textColor = isDarkTheme ? "#FFFFFF" : "#000000";
         
         // Load HTML content
         String htmlContent = "<html><body style='color:" + textColor + ";'>" + 

@@ -31,18 +31,31 @@ public class LicenseDialogFragment extends DialogFragment {
         WebView licenseWebView = view.findViewById(R.id.licenseWebView);
         Button closeButton = view.findViewById(R.id.closeButton);
         
-        // Configure WebView
-        licenseWebView.setBackgroundColor(Color.TRANSPARENT);
-        
         // Check if dark theme is enabled
         int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
         boolean isDarkTheme = currentNightMode == Configuration.UI_MODE_NIGHT_YES;
-        String textColor = isDarkTheme ? "#FFFFFF" : "#000000";
         
-        // Load HTML content
-        String htmlContent = "<html><body style='color:" + textColor + ";'>" + 
-                            getHtmlLicenseText() + 
-                            "</body></html>";
+        // Set appropriate colors based on theme
+        String textColor = isDarkTheme ? "#FFFFFF" : "#000000";
+        String backgroundColor = isDarkTheme ? "#121212" : "#FFFFFF";
+        String linkColor = isDarkTheme ? "#8AB4F8" : "#1A73E8";
+        
+        // Configure WebView with appropriate background
+        licenseWebView.setBackgroundColor(Color.parseColor(backgroundColor));
+        
+        // Load HTML content with improved styling
+        String htmlContent = 
+            "<html>" +
+            "<head><style>" +
+            "body { color: " + textColor + "; background-color: " + backgroundColor + "; padding: 8px; }" +
+            "h2, h3 { color: " + (isDarkTheme ? "#BB86FC" : "#6200EE") + "; }" +
+            "a { color: " + linkColor + "; }" +
+            "ul { padding-left: 20px; }" +
+            "li { margin-bottom: 8px; }" +
+            "</style></head>" +
+            "<body>" + getHtmlLicenseText() + "</body>" +
+            "</html>";
+        
         licenseWebView.loadDataWithBaseURL(null, htmlContent, "text/html", "UTF-8", null);
         
         // Create the dialog

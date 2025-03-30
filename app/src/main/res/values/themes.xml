@@ -1,31 +1,34 @@
-<!-- Base theme -->
-<style name="Theme.AppCompat.Light.DarkActionBar.NewDawn" parent="Theme.MaterialComponents.Light.NoActionBar">
-    <!-- Primary colors -->
-    <item name="colorPrimary">@color/colorPrimary</item>
-    <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-    <item name="colorAccent">@color/colorAccent</item>
-    
-    <!-- Custom attributes -->
-    <item name="colorBackgroundNight">@color/colorBackground</item>
-    <item name="colorTextLight">@color/colorTextLight</item>
-    <item name="colorOnSurface">@color/colorText</item>
-    
-    <!-- Other theme attributes -->
-    <item name="colorSurface">@color/colorSurface</item>
-</style>
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base theme -->
+    <style name="Theme.AppCompat.Light.DarkActionBar.NewDawn" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!-- Primary colors -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        
+        <!-- Custom attributes -->
+        <item name="colorBackgroundNight">@color/colorBackground</item>
+        <item name="colorTextLight">@color/colorTextLight</item>
+        <item name="colorOnSurface">@color/colorText</item>
+        
+        <!-- Other theme attributes -->
+        <item name="colorSurface">@color/colorSurface</item>
+    </style>
 
-<!-- Dark theme -->
-<style name="Theme.AppCompat.DarkActionBar.NewDawn" parent="Theme.MaterialComponents.NoActionBar">
-    <!-- Primary colors -->
-    <item name="colorPrimary">@color/colorPrimary</item>
-    <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-    <item name="colorAccent">@color/colorAccent</item>
-    
-    <!-- Custom attributes -->
-    <item name="colorBackgroundNight">@color/colorBackgroundDark</item>
-    <item name="colorTextLight">@color/colorTextLightDark</item>
-    <item name="colorOnSurface">@color/colorTextDark</item>
-    
-    <!-- Other theme attributes -->
-    <item name="colorSurface">@color/colorSurfaceDark</item>
-</style>
+    <!-- Dark theme -->
+    <style name="Theme.AppCompat.DarkActionBar.NewDawn" parent="Theme.MaterialComponents.NoActionBar">
+        <!-- Primary colors -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        
+        <!-- Custom attributes -->
+        <item name="colorBackgroundNight">@color/colorBackgroundDark</item>
+        <item name="colorTextLight">@color/colorTextLightDark</item>
+        <item name="colorOnSurface">@color/colorTextDark</item>
+        
+        <!-- Other theme attributes -->
+        <item name="colorSurface">@color/colorSurfaceDark</item>
+    </style>
+</resources>

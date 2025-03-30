@@ -1,524 +1,558 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorBackground"
-    tools:context=".MainActivity">
+    android:fitsSystemWindows="true"
+    tools:openDrawer="start">
 
-    <!-- Background Sunrise Image (semi-transparent) -->
-    <ImageView
-        android:id="@+id/backgroundImage"
+    <!-- Main content - your existing layout -->
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scaleType="centerCrop"
-        android:src="@drawable/bg_sunrise"
-        android:alpha="0.1"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:background="@color/colorBackground"
+        tools:context=".MainActivity">
 
-    <!-- App title -->
-    <TextView
-        android:id="@+id/appTitleTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:text="New Dawn"
-        android:textColor="@color/colorOnSurface"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <!-- Sobriety Counter Section -->
-    <TextView
-        android:id="@+id/dayCountLabelTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Days Sober"
-        android:textColor="@color/colorOnSurface"
-        android:textSize="20sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/appTitleTextView" />
-
-    <!-- Day Count in a Circle -->
-    <FrameLayout
-        android:id="@+id/dayCountContainer"
-        android:layout_width="120dp"
-        android:layout_height="120dp"
-        android:layout_marginTop="8dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dayCountLabelTextView">
-
-        <androidx.cardview.widget.CardView
+        <!-- Background Sunrise Image (semi-transparent) -->
+        <ImageView
+            android:id="@+id/backgroundImage"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:cardCornerRadius="60dp"
-            app:cardBackgroundColor="@color/colorPrimary"
-            android:alpha="0.2" />
+            android:scaleType="centerCrop"
+            android:src="@drawable/bg_sunrise"
+            android:alpha="0.1"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
+        <!-- Toolbar -->
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/colorPrimary"
+            android:elevation="4dp"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+
+        <!-- App title - moved below toolbar -->
         <TextView
-            android:id="@+id/dayCountTextView"
+            android:id="@+id/appTitleTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="326"
-            android:textColor="@color/colorPrimary"
-            android:textSize="48sp"
-            android:textStyle="bold" />
-    </FrameLayout>
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:text="New Dawn"
+            android:textColor="@color/colorOnSurface"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/toolbar" />
 
-    <TextView
-        android:id="@+id/soberSinceTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Sober since: May 6, 2024"
-        android:textColor="@color/colorTextLight"
-        android:textSize="16sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dayCountContainer" />
-
-    <!-- Main Content Section - Scrollable -->
-    <ScrollView
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp"
-        app:layout_constraintBottom_toTopOf="@+id/resetDateButton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/soberSinceTextView">
-
-        <LinearLayout
-            android:layout_width="match_parent"
+        <!-- Sobriety Counter Section -->
+        <TextView
+            android:id="@+id/dayCountLabelTextView"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:layout_marginTop="16dp"
+            android:text="Days Sober"
+            android:textColor="@color/colorOnSurface"
+            android:textSize="20sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/appTitleTextView" />
 
-            <!-- Today's Motivation -->
+        <!-- Day Count in a Circle -->
+        <FrameLayout
+            android:id="@+id/dayCountContainer"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_marginTop="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/dayCountLabelTextView">
+
             <androidx.cardview.widget.CardView
-                android:id="@+id/motivationCardView"
-                style="@style/AppCard"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="match_parent"
+                app:cardCornerRadius="60dp"
+                app:cardBackgroundColor="@color/colorPrimary"
+                android:alpha="0.2" />
 
-                <LinearLayout
+            <TextView
+                android:id="@+id/dayCountTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="326"
+                android:textColor="@color/colorPrimary"
+                android:textSize="48sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/soberSinceTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Sober since: May 6, 2024"
+            android:textColor="@color/colorTextLight"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/dayCountContainer" />
+
+        <!-- Main Content Section - Scrollable -->
+        <ScrollView
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            app:layout_constraintBottom_toTopOf="@+id/resetDateButton"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/soberSinceTextView">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Today's Motivation -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/motivationCardView"
+                    style="@style/AppCard"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="16dp">
-
-                    <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_gravity="center_vertical"
-                        android:layout_marginEnd="16dp"
-                        android:src="@drawable/ic_motivation"
-                        app:tint="@color/colorPrimary" />
+                    android:layout_height="wrap_content">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        android:orientation="horizontal"
+                        android:padding="16dp">
 
-                        <TextView
-                            style="@style/CardTitleText"
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginEnd="16dp"
+                            android:src="@drawable/ic_motivation"
+                            app:tint="@color/colorPrimary" />
+
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Today's Motivation"
-                            android:textColor="@color/colorPrimary" />
+                            android:orientation="vertical">
 
-                        <TextView
-                            android:id="@+id/motivationTextView"
-                            style="@style/CardContentText"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Rock bottom became the solid foundation on which I rebuilt my life. — J.K. Rowling" />
+                            <TextView
+                                style="@style/CardTitleText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Today's Motivation"
+                                android:textColor="@color/colorPrimary" />
+
+                            <TextView
+                                android:id="@+id/motivationTextView"
+                                style="@style/CardContentText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Rock bottom became the solid foundation on which I rebuilt my life. — J.K. Rowling" />
+                        </LinearLayout>
                     </LinearLayout>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                </androidx.cardview.widget.CardView>
 
-            <!-- Milestones -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/milestonesCardView"
-                style="@style/AppCard"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <LinearLayout
+                <!-- Milestones -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/milestonesCardView"
+                    style="@style/AppCard"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="16dp">
-
-                    <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_gravity="center_vertical"
-                        android:layout_marginEnd="16dp"
-                        android:src="@drawable/ic_milestone"
-                        app:tint="@color/colorPrimary" />
+                    android:layout_height="wrap_content">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        android:orientation="horizontal"
+                        android:padding="16dp">
 
-                        <TextView
-                            style="@style/CardTitleText"
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginEnd="16dp"
+                            android:src="@drawable/ic_milestone"
+                            app:tint="@color/colorPrimary" />
+
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Milestone Progress"
-                            android:textColor="@color/colorPrimary" />
+                            android:orientation="vertical">
 
-                        <TextView
-                            android:id="@+id/nextMilestoneTextView"
-                            style="@style/CardContentText"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Next milestone: 365 days\n39 days to go!" />
+                            <TextView
+                                style="@style/CardTitleText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Milestone Progress"
+                                android:textColor="@color/colorPrimary" />
 
-                        <!-- Progress Bar -->
-                        <ProgressBar
-                            android:id="@+id/milestoneProgressBar"
-                            style="?android:attr/progressBarStyleHorizontal"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:progressTint="@color/colorPrimary"
-                            android:progress="89" />
+                            <TextView
+                                android:id="@+id/nextMilestoneTextView"
+                                style="@style/CardContentText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Next milestone: 365 days\n39 days to go!" />
+
+                            <!-- Progress Bar -->
+                            <ProgressBar
+                                android:id="@+id/milestoneProgressBar"
+                                style="?android:attr/progressBarStyleHorizontal"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:progressTint="@color/colorPrimary"
+                                android:progress="89" />
+                        </LinearLayout>
                     </LinearLayout>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                </androidx.cardview.widget.CardView>
 
-            <!-- Health Benefits -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/statsCardView"
-                style="@style/AppCard"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <LinearLayout
+                <!-- Health Benefits -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/statsCardView"
+                    style="@style/AppCard"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="16dp">
-
-                    <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_gravity="center_vertical"
-                        android:layout_marginEnd="16dp"
-                        android:src="@drawable/ic_health"
-                        app:tint="@color/colorPhysical" />
+                    android:layout_height="wrap_content">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        android:orientation="horizontal"
+                        android:padding="16dp">
 
-                        <TextView
-                            style="@style/CardTitleText"
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginEnd="16dp"
+                            android:src="@drawable/ic_health"
+                            app:tint="@color/colorPhysical" />
+
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Health Benefits"
-                            android:textColor="@color/colorPhysical" />
+                            android:orientation="vertical">
 
-                        <TextView
-                            style="@style/CardContentText"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Tap to see your physical, mental, and financial improvements" />
+                            <TextView
+                                style="@style/CardTitleText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Health Benefits"
+                                android:textColor="@color/colorPhysical" />
+
+                            <TextView
+                                style="@style/CardContentText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Tap to see your physical, mental, and financial improvements" />
+                        </LinearLayout>
                     </LinearLayout>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                </androidx.cardview.widget.CardView>
 
-            <!-- Journal Card -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/journalCardView"
-                style="@style/AppCard"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <LinearLayout
+                <!-- Journal Card -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/journalCardView"
+                    style="@style/AppCard"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="16dp">
-
-                    <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_gravity="center_vertical"
-                        android:layout_marginEnd="16dp"
-                        android:src="@drawable/ic_journal"
-                        app:tint="@color/colorMental" />
+                    android:layout_height="wrap_content">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        android:orientation="horizontal"
+                        android:padding="16dp">
 
-                        <TextView
-                            style="@style/CardTitleText"
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginEnd="16dp"
+                            android:src="@drawable/ic_journal"
+                            app:tint="@color/colorMental" />
+
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Your Journal"
-                            android:textColor="@color/colorMental" />
+                            android:orientation="vertical">
 
-                        <TextView
-                            style="@style/CardContentText"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Record your thoughts, feelings, and victories" />
+                            <TextView
+                                style="@style/CardTitleText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Your Journal"
+                                android:textColor="@color/colorMental" />
+
+                            <TextView
+                                style="@style/CardContentText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Record your thoughts, feelings, and victories" />
+                        </LinearLayout>
                     </LinearLayout>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                </androidx.cardview.widget.CardView>
 
-            <!-- Achievements Card -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/achievementsCardView"
-                style="@style/AppCard"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <LinearLayout
+                <!-- Achievements Card -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/achievementsCardView"
+                    style="@style/AppCard"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="16dp">
-
-                    <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_gravity="center_vertical"
-                        android:layout_marginEnd="16dp"
-                        android:src="@drawable/ic_achievement"
-                        app:tint="@color/colorAccent" />
+                    android:layout_height="wrap_content">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        android:orientation="horizontal"
+                        android:padding="16dp">
 
-                        <TextView
-                            style="@style/CardTitleText"
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginEnd="16dp"
+                            android:src="@drawable/ic_achievement"
+                            app:tint="@color/colorAccent" />
+
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Achievements"
-                            android:textColor="@color/colorAccent" />
+                            android:orientation="vertical">
 
-                        <TextView
-                            style="@style/CardContentText"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="View your earned badges and accomplishments" />
+                            <TextView
+                                style="@style/CardTitleText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Achievements"
+                                android:textColor="@color/colorAccent" />
+
+                            <TextView
+                                style="@style/CardContentText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="View your earned badges and accomplishments" />
+                        </LinearLayout>
                     </LinearLayout>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                </androidx.cardview.widget.CardView>
 
-            <!-- Emergency Help Card -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/emergencyHelpCardView"
-                style="@style/AppCard"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <LinearLayout
+                <!-- Emergency Help Card -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/emergencyHelpCardView"
+                    style="@style/AppCard"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="16dp">
-
-                    <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_gravity="center_vertical"
-                        android:layout_marginEnd="16dp"
-                        android:src="@drawable/ic_emergency"
-                        app:tint="#F44336" />
+                    android:layout_height="wrap_content">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        android:orientation="horizontal"
+                        android:padding="16dp">
 
-                        <TextView
-                            style="@style/CardTitleText"
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginEnd="16dp"
+                            android:src="@drawable/ic_emergency"
+                            app:tint="#F44336" />
+
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Emergency Help"
-                            android:textColor="#F44336" />
+                            android:orientation="vertical">
 
-                        <TextView
-                            style="@style/CardContentText"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Access resources and support when you need it most" />
+                            <TextView
+                                style="@style/CardTitleText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Emergency Help"
+                                android:textColor="#F44336" />
+
+                            <TextView
+                                style="@style/CardContentText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Access resources and support when you need it most" />
+                        </LinearLayout>
                     </LinearLayout>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                </androidx.cardview.widget.CardView>
 
-            <!-- Inspiration Card -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/inspirationCardView"
-                style="@style/AppCard"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <LinearLayout
+                <!-- Inspiration Card -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/inspirationCardView"
+                    style="@style/AppCard"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="16dp">
-
-                    <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_gravity="center_vertical"
-                        android:layout_marginEnd="16dp"
-                        android:src="@drawable/ic_inspiration"
-                        app:tint="#9C27B0" />
+                    android:layout_height="wrap_content">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        android:orientation="horizontal"
+                        android:padding="16dp">
 
-                        <TextView
-                            style="@style/CardTitleText"
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginEnd="16dp"
+                            android:src="@drawable/ic_inspiration"
+                            app:tint="#9C27B0" />
+
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Inspirational Quotes"
-                            android:textColor="#9C27B0" />
+                            android:orientation="vertical">
 
-                        <TextView
-                            style="@style/CardContentText"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Find motivation in quotes about recovery and strength" />
+                            <TextView
+                                style="@style/CardTitleText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Inspirational Quotes"
+                                android:textColor="#9C27B0" />
+
+                            <TextView
+                                style="@style/CardContentText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Find motivation in quotes about recovery and strength" />
+                        </LinearLayout>
                     </LinearLayout>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                </androidx.cardview.widget.CardView>
 
-            <!-- Community Support Card -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/communityCardView"
-                style="@style/AppCard"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <LinearLayout
+                <!-- Community Support Card -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/communityCardView"
+                    style="@style/AppCard"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="16dp">
-
-                    <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_gravity="center_vertical"
-                        android:layout_marginEnd="16dp"
-                        android:src="@drawable/ic_community"
-                        app:tint="#03A9F4" />
+                    android:layout_height="wrap_content">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        android:orientation="horizontal"
+                        android:padding="16dp">
 
-                        <TextView
-                            style="@style/CardTitleText"
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginEnd="16dp"
+                            android:src="@drawable/ic_community"
+                            app:tint="#03A9F4" />
+
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Community Support"
-                            android:textColor="#03A9F4" />
+                            android:orientation="vertical">
 
-                        <TextView
-                            style="@style/CardContentText"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Find meetings and resources near you" />
+                            <TextView
+                                style="@style/CardTitleText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Community Support"
+                                android:textColor="#03A9F4" />
+
+                            <TextView
+                                style="@style/CardContentText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Find meetings and resources near you" />
+                        </LinearLayout>
                     </LinearLayout>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                </androidx.cardview.widget.CardView>
 
-            <!-- Progress Report Card -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/progressReportCardView"
-                style="@style/AppCard"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <LinearLayout
+                <!-- Progress Report Card -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/progressReportCardView"
+                    style="@style/AppCard"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="16dp">
-
-                    <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_gravity="center_vertical"
-                        android:layout_marginEnd="16dp"
-                        android:src="@drawable/ic_progress"
-                        app:tint="#795548" />
+                    android:layout_height="wrap_content">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        android:orientation="horizontal"
+                        android:padding="16dp">
 
-                        <TextView
-                            style="@style/CardTitleText"
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginEnd="16dp"
+                            android:src="@drawable/ic_progress"
+                            app:tint="#795548" />
+
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Progress Report"
-                            android:textColor="#795548" />
+                            android:orientation="vertical">
 
-                        <TextView
-                            style="@style/CardContentText"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="View detailed statistics of your journey" />
+                            <TextView
+                                style="@style/CardTitleText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Progress Report"
+                                android:textColor="#795548" />
+
+                            <TextView
+                                style="@style/CardContentText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="View detailed statistics of your journey" />
+                        </LinearLayout>
                     </LinearLayout>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-        </LinearLayout>
-    </ScrollView>
+                </androidx.cardview.widget.CardView>
+            </LinearLayout>
+        </ScrollView>
 
-    <!-- Change Start Date Button -->
-    <Button
-        android:id="@+id/resetDateButton"
-        style="@style/RoundedButton"
+        <!-- Change Start Date Button -->
+        <Button
+            android:id="@+id/resetDateButton"
+            style="@style/RoundedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:text="CHANGE START DATE"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <!-- Settings Button - Option to keep or remove -->
+        <!-- If you decide to move settings to drawer menu only, you can remove this -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/settingsButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:contentDescription="Settings"
+            app:backgroundTint="@color/colorPrimary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/toolbar"
+            app:srcCompat="@drawable/ic_settings"
+            app:tint="@android:color/white" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Navigation drawer -->
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/nav_view"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp"
-        android:text="CHANGE START DATE"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:fitsSystemWindows="true"
+        app:headerLayout="@layout/nav_header"
+        app:menu="@menu/drawer_menu" />
 
-    <!-- Settings Button -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/settingsButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:contentDescription="Settings"
-        app:backgroundTint="@color/colorPrimary"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_settings"
-        app:tint="@android:color/white" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.drawerlayout.widget.DrawerLayout>

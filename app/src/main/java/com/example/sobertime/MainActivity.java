@@ -19,16 +19,21 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
-import android.util.Log;
-
+import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.navigation.NavigationView;
+
+import android.util.Log;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -36,7 +41,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private TextView dayCountTextView;
     private TextView soberSinceTextView;
@@ -53,9 +58,13 @@ public class MainActivity extends AppCompatActivity {
     private CardView communityCardView;
     private CardView progressReportCardView;
 
-    private FloatingActionButton settingsButton;
     private Button resetDateButton;
     private ProgressBar milestoneProgressBar;
+    
+    // Drawer elements
+    private DrawerLayout drawerLayout;
+    private Toolbar toolbar;
+    private NavigationView navigationView;
 
     private SharedPreferences preferences;
     private static final String PREFS_NAME = "SobrietyTrackerPrefs";
@@ -76,6 +85,9 @@ public class MainActivity extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        
+        // Set up toolbar and drawer
+        setupToolbarAndDrawer();
 
         // Initialize preferences
         preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
@@ -98,6 +110,21 @@ public class MainActivity extends AppCompatActivity {
 
         // Check achievements for current day count
         updateAchievements();
+    }
+    
+    private void setupToolbarAndDrawer() {
+        toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        
+        drawerLayout = findViewById(R.id.drawer_layout);
+        navigationView = findViewById(R.id.nav_view);
+        
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
+        
+        navigationView.setNavigationItemSelectedListener(this);
     }
 
     // Apply saved theme preference
@@ -201,9 +228,6 @@ public class MainActivity extends AppCompatActivity {
         motivationTextView = findViewById(R.id.motivationTextView);
         milestonesCardView = findViewById(R.id.milestonesCardView);
         statsCardView = findViewById(R.id.statsCardView);
-
-        // Change Button to FloatingActionButton to fix the class cast exception
-        settingsButton = findViewById(R.id.settingsButton);
         resetDateButton = findViewById(R.id.resetDateButton);
 
         // Safely try to find the milestone progress bar
@@ -256,7 +280,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 String resourceName = getResources().getResourceEntryName(id);
                 Log.d("MainActivity", "View with id " + id + " (" + resourceName + ") not found");
-            } catch (Exception e2) {  // Renamed from e to e2 to fix redefinition error
+            } catch (Exception e2) {
                 Log.d("MainActivity", "View with id " + id + " not found, and resource name could not be retrieved");
             }
             return null;
@@ -308,22 +332,6 @@ public class MainActivity extends AppCompatActivity {
         setupCardViewClickListener(inspirationCardView, InspirationActivity.class, "Inspirational Quotes");
         setupCardViewClickListener(communityCardView, CommunitySupportActivity.class, "Community Support");
         setupCardViewClickListener(progressReportCardView, ProgressReportActivity.class, "Progress Report");
-
-        settingsButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
-                if (intent.resolveActivity(getPackageManager()) != null) {
-                    startActivity(intent);
-                } else {
-                    // Log error and show user-friendly message
-                    Log.e("MainActivity", "SettingsActivity is missing or misconfigured");
-                    Toast.makeText(MainActivity.this,
-                            "Settings feature is currently unavailable. Please try again later.",
-                            Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
 
         resetDateButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -511,24 +519,31 @@ public class MainActivity extends AppCompatActivity {
 
         achievementManager.checkFinancialAchievements(moneySaved);
     }
-
+    
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
-
-        if (id == R.id.action_about) {
+        
+        if (id == R.id.nav_settings) {
+            // Open Settings activity
+            Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+            startActivity(intent);
+        } else if (id == R.id.nav_about) {
             // Open About activity
             Intent intent = new Intent(MainActivity.this, AboutActivity.class);
             startActivity(intent);
-            return true;
         }
-
-        return super.onOptionsItemSelected(item);
+        
+        drawerLayout.closeDrawer(GravityCompat.START);
+        return true;
+    }
+    
+    @Override
+    public void onBackPressed() {
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
     }
 }

@@ -6,4 +6,5 @@
     <attr name="colorOnSurface" format="color" />
     <attr name="colorTextLight" format="color" />
     <attr name="colorSurface" format="color" />
+    <attr name="colorText" format="color" />
 </resources>

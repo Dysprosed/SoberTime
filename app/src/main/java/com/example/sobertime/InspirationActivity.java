@@ -8,12 +8,13 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import main.java.com.example.sobertime.BaseActivity;
 
 import com.google.android.material.tabs.TabLayout;
 
 import java.util.List;
 
-public class InspirationActivity extends AppCompatActivity implements QuoteAdapter.OnQuoteInteractionListener {
+public class InspirationActivity extends BaseActivity implements QuoteAdapter.OnQuoteInteractionListener {
     
     private TabLayout tabLayout;
     private RecyclerView recyclerView;
@@ -29,7 +30,6 @@ public class InspirationActivity extends AppCompatActivity implements QuoteAdapt
         
         // Set up action bar
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setTitle("Inspirational Quotes");
         }
         
@@ -150,12 +150,4 @@ public class InspirationActivity extends AppCompatActivity implements QuoteAdapt
         // or allow sharing the quote
     }
     
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            onBackPressed();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
 }

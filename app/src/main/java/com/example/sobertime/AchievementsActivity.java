@@ -8,12 +8,13 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import main.java.com.example.sobertime.BaseActivity;
 
 import com.google.android.material.tabs.TabLayout;
 
 import java.util.List;
 
-public class AchievementsActivity extends AppCompatActivity {
+public class AchievementsActivity extends BaseActivity {
 
     private TabLayout tabLayout;
     private RecyclerView recyclerView;
@@ -29,7 +30,6 @@ public class AchievementsActivity extends AppCompatActivity {
 
         // Set up action bar
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setTitle("Achievements");
         }
 
@@ -123,12 +123,4 @@ public class AchievementsActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            onBackPressed();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
 }

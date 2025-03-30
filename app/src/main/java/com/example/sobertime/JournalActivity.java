@@ -16,12 +16,13 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import main.java.com.example.sobertime.BaseActivity;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.List;
 
-public class JournalActivity extends AppCompatActivity implements JournalAdapter.OnEntryClickListener {
+public class JournalActivity extends BaseActivity implements JournalAdapter.OnEntryClickListener {
 
     private static final int REQUEST_ADD_ENTRY = 1001;
     private static final int REQUEST_EDIT_ENTRY = 1002;
@@ -42,8 +43,7 @@ public class JournalActivity extends AppCompatActivity implements JournalAdapter
         
         // Set up action bar
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle("Your Journal");
+            getSupportActionBar().setTitle("Journal");
         }
         
         // Initialize database helper

@@ -16,8 +16,9 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+import main.java.com.example.sobertime.BaseActivity;
 
-public class EmergencyHelpActivity extends AppCompatActivity {
+public class EmergencyHelpActivity extends BaseActivity {
 
     private static final String PREFS_NAME = "EmergencyContactPrefs";
     private static final String SPONSOR_NAME_KEY = "sponsor_name";
@@ -58,7 +59,6 @@ public class EmergencyHelpActivity extends AppCompatActivity {
         
         // Set up action bar
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setTitle("Emergency Help");
         }
         
@@ -348,12 +348,4 @@ public class EmergencyHelpActivity extends AppCompatActivity {
                 .show();
     }
     
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            onBackPressed();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
 }

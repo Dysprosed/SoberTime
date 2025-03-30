@@ -9,8 +9,9 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import main.java.com.example.sobertime.BaseActivity;
 
-public class AboutActivity extends AppCompatActivity {
+public class AboutActivity extends BaseActivity {
 
     private TextView versionTextView;
     private TextView buildDateTextView;
@@ -30,7 +31,6 @@ public class AboutActivity extends AppCompatActivity {
         
         // Set up action bar
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setTitle("About New Dawn");
         }
         
@@ -91,12 +91,4 @@ public class AboutActivity extends AppCompatActivity {
         dialogFragment.show(getSupportFragmentManager(), "license_dialog");
     }
     
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            onBackPressed();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
 }

@@ -21,6 +21,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.cardview.widget.CardView;
+import main.java.com.example.sobertime.BaseActivity;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,7 +30,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
-public class SettingsActivity extends AppCompatActivity {
+public class SettingsActivity extends BaseActivity {
 
     private Switch masterNotificationSwitch;
     private Switch morningNotificationSwitch;
@@ -72,7 +73,6 @@ public class SettingsActivity extends AppCompatActivity {
         // Set up action bar with back button
         try {
             if (getSupportActionBar() != null) {
-                getSupportActionBar().setDisplayHomeAsUpEnabled(true);
                 getSupportActionBar().setTitle("Settings");
             }
         } catch (Exception e) {
@@ -546,12 +546,4 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            onBackPressed();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
 }

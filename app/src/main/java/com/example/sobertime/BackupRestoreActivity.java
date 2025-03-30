@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import main.java.com.example.sobertime.BaseActivity;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -33,7 +34,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class BackupRestoreActivity extends AppCompatActivity {
+public class BackupRestoreActivity extends BaseActivity {
 
     private Button backupButton;
     private Button restoreButton;
@@ -53,7 +54,6 @@ public class BackupRestoreActivity extends AppCompatActivity {
         
         // Set up action bar
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setTitle("Backup & Restore");
         }
         
@@ -404,12 +404,4 @@ public class BackupRestoreActivity extends AppCompatActivity {
         }
     }
     
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            onBackPressed();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
 }

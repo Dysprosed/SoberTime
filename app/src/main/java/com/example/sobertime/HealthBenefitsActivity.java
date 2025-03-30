@@ -5,11 +5,12 @@ import android.view.MenuItem;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+import main.java.com.example.sobertime.BaseActivity;
 
 import java.text.NumberFormat;
 import java.util.Locale;
 
-public class HealthBenefitsActivity extends AppCompatActivity {
+public class HealthBenefitsActivity extends BaseActivity {
 
     private TextView physicalBenefitsTextView;
     private TextView mentalBenefitsTextView;
@@ -26,14 +27,9 @@ public class HealthBenefitsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_health_benefits);
 
-        // Set up action bar with back button
-        try {
-            if (getSupportActionBar() != null) {
-                getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-                getSupportActionBar().setTitle("Your Health Benefits");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        // Set the title for the action bar
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle("Your Health Benefits");
         }
 
         // Get days sober from intent
@@ -41,6 +37,11 @@ public class HealthBenefitsActivity extends AppCompatActivity {
 
         // Initialize database helper
         databaseHelper = DatabaseHelper.getInstance(this);
+        if (databaseHelper == null) {
+            showToast("Database error. Please restart the app.");
+            Log.e("HealthBenefitsActivity", "DatabaseHelper instance is null.");
+            return;
+        }
 
         // Initialize views
         initializeViews();
@@ -56,6 +57,11 @@ public class HealthBenefitsActivity extends AppCompatActivity {
         physicalCard = findViewById(R.id.physicalCard);
         mentalCard = findViewById(R.id.mentalCard);
         financialCard = findViewById(R.id.financialCard);
+
+        if (physicalBenefitsTextView == null || mentalBenefitsTextView == null || financialBenefitsTextView == null) {
+            showToast("Error initializing views: Some views are missing.");
+            Log.e("HealthBenefitsActivity", "View initialization failed.");
+        }
     }
 
     private void calculateBenefits() {
@@ -233,12 +239,4 @@ public class HealthBenefitsActivity extends AppCompatActivity {
         financialBenefitsTextView.setText(financialBenefits.toString());
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            onBackPressed();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
 }

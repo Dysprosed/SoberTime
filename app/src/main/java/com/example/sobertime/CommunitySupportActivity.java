@@ -11,11 +11,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import main.java.com.example.sobertime.BaseActivity;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class CommunitySupportActivity extends AppCompatActivity {
+public class CommunitySupportActivity extends BaseActivity {
 
     private static final String PREFS_NAME = "CommunitySupportPrefs";
     private static final String CUSTOM_RESOURCES_KEY = "custom_resources";
@@ -37,7 +38,6 @@ public class CommunitySupportActivity extends AppCompatActivity {
         
         // Set up action bar
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setTitle("Community Support");
         }
         
@@ -199,12 +199,4 @@ public class CommunitySupportActivity extends AppCompatActivity {
         }
     }
     
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            onBackPressed();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
 }

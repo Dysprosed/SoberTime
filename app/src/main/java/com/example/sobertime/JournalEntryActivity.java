@@ -18,11 +18,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.Arrays;
 
-public class JournalEntryActivity extends AppCompatActivity {
+public class JournalEntryActivity extends BaseActivity {
 
     private EditText titleEditText;
     private EditText contentEditText;
@@ -42,11 +41,6 @@ public class JournalEntryActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_journal_entry);
-        
-        // Set up action bar
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        }
         
         // Initialize database helper
         databaseHelper = DatabaseHelper.getInstance(this);
@@ -287,22 +281,26 @@ public class JournalEntryActivity extends AppCompatActivity {
     
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        int id = item.getItemId();
-        
-        if (id == android.R.id.home) {
-            // Prompt to save if there are changes
-            if (hasUnsavedChanges()) {
-                showUnsavedChangesDialog();
-            } else {
-                finish();
-            }
-            return true;
-        } else if (id == R.id.action_delete_entry) {
+        if (item.getItemId() == R.id.action_delete_entry) {
             showDeleteConfirmationDialog();
             return true;
         }
         
+        // For other menu items (including home/up button), let BaseActivity handle it
         return super.onOptionsItemSelected(item);
+    }
+    
+    /**
+     * Override BaseActivity's method for handling back navigation
+     */
+    @Override
+    protected boolean handleSpecificBackNavigation() {
+        // Prompt to save if there are changes
+        if (hasUnsavedChanges()) {
+            showUnsavedChangesDialog();
+            return true; // We're handling the navigation
+        }
+        return false; // Use default behavior (finish the activity)
     }
     
     @Override

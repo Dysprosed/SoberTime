@@ -22,6 +22,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.FileProvider;
+import main.java.com.example.sobertime.BaseActivity;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -34,7 +35,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
-public class ProgressReportActivity extends AppCompatActivity {
+public class ProgressReportActivity extends BaseActivity {
 
     private static final String PREFS_NAME = "SobrietyTrackerPrefs";
     private static final String START_DATE_KEY = "sobriety_start_date";
@@ -65,7 +66,6 @@ public class ProgressReportActivity extends AppCompatActivity {
         
         // Set up action bar
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setTitle("Progress Report");
         }
         

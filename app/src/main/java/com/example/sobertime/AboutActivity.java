@@ -20,8 +20,8 @@ public class AboutActivity extends AppCompatActivity {
     
     private static final String APP_VERSION = "1.0.0";
     private static final String BUILD_DATE = "March 28, 2025";
-    private static final String GITHUB_URL = "https://github.com/yourusername/newdawn";
-    private static final String DONATE_URL = "https://buymeacoffee.com/yourusername";
+    private static final String GITHUB_URL = "https://github.com/Dysprosed/SoberTime";
+    private static final String DONATE_URL = "https://www.buymeacoffee.com/Dysprosed";
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {

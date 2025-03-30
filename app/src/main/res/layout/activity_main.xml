@@ -529,20 +529,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <!-- Settings Button - Option to keep or remove -->
-        <!-- If you decide to move settings to drawer menu only, you can remove this -->
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/settingsButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:contentDescription="Settings"
-            app:backgroundTint="@color/colorPrimary"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/toolbar"
-            app:srcCompat="@drawable/ic_settings"
-            app:tint="@android:color/white" />
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- Navigation drawer -->

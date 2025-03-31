@@ -16,7 +16,6 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
-import main.java.com.example.sobertime.BaseActivity;
 
 public class EmergencyHelpActivity extends BaseActivity {
 

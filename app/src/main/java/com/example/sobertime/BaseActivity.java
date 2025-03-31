@@ -21,7 +21,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         // Set up the back button in the action bar for all activities except MainActivity
-        if (!(this instanceof MainActivity) && getSupportActionBar() != null) {
+        if (!getClass().getSimpleName().equals("MainActivity") && getSupportActionBar() != null) {
             try {
                 getSupportActionBar().setDisplayHomeAsUpEnabled(true);
                 getSupportActionBar().setDisplayShowHomeEnabled(true);
@@ -31,6 +31,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         } else if (getSupportActionBar() == null) {
             Log.w(TAG, "SupportActionBar is null");
         }
+
     }
 
     @Override

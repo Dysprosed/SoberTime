@@ -8,7 +8,6 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import main.java.com.example.sobertime.BaseActivity;
 
 import com.google.android.material.tabs.TabLayout;
 

@@ -21,7 +21,6 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.cardview.widget.CardView;
-import main.java.com.example.sobertime.BaseActivity;
 
 import java.util.ArrayList;
 import java.util.Arrays;

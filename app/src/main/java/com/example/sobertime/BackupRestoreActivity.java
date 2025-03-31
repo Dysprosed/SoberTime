@@ -17,7 +17,6 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import main.java.com.example.sobertime.BaseActivity;
 
 import org.json.JSONArray;
 import org.json.JSONException;

@@ -76,6 +76,15 @@
             android:background="@drawable/button_rounded"
             android:layout_marginBottom="16dp" />
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="If you found this app helpful, consider supporting its development."
+            android:textColor="@color/colorText"
+            android:textSize="16sp"
+            android:gravity="left"
+            android:layout_marginBottom="24dp" />
+
         <Button
             android:id="@+id/donateButton"
             android:layout_width="match_parent"

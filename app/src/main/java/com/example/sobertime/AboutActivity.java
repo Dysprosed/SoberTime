@@ -10,13 +10,11 @@ import android.widget.TextView;
 public class AboutActivity extends BaseActivity {
 
     private TextView versionTextView;
-    private TextView buildDateTextView;
     private Button githubButton;
     private Button donateButton;
     private Button licenseButton;
     
     private static final String APP_VERSION = "1.0.0";
-    private static final String BUILD_DATE = "March 28, 2025";
     private static final String GITHUB_URL = "https://github.com/Dysprosed/SoberTime";
     private static final String DONATE_URL = "https://www.buymeacoffee.com/Dysprosed";
     
@@ -42,7 +40,6 @@ public class AboutActivity extends BaseActivity {
     
     private void initializeViews() {
         versionTextView = findViewById(R.id.versionTextView);
-        buildDateTextView = findViewById(R.id.buildDateTextView);
         githubButton = findViewById(R.id.githubButton);
         donateButton = findViewById(R.id.donateButton);
         licenseButton = findViewById(R.id.licenseButton);
@@ -50,7 +47,6 @@ public class AboutActivity extends BaseActivity {
     
     private void setupAppInfo() {
         versionTextView.setText("Version: " + APP_VERSION);
-        buildDateTextView.setText("Built on: " + BUILD_DATE);
     }
     
     private void setupButtonListeners() {

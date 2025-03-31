@@ -30,14 +30,25 @@ public class CommunitySupportActivity extends BaseActivity {
     private SupportResourceAdapter adapter;
     private List<SupportResource> resources;
     
+    // Flag to track if this activity was launched from the welcome screen
+    private boolean isFromWelcomeScreen = false;
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_community_support);
         
+        // Check if coming from welcome screen
+        isFromWelcomeScreen = getIntent().getBooleanExtra("from_welcome_screen", false);
+        
         // Set up action bar
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle("Community Support");
+            
+            // Only show back button if not coming from welcome screen
+            if (!isFromWelcomeScreen) {
+                getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            }
         }
         
         // Initialize views
@@ -198,4 +209,24 @@ public class CommunitySupportActivity extends BaseActivity {
         }
     }
     
+    @Override
+    public void onBackPressed() {
+        if (isFromWelcomeScreen) {
+            // Go to MainActivity instead of closing the app
+            Intent intent = new Intent(this, MainActivity.class);
+            startActivity(intent);
+            finish();
+        } else {
+            super.onBackPressed();
+        }
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 }

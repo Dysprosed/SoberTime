@@ -371,10 +371,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void showDatePickerDialog() {
-        // Create Calendar instance from sobriety start date
+        // Create Calendar instance from sobriety start date or today's date
         Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(sobrietyStartDate);
-
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        int userStatus = prefs.getInt("current_status", 0);
+        
+        if (userStatus != 2) { // If not in "seeking" status
+            calendar.setTimeInMillis(sobrietyStartDate);
+        }
+    
         // Create DatePickerDialog
         DatePickerDialog datePickerDialog = new DatePickerDialog(
                 this,
@@ -383,19 +388,28 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
                         Calendar selectedDate = Calendar.getInstance();
                         selectedDate.set(year, month, dayOfMonth);
-
+    
                         // Save the new date
                         sobrietyStartDate = selectedDate.getTimeInMillis();
                         SharedPreferences.Editor editor = preferences.edit();
                         editor.putLong(START_DATE_KEY, sobrietyStartDate);
+                        
+                        // Update user status to "sober" (1) if they were previously "seeking" (2)
+                        if (userStatus == 2) {
+                            editor.putInt("current_status", 1); // Set to sober status
+                            Toast.makeText(MainActivity.this, 
+                                    "Congratulations on starting your sobriety journey!", 
+                                    Toast.LENGTH_LONG).show();
+                        }
+                        
                         editor.apply();
-
+    
                         // Update UI
                         updateSobrietyInfo();
-
+    
                         // Check achievements for new day count
                         updateAchievements();
-
+    
                         // Reschedule notifications based on new date
                         NotificationHelper.rescheduleNotifications(MainActivity.this, sobrietyStartDate);
                     }
@@ -404,26 +418,52 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 calendar.get(Calendar.MONTH),
                 calendar.get(Calendar.DAY_OF_MONTH)
         );
-
+    
         // Set max date to today
         datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis());
         datePickerDialog.show();
     }
 
     private void updateSobrietyInfo() {
-        int daysSober = getDaysSober();
-
-        // Update day count
-        dayCountTextView.setText(String.valueOf(daysSober));
-
-        // Update sober since text
-        soberSinceTextView.setText("Sober since: " + dateFormat.format(new Date(sobrietyStartDate)));
-
-        // Update next milestone info
-        updateNextMilestone(daysSober);
-
-        // Update motivation message
-        updateMotivationMessage(daysSober);
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        int userStatus = prefs.getInt("current_status", 0); // 0 = unknown, 1 = sober, 2 = seeking
+        
+        if (userStatus == 2) { // User is seeking support, not yet sober
+            // Show special UI for users who haven't started sobriety yet
+            dayCountTextView.setText("--");
+            soberSinceTextView.setText("Ready to begin your journey?");
+            nextMilestoneTextView.setText("Your first milestone awaits! Set your sobriety date to begin tracking.");
+            
+            // Set progress bar to 0 if it exists
+            if (milestoneProgressBar != null) {
+                milestoneProgressBar.setProgress(0);
+            }
+            
+            // Change the button text to reflect starting vs. changing date
+            resetDateButton.setText("SET SOBRIETY DATE");
+            
+            // Update motivation message for those still considering sobriety
+            motivationTextView.setText("The journey of a thousand miles begins with a single step.");
+            
+        } else {
+            // Regular sobriety tracking
+            int daysSober = getDaysSober();
+    
+            // Update day count
+            dayCountTextView.setText(String.valueOf(daysSober));
+    
+            // Update sober since text
+            soberSinceTextView.setText("Sober since: " + dateFormat.format(new Date(sobrietyStartDate)));
+    
+            // Update next milestone info
+            updateNextMilestone(daysSober);
+    
+            // Update motivation message
+            updateMotivationMessage(daysSober);
+            
+            // Ensure button has the right text
+            resetDateButton.setText("CHANGE START DATE");
+        }
     }
 
     private int getDaysSober() {

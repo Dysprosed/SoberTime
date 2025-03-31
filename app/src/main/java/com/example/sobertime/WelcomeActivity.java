@@ -57,11 +57,11 @@ public class WelcomeActivity extends AppCompatActivity {
     }
     
     private void setupClickListeners() {
-        // Yes button - show date picker
+        // Yes button - show sobriety date dialog then date picker
         yesSoberCardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showDatePickerDialog();
+                showSobrietyDatePrompt();
             }
         });
         
@@ -154,8 +154,23 @@ public class WelcomeActivity extends AppCompatActivity {
     
     private void goToCommunitySupport() {
         Intent intent = new Intent(WelcomeActivity.this, CommunitySupportActivity.class);
+        intent.putExtra("from_welcome_screen", true);
         startActivity(intent);
         finish();
+    }
+    
+    private void showSobrietyDatePrompt() {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Select Your Sobriety Date")
+            .setMessage("Please select the date when you began your sobriety journey. This will help us track your progress and milestones.")
+            .setPositiveButton("Select Date", new android.content.DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(android.content.DialogInterface dialog, int which) {
+                    showDatePickerDialog();
+                }
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
     }
     
     private void navigateBasedOnStatus() {

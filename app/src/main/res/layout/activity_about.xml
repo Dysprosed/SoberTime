@@ -44,10 +44,19 @@
             android:id="@+id/buildDateTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Built on: March 28, 2025"
+            android:text="Developed by: Brandon Shaw"
             android:textColor="@color/colorText"
             android:textSize="16sp"
             android:layout_marginBottom="24dp" />
+
+        <TextView
+            android:id="@+id/buildDateTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Copyright © 2025 Brandon Shaw"
+            android:textColor="@color/colorText"
+            android:textSize="16sp"
+            android:layout_marginBottom="24dp" />    
 
         <TextView
             android:layout_width="match_parent"
@@ -55,7 +64,7 @@
             android:text="New Dawn is an open-source sobriety tracking app designed to help you in your journey to recovery. It provides tools to track progress, celebrate milestones, and access support when needed."
             android:textColor="@color/colorText"
             android:textSize="16sp"
-            android:gravity="center"
+            android:gravity="left"
             android:layout_marginBottom="16dp" />
 
         <TextView
@@ -64,7 +73,7 @@
             android:text="This app was developed using AI assistance from Claude (Anthropic) and is provided as open-source software for the recovery community."
             android:textColor="@color/colorText"
             android:textSize="16sp"
-            android:gravity="center"
+            android:gravity="left"
             android:layout_marginBottom="24dp" />
 
         <Button

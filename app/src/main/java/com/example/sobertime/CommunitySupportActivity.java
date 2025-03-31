@@ -6,8 +6,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -17,7 +17,7 @@ import java.util.List;
 
 public class CommunitySupportActivity extends BaseActivity {
 
-    private static final String PREFS_NAME = "CommunitySupportPrefs";
+    private static final String CUSTOM_RESOURCES_PREFS = "CommunitySupportPrefs";
     private static final String CUSTOM_RESOURCES_KEY = "custom_resources";
     
     private RecyclerView supportResourcesRecyclerView;
@@ -32,6 +32,8 @@ public class CommunitySupportActivity extends BaseActivity {
     
     // Flag to track if this activity was launched from the welcome screen
     private boolean isFromWelcomeScreen = false;
+    private boolean isTempSeekingStatus = false;
+    private static final String PREFS_NAME = "SobrietyTrackerPrefs"; // Main app preferences
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,15 +42,12 @@ public class CommunitySupportActivity extends BaseActivity {
         
         // Check if coming from welcome screen
         isFromWelcomeScreen = getIntent().getBooleanExtra("from_welcome_screen", false);
+        isTempSeekingStatus = getIntent().getBooleanExtra("temp_seeking_status", false);
         
         // Set up action bar
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle("Community Support");
-            
-            // Only show back button if not coming from welcome screen
-            if (!isFromWelcomeScreen) {
-                getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            }
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
         
         // Initialize views
@@ -59,6 +58,20 @@ public class CommunitySupportActivity extends BaseActivity {
         
         // Set up click listeners
         setupClickListeners();
+        
+        // Add a special banner for users coming from welcome screen
+        if (isFromWelcomeScreen && isTempSeekingStatus) {
+            showWelcomeBanner();
+        }
+    }
+    
+    private void showWelcomeBanner() {
+        // You could create and show a banner view here explaining that they can
+        // browse resources and then decide to begin tracking sobriety
+        // For this implementation, we'll just show a toast message
+        Toast.makeText(this, 
+            "Browse these resources to help with your journey. Press back to return to welcome screen.", 
+            Toast.LENGTH_LONG).show();
     }
     
     private void initializeViews() {
@@ -106,7 +119,7 @@ public class CommunitySupportActivity extends BaseActivity {
         ));
         
         // Load custom resources
-        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences(CUSTOM_RESOURCES_PREFS, MODE_PRIVATE);
         String customResourcesJson = prefs.getString(CUSTOM_RESOURCES_KEY, "");
         
         if (!customResourcesJson.isEmpty()) {
@@ -200,7 +213,7 @@ public class CommunitySupportActivity extends BaseActivity {
             String json = SupportResource.toJson(customResources);
             
             // Save to preferences
-            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+            SharedPreferences prefs = getSharedPreferences(CUSTOM_RESOURCES_PREFS, MODE_PRIVATE);
             SharedPreferences.Editor editor = prefs.edit();
             editor.putString(CUSTOM_RESOURCES_KEY, json);
             editor.apply();
@@ -210,9 +223,34 @@ public class CommunitySupportActivity extends BaseActivity {
     }
     
     @Override
+    public boolean onCreateOptionsMenu(android.view.Menu menu) {
+        if (isFromWelcomeScreen && isTempSeekingStatus) {
+            menu.add(0, 999, 0, "Start My Journey")
+                .setShowAsAction(android.view.MenuItem.SHOW_AS_ACTION_ALWAYS);
+        }
+        return true;
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
+            return true;
+        } else if (item.getItemId() == 999) { // Our custom "Start Journey" item
+            saveSeekingStatusAndGoToMain();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+    
+    @Override
     public void onBackPressed() {
-        if (isFromWelcomeScreen) {
-            // Go to MainActivity instead of closing the app
+        if (isFromWelcomeScreen && isTempSeekingStatus) {
+            // Go back to welcome screen without saving status
+            finish();
+        } else if (isFromWelcomeScreen) {
+            // This means they explicitly chose to stay and save status
+            // Go to MainActivity instead of finishing
             Intent intent = new Intent(this, MainActivity.class);
             startActivity(intent);
             finish();
@@ -221,12 +259,20 @@ public class CommunitySupportActivity extends BaseActivity {
         }
     }
     
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            onBackPressed();
-            return true;
+    // Called when user explicitly confirms seeking status
+    private void saveSeekingStatusAndGoToMain() {
+        if (isTempSeekingStatus) {
+            // Save status to main app preferences
+            SharedPreferences mainPrefs = getSharedPreferences("SobrietyTrackerPrefs", MODE_PRIVATE);
+            SharedPreferences.Editor editor = mainPrefs.edit();
+            editor.putInt("current_status", 2); // 2 = STATUS_SEEKING
+            editor.putBoolean("onboarding_complete", true);
+            editor.apply();
+            
+            // Go to main activity
+            Intent intent = new Intent(this, MainActivity.class);
+            startActivity(intent);
+            finish();
         }
-        return super.onOptionsItemSelected(item);
     }
 }

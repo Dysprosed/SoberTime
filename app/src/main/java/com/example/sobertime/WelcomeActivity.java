@@ -69,7 +69,7 @@ public class WelcomeActivity extends AppCompatActivity {
         notSoberCardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                saveUserStatus(STATUS_SEEKING);
+                // Important: Don't save status yet - we'll only save it if they decide to stay
                 showSupportMessage();
             }
         });
@@ -82,6 +82,20 @@ public class WelcomeActivity extends AppCompatActivity {
                 goToMainActivity();
             }
         });
+    }
+    
+    private void showSobrietyDatePrompt() {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Select Your Sobriety Date")
+            .setMessage("Please select the date when you began your sobriety journey. This will help us track your progress and milestones.")
+            .setPositiveButton("Select Date", new android.content.DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(android.content.DialogInterface dialog, int which) {
+                    showDatePickerDialog();
+                }
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
     }
     
     private void showDatePickerDialog() {
@@ -155,22 +169,9 @@ public class WelcomeActivity extends AppCompatActivity {
     private void goToCommunitySupport() {
         Intent intent = new Intent(WelcomeActivity.this, CommunitySupportActivity.class);
         intent.putExtra("from_welcome_screen", true);
+        intent.putExtra("temp_seeking_status", true); // Flag to indicate temporary status
         startActivity(intent);
-        finish();
-    }
-    
-    private void showSobrietyDatePrompt() {
-        new androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("Select Your Sobriety Date")
-            .setMessage("Please select the date when you began your sobriety journey. This will help us track your progress and milestones.")
-            .setPositiveButton("Select Date", new android.content.DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(android.content.DialogInterface dialog, int which) {
-                    showDatePickerDialog();
-                }
-            })
-            .setNegativeButton("Cancel", null)
-            .show();
+        // Don't finish this activity yet - we want to come back here if user presses back
     }
     
     private void navigateBasedOnStatus() {
@@ -179,7 +180,7 @@ public class WelcomeActivity extends AppCompatActivity {
         
         switch (status) {
             case STATUS_SEEKING:
-                goToCommunitySupport();
+                goToMainActivity(); // Changed from goToCommunitySupport() to avoid getting stuck
                 break;
             case STATUS_SOBER:
             case STATUS_UNKNOWN:

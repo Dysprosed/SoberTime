@@ -44,15 +44,6 @@
             android:id="@+id/buildDateTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Developed by: Brandon Shaw"
-            android:textColor="@color/colorText"
-            android:textSize="16sp"
-            android:layout_marginBottom="24dp" />
-
-        <TextView
-            android:id="@+id/buildDateTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
             android:text="Copyright © 2025 Brandon Shaw"
             android:textColor="@color/colorText"
             android:textSize="16sp"

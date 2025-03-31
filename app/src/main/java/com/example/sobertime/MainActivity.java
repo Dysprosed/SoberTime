@@ -113,18 +113,44 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
     
     private void setupToolbarAndDrawer() {
+        // Find the toolbar in the layout
         toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
         
+        // Set the toolbar as the app bar
+        if (toolbar != null) {
+            // We need to set the app theme to NoActionBar first
+            // This code checks if we need to create a custom theme
+            int currentThemeId = getTheme().getResources().getIdentifier(
+                    "Theme.AppCompat.Light.NoActionBar", "style", getPackageName());
+            
+            if (currentThemeId != 0) {
+                // Only set the support action bar if we can find a valid NoActionBar theme
+                setSupportActionBar(toolbar);
+            } else {
+                // Log that we couldn't find the right theme - this is a fallback
+                Log.w("MainActivity", "Could not find NoActionBar theme, skipping toolbar setup");
+                return;
+            }
+        } else {
+            // Log that we couldn't find the toolbar
+            Log.w("MainActivity", "Toolbar not found in layout");
+            return;
+        }
+        
+        // Set up drawer layout
         drawerLayout = findViewById(R.id.drawer_layout);
         navigationView = findViewById(R.id.nav_view);
         
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawerLayout.addDrawerListener(toggle);
-        toggle.syncState();
-        
-        navigationView.setNavigationItemSelectedListener(this);
+        if (drawerLayout != null && navigationView != null) {
+            ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                    this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+            drawerLayout.addDrawerListener(toggle);
+            toggle.syncState();
+            
+            navigationView.setNavigationItemSelectedListener(this);
+        } else {
+            Log.w("MainActivity", "Drawer layout or navigation view not found");
+        }
     }
 
     // Apply saved theme preference

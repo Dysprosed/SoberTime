@@ -1,0 +1,176 @@
+package com.example.sobertime;
+
+import android.app.DatePickerDialog;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.DatePicker;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
+
+import java.util.Calendar;
+
+public class WelcomeActivity extends AppCompatActivity {
+
+    private CardView yesSoberCardView;
+    private CardView notSoberCardView;
+    private TextView skipTextView;
+
+    private static final String PREFS_NAME = "SobrietyTrackerPrefs";
+    private static final String ONBOARDING_COMPLETE_KEY = "onboarding_complete";
+    private static final String START_DATE_KEY = "sobriety_start_date";
+    private static final String CURRENT_STATUS_KEY = "current_status";
+    
+    // Status values
+    private static final int STATUS_SOBER = 1;
+    private static final int STATUS_SEEKING = 2;
+    private static final int STATUS_UNKNOWN = 0;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        
+        // Check if onboarding is complete
+        SharedPreferences preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        boolean onboardingComplete = preferences.getBoolean(ONBOARDING_COMPLETE_KEY, false);
+        
+        if (onboardingComplete) {
+            // Skip to appropriate screen based on saved status
+            navigateBasedOnStatus();
+            finish();
+            return;
+        }
+        
+        setContentView(R.layout.activity_welcome);
+        
+        // Initialize views
+        yesSoberCardView = findViewById(R.id.yesSoberCardView);
+        notSoberCardView = findViewById(R.id.notSoberCardView);
+        skipTextView = findViewById(R.id.skipTextView);
+        
+        // Set up click listeners
+        setupClickListeners();
+    }
+    
+    private void setupClickListeners() {
+        // Yes button - show date picker
+        yesSoberCardView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showDatePickerDialog();
+            }
+        });
+        
+        // No button - show support message and go to community support
+        notSoberCardView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                saveUserStatus(STATUS_SEEKING);
+                showSupportMessage();
+            }
+        });
+        
+        // Skip button - go to main activity without saving status
+        skipTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                saveUserStatus(STATUS_UNKNOWN);
+                goToMainActivity();
+            }
+        });
+    }
+    
+    private void showDatePickerDialog() {
+        // Get current date
+        Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+        
+        // Create DatePickerDialog
+        DatePickerDialog datePickerDialog = new DatePickerDialog(
+                this,
+                new DatePickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+                        // Create calendar with selected date
+                        Calendar selectedDate = Calendar.getInstance();
+                        selectedDate.set(year, month, dayOfMonth);
+                        
+                        // Save the date and status
+                        saveSobrietyStartDate(selectedDate.getTimeInMillis());
+                        saveUserStatus(STATUS_SOBER);
+                        
+                        // Show congratulation message
+                        showCongratulationsMessage();
+                    }
+                },
+                year, month, day
+        );
+        
+        // Set max date to today
+        datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis());
+        datePickerDialog.show();
+    }
+    
+    private void saveSobrietyStartDate(long startDate) {
+        SharedPreferences preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putLong(START_DATE_KEY, startDate);
+        editor.apply();
+    }
+    
+    private void saveUserStatus(int status) {
+        SharedPreferences preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putInt(CURRENT_STATUS_KEY, status);
+        editor.putBoolean(ONBOARDING_COMPLETE_KEY, true);
+        editor.apply();
+    }
+    
+    private void showCongratulationsMessage() {
+        Toast.makeText(this, 
+                "Congratulations on your sobriety journey! We're here to support you.", 
+                Toast.LENGTH_LONG).show();
+        goToMainActivity();
+    }
+    
+    private void showSupportMessage() {
+        Toast.makeText(this, 
+                "Taking the first step is the hardest part. We're here to help you on your journey.", 
+                Toast.LENGTH_LONG).show();
+        goToCommunitySupport();
+    }
+    
+    private void goToMainActivity() {
+        Intent intent = new Intent(WelcomeActivity.this, MainActivity.class);
+        startActivity(intent);
+        finish();
+    }
+    
+    private void goToCommunitySupport() {
+        Intent intent = new Intent(WelcomeActivity.this, CommunitySupportActivity.class);
+        startActivity(intent);
+        finish();
+    }
+    
+    private void navigateBasedOnStatus() {
+        SharedPreferences preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        int status = preferences.getInt(CURRENT_STATUS_KEY, STATUS_UNKNOWN);
+        
+        switch (status) {
+            case STATUS_SEEKING:
+                goToCommunitySupport();
+                break;
+            case STATUS_SOBER:
+            case STATUS_UNKNOWN:
+            default:
+                goToMainActivity();
+                break;
+        }
+    }
+}

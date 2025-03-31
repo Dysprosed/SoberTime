@@ -12,16 +12,22 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AppCompat.Light.DarkActionBar.NewDawn">
+        android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
 
+        <!-- Welcome Activity is now the launcher activity -->
         <activity
-            android:name=".MainActivity"
+            android:name=".WelcomeActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- MainActivity is now a regular activity -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
 
         <activity
             android:name=".HealthBenefitsActivity"

@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorBackground"
-    android:fillViewport="true"
     tools:context=".ProgressReportActivity">
 
     <LinearLayout
@@ -15,34 +14,31 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <!-- Report Header -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center"
             android:text="Progress Report"
             android:textColor="@color/colorPrimary"
             android:textSize="24sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:layout_marginBottom="8dp" />
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/dateRangeTextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Feb 25, 2025 - Mar 25, 2025"
-            android:textColor="@color/colorText"
-            android:textSize="16sp"
             android:gravity="center"
-            android:layout_marginBottom="24dp" />
+            android:text="May 1, 2024 - July 30, 2024"
+            android:textColor="@color/colorTextLight"
+            android:textSize="16sp"
+            android:layout_marginBottom="16dp" />
 
         <!-- Summary Card -->
         <androidx.cardview.widget.CardView
+            style="@style/AppCard"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="4dp"
-            app:cardBackgroundColor="@color/colorSurface">
+            android:layout_height="wrap_content">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -51,202 +47,421 @@
                 android:padding="16dp">
 
                 <TextView
+                    style="@style/CardTitleText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Summary"
-                    android:textColor="@color/colorPrimary"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="12dp" />
+                    android:textColor="@color/colorPrimary" />
 
-                <!-- Days Sober -->
-                <LinearLayout
+                <GridLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="12dp">
+                    android:columnCount="2"
+                    android:rowCount="4"
+                    android:layout_marginTop="8dp">
 
+                    <!-- Days Sober -->
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Total Days Sober:"
-                        android:textColor="@color/colorText"
+                        android:layout_columnWeight="1"
+                        android:text="Days Sober:"
+                        android:textColor="@color/colorTextDark"
                         android:textSize="16sp" />
 
                     <TextView
                         android:id="@+id/totalDaysTextView"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="30"
-                        android:textColor="@color/colorPhysical"
-                        android:textSize="18sp"
+                        android:layout_columnWeight="1"
+                        android:text="180"
+                        android:textColor="@color/colorPrimary"
+                        android:textSize="16sp"
                         android:textStyle="bold" />
-                </LinearLayout>
 
-                <!-- Money Saved -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="12dp">
-
+                    <!-- Money Saved -->
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
+                        android:layout_columnWeight="1"
                         android:text="Money Saved:"
-                        android:textColor="@color/colorText"
+                        android:textColor="@color/colorTextDark"
                         android:textSize="16sp" />
 
                     <TextView
                         android:id="@+id/moneySavedTextView"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="$382.50"
+                        android:layout_columnWeight="1"
+                        android:text="$2,700"
                         android:textColor="@color/colorFinancial"
-                        android:textSize="18sp"
+                        android:textSize="16sp"
                         android:textStyle="bold" />
-                </LinearLayout>
 
-                <!-- Calories Saved -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="12dp">
-
+                    <!-- Calories Saved -->
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
+                        android:layout_columnWeight="1"
                         android:text="Calories Saved:"
-                        android:textColor="@color/colorText"
+                        android:textColor="@color/colorTextDark"
                         android:textSize="16sp" />
 
                     <TextView
                         android:id="@+id/caloriesSavedTextView"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="6,750"
+                        android:layout_columnWeight="1"
+                        android:text="40,500"
                         android:textColor="@color/colorPhysical"
-                        android:textSize="18sp"
+                        android:textSize="16sp"
                         android:textStyle="bold" />
-                </LinearLayout>
 
-                <!-- Achievements -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="12dp">
-
+                    <!-- Achievements -->
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Achievements Unlocked:"
-                        android:textColor="@color/colorText"
+                        android:layout_columnWeight="1"
+                        android:text="Achievements:"
+                        android:textColor="@color/colorTextDark"
                         android:textSize="16sp" />
 
                     <TextView
                         android:id="@+id/achievementsCountTextView"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="2"
+                        android:layout_columnWeight="1"
+                        android:text="12"
                         android:textColor="@color/colorAccent"
-                        android:textSize="18sp"
+                        android:textSize="16sp"
                         android:textStyle="bold" />
-                </LinearLayout>
 
-                <!-- Journal Entries -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
+                    <!-- Journal Entries -->
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
+                        android:layout_columnWeight="1"
                         android:text="Journal Entries:"
-                        android:textColor="@color/colorText"
+                        android:textColor="@color/colorTextDark"
                         android:textSize="16sp" />
 
                     <TextView
                         android:id="@+id/journalCountTextView"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="14"
+                        android:layout_columnWeight="1"
+                        android:text="85"
                         android:textColor="@color/colorMental"
-                        android:textSize="18sp"
+                        android:textSize="16sp"
                         android:textStyle="bold" />
-                </LinearLayout>
+                </GridLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Weekly Trends Card -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/weeklyTrendsCard"
+        <!-- Visualization Tabs -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="4dp"
-            app:cardBackgroundColor="@color/colorSurface">
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp">
 
-            <LinearLayout
-                android:layout_width="match_parent"
+            <androidx.cardview.widget.CardView
+                android:id="@+id/financialTabCard"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="2dp"
+                android:foreground="?attr/selectableItemBackground"
+                app:cardBackgroundColor="@color/colorPrimary">
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Weekly Breakdown"
-                    android:textColor="@color/colorPrimary"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="12dp" />
+                    android:text="Financial"
+                    android:textColor="@color/colorTextLight"
+                    android:textSize="14sp"
+                    android:gravity="center"
+                    android:padding="8dp"/>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/healthTabCard"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="2dp"
+                android:foreground="?attr/selectableItemBackground"
+                app:cardBackgroundColor="@color/colorCardBackground">
 
                 <TextView
-                    android:id="@+id/weeklyTrendsTextView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="• Week 1: 7 sober days, 2 journal entries\n• Week 2: 7 sober days, 4 journal entries, 1 achievement\n• Week 3: 7 sober days, 3 journal entries\n• Week 4: 7 sober days, 5 journal entries, 1 achievement"
-                    android:textColor="@color/colorText"
-                    android:textSize="16sp"
-                    android:lineSpacingExtra="8dp" />
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
+                    android:text="Health"
+                    android:textColor="@color/colorTextDark"
+                    android:textSize="14sp"
+                    android:gravity="center"
+                    android:padding="8dp"/>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/timeTabCard"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="2dp"
+                android:foreground="?attr/selectableItemBackground"
+                app:cardBackgroundColor="@color/colorCardBackground">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Time"
+                    android:textColor="@color/colorTextDark"
+                    android:textSize="14sp"
+                    android:gravity="center"
+                    android:padding="8dp"/>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/achievementsTabCard"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="2dp"
+                android:foreground="?attr/selectableItemBackground"
+                app:cardBackgroundColor="@color/colorCardBackground">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Progress"
+                    android:textColor="@color/colorTextDark"
+                    android:textSize="14sp"
+                    android:gravity="center"
+                    android:padding="8dp"/>
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
+
+        <!-- Financial Impact Content -->
+        <LinearLayout
+            android:id="@+id/financialContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="visible">
+
+            <androidx.cardview.widget.CardView
+                style="@style/AppCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        style="@style/CardTitleText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Financial Impact"
+                        android:textColor="@color/colorFinancial" />
+
+                    <!-- Financial Comparison Chart -->
+                    <com.github.mikephil.charting.charts.BarChart
+                        android:id="@+id/financialComparisonChart"
+                        android:layout_width="match_parent"
+                        android:layout_height="280dp"
+                        android:layout_marginTop="8dp"/>
+
+                    <TextView
+                        android:id="@+id/financialExamplesTextView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:textColor="@color/colorTextDark"
+                        android:textSize="14sp"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
+
+        <!-- Health Impact Content -->
+        <LinearLayout
+            android:id="@+id/healthContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <androidx.cardview.widget.CardView
+                style="@style/AppCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        style="@style/CardTitleText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Health Benefits"
+                        android:textColor="@color/colorPhysical" />
+
+                    <!-- Health Progress Chart -->
+                    <com.github.mikephil.charting.charts.LineChart
+                        android:id="@+id/healthProgressChart"
+                        android:layout_width="match_parent"
+                        android:layout_height="280dp"
+                        android:layout_marginTop="8dp"/>
+
+                    <TextView
+                        android:id="@+id/healthDetailsTextView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:textColor="@color/colorTextDark"
+                        android:textSize="14sp"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
+
+        <!-- Time Investment Content -->
+        <LinearLayout
+            android:id="@+id/timeContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <androidx.cardview.widget.CardView
+                style="@style/AppCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        style="@style/CardTitleText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Time Reclaimed"
+                        android:textColor="@color/colorMental" />
+
+                    <!-- Time Investment Chart -->
+                    <com.github.mikephil.charting.charts.PieChart
+                        android:id="@+id/timeInvestmentChart"
+                        android:layout_width="match_parent"
+                        android:layout_height="280dp"
+                        android:layout_marginTop="8dp"/>
+
+                    <TextView
+                        android:id="@+id/timeDetailsTextView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:textColor="@color/colorTextDark"
+                        android:textSize="14sp"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
+
+        <!-- Achievements Progress Content -->
+        <LinearLayout
+            android:id="@+id/achievementsContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <androidx.cardview.widget.CardView
+                style="@style/AppCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        style="@style/CardTitleText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Achievement Progress"
+                        android:textColor="@color/colorAccent" />
+
+                    <!-- Achievements Chart -->
+                    <com.github.mikephil.charting.charts.BarChart
+                        android:id="@+id/achievementsChart"
+                        android:layout_width="match_parent"
+                        android:layout_height="280dp"
+                        android:layout_marginTop="8dp"/>
+
+                    <TextView
+                        android:id="@+id/nextMilestoneTextView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:textColor="@color/colorTextDark"
+                        android:textSize="14sp"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
 
         <!-- Share Buttons -->
-        <Button
-            android:id="@+id/emailReportButton"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:text="Email Report"
-            android:textColor="@android:color/white"
-            android:background="@drawable/button_rounded" />
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp">
 
-        <Button
-            android:id="@+id/shareReportButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:text="Share Progress"
-            android:textColor="@color/colorPrimary"
-            android:background="@drawable/button_outlined" />
+            <Button
+                android:id="@+id/emailReportButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="Email Report"
+                android:textColor="@color/colorTextLight"
+                android:backgroundTint="@color/colorPrimary"
+                android:drawableStart="@drawable/ic_email"
+                android:padding="12dp"
+                android:layout_gravity="center"/>
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Note: Reports only include information that you choose to share. No personal data leaves your device unless you explicitly share it."
-            android:textColor="@color/colorTextLight"
-            android:textSize="14sp"
-            android:gravity="center"
-            android:layout_marginBottom="24dp" />
+            <Button
+                android:id="@+id/shareReportButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:text="Share Progress"
+                android:textColor="@color/colorTextLight"
+                android:backgroundTint="@color/colorAccent"
+                android:drawableStart="@drawable/ic_share"
+                android:padding="12dp"
+                android:layout_gravity="center"/>
+        </LinearLayout>
+
     </LinearLayout>
-</ScrollView>
+</androidx.core.widget.NestedScrollView>

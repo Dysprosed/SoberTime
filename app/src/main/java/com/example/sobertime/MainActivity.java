@@ -156,19 +156,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    @Override
-    protected void onPostCreate(Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
-        // Simply create a new toggle and sync state
-        if (drawerLayout != null && toolbar != null) {
-            ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                    this, drawerLayout, toolbar,
-                    R.string.navigation_drawer_open,
-                    R.string.navigation_drawer_close);
-            toggle.syncState();
-        }
-    }
-
     // Apply saved theme preference
     private void applyThemePreference() {
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);

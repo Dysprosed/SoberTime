@@ -58,7 +58,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private CardView communityCardView;
     private CardView progressReportCardView;
 
-    private Button resetDateButton;
     private ProgressBar milestoneProgressBar;
     
     // Drawer elements
@@ -254,7 +253,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         motivationTextView = findViewById(R.id.motivationTextView);
         milestonesCardView = findViewById(R.id.milestonesCardView);
         statsCardView = findViewById(R.id.statsCardView);
-        resetDateButton = findViewById(R.id.resetDateButton);
 
         // Safely try to find the milestone progress bar
         milestoneProgressBar = findProgressBarSafely(R.id.milestoneProgressBar);
@@ -359,19 +357,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setupCardViewClickListener(communityCardView, CommunitySupportActivity.class, "Community Support");
         setupCardViewClickListener(progressReportCardView, ProgressReportActivity.class, "Progress Report");
 
-        resetDateButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    showDatePickerDialog();
-                } catch (Exception e) {
-                    Log.e("MainActivity", "Failed to show DatePickerDialog", e);
-                    Toast.makeText(MainActivity.this,
-                            "An error occurred while opening the date picker. Please try again.",
-                            Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
     }
 
     /**
@@ -396,60 +381,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    private void showDatePickerDialog() {
-        // Create Calendar instance from sobriety start date or today's date
-        Calendar calendar = Calendar.getInstance();
-        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        int userStatus = prefs.getInt("current_status", 0);
-        
-        if (userStatus != 2) { // If not in "seeking" status
-            calendar.setTimeInMillis(sobrietyStartDate);
-        }
-
-        // Create DatePickerDialog
-        DatePickerDialog datePickerDialog = new DatePickerDialog(
-                this,
-                new DatePickerDialog.OnDateSetListener() {
-                    @Override
-                    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-                        Calendar selectedDate = Calendar.getInstance();
-                        selectedDate.set(year, month, dayOfMonth);
-
-                        // Save the new date
-                        sobrietyStartDate = selectedDate.getTimeInMillis();
-                        SharedPreferences.Editor editor = preferences.edit();
-                        editor.putLong(START_DATE_KEY, sobrietyStartDate);
-                        
-                        // Update user status to "sober" (1) if they were previously "seeking" (2)
-                        if (userStatus == 2) {
-                            editor.putInt("current_status", 1); // Set to sober status
-                            Toast.makeText(MainActivity.this, 
-                                    "Congratulations on starting your sobriety journey!", 
-                                    Toast.LENGTH_LONG).show();
-                        }
-                        
-                        editor.apply();
-
-                        // Update UI
-                        updateSobrietyInfo();
-
-                        // Check achievements for new day count
-                        updateAchievements();
-
-                        // Reschedule notifications based on new date
-                        NotificationHelper.rescheduleNotifications(MainActivity.this, sobrietyStartDate);
-                    }
-                },
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)
-        );
-
-        // Set max date to today
-        datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis());
-        datePickerDialog.show();
-    }
-
     private void updateSobrietyInfo() {
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         int userStatus = prefs.getInt("current_status", 0); // 0 = unknown, 1 = sober, 2 = seeking
@@ -464,9 +395,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (milestoneProgressBar != null) {
                 milestoneProgressBar.setProgress(0);
             }
-            
-            // Change the button text to reflect starting vs. changing date
-            resetDateButton.setText("SET SOBRIETY DATE");
             
             // Update motivation message for those still considering sobriety
             motivationTextView.setText("The journey of a thousand miles begins with a single step.");
@@ -486,9 +414,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     
             // Update motivation message
             updateMotivationMessage(daysSober);
-            
-            // Ensure button has the right text
-            resetDateButton.setText("CHANGE START DATE");
+
         }
     }
 

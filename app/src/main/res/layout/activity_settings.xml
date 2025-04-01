@@ -372,6 +372,67 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
             
+            <!-- Sobriety Date -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Sobriety Settings"
+                android:textColor="@color/colorPrimary"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="16dp" />
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/sobrietyDateCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="3dp"
+                app:cardBackgroundColor="@color/colorSurface"
+                android:foreground="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Sobriety Start Date"
+                            android:textColor="@color/colorText"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/sobrietyDateText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="January 1, 2025"
+                            android:textColor="@color/colorTextLight"
+                            android:textSize="14sp"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@android:drawable/ic_menu_my_calendar"
+                        app:tint="@color/colorPrimary" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
             <!-- Calories Per Drink -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/caloriesPerDrinkCard"
@@ -424,6 +485,8 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
             
+
+            <!-- Dark Theme -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

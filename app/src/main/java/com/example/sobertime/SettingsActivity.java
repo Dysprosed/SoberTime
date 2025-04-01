@@ -21,7 +21,9 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.cardview.widget.CardView;
+import main.java.com.example.sobertime.BaseActivity;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -45,6 +47,8 @@ public class SettingsActivity extends BaseActivity {
     private CardView drinkCostCard;
     private CardView drinksPerWeekCard;
     private CardView caloriesPerDrinkCard;
+    private TextView sobrietyDateText;
+    private CardView sobrietyDateCard;
 
     // Backup/Restore
     private Button backupRestoreButton;
@@ -59,6 +63,8 @@ public class SettingsActivity extends BaseActivity {
     private static final String MILESTONE_ENABLED_KEY = "milestone_notification_enabled";
     private static final String CUSTOM_TIMES_KEY = "custom_notification_times";
     private static final String NIGHT_MODE_KEY = "night_mode_enabled";
+    private static final String SOBRIETY_PREFS_NAME = "SobrietyTrackerPrefs";
+    private static final String START_DATE_KEY = "sobriety_start_date";
 
     private SharedPreferences preferences;
     private List<String> customTimes;
@@ -110,6 +116,10 @@ public class SettingsActivity extends BaseActivity {
             drinksPerWeekCard = findViewById(R.id.drinksPerWeekCard);
             caloriesPerDrinkCard = findViewById(R.id.caloriesPerDrinkCard);
 
+            // Sobriety date
+            sobrietyDateText = findViewById(R.id.sobrietyDateText);
+            sobrietyDateCard = findViewById(R.id.sobrietyDateCard);
+            
             // Backup/Restore
             backupRestoreButton = findViewById(R.id.backupRestoreButton);
 
@@ -171,6 +181,11 @@ public class SettingsActivity extends BaseActivity {
             drinkCostText.setText(String.format(Locale.getDefault(), "$%.2f", drinkCost));
             drinksPerWeekText.setText(String.valueOf(drinksPerWeek));
             caloriesPerDrinkText.setText(String.valueOf(caloriesPerDrink));
+
+            // Load sobriety date
+            SharedPreferences sobrietyPrefs = getSharedPreferences(SOBRIETY_PREFS_NAME, MODE_PRIVATE);
+            long sobrietyStartDate = sobrietyPrefs.getLong(START_DATE_KEY, System.currentTimeMillis());
+            sobrietyDateText.setText(new SimpleDateFormat("MMMM d, yyyy", Locale.getDefault()).format(new Date(sobrietyStartDate)));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -302,6 +317,14 @@ public class SettingsActivity extends BaseActivity {
                 }
             });
 
+            // Sobriety date card
+            sobrietyDateCard.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    showDatePickerDialog();
+                }
+            });
+
             // Backup/Restore button
             backupRestoreButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -314,6 +337,52 @@ public class SettingsActivity extends BaseActivity {
         } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(this, "Error setting up listeners: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showDatePickerDialog() {
+        try {
+            // Get current sobriety date
+            SharedPreferences sobrietyPrefs = getSharedPreferences(SOBRIETY_PREFS_NAME, MODE_PRIVATE);
+            long currentDate = sobrietyPrefs.getLong(START_DATE_KEY, System.currentTimeMillis());
+    
+            // Set up calendar with current date
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeInMillis(currentDate);
+    
+            // Create DatePickerDialog using lambda
+            DatePickerDialog datePickerDialog = new DatePickerDialog(
+                    this,
+                    (view, selectedYear, selectedMonth, selectedDay) -> {
+                        Calendar newDate = Calendar.getInstance();
+                        newDate.set(selectedYear, selectedMonth, selectedDay);
+    
+                        // Save the new date
+                        long newStartDate = newDate.getTimeInMillis();
+                        SharedPreferences.Editor editor = sobrietyPrefs.edit();
+                        editor.putLong(START_DATE_KEY, newStartDate);
+                        editor.apply();
+    
+                        // Update UI
+                        String formattedDate = new SimpleDateFormat("MMMM d, yyyy", Locale.getDefault()).format(new Date(newStartDate));
+                        sobrietyDateText.setText(formattedDate);
+    
+                        // Reschedule notifications
+                        NotificationHelper.rescheduleNotifications(SettingsActivity.this, newStartDate);
+    
+                        Toast.makeText(SettingsActivity.this, "Sobriety start date updated", Toast.LENGTH_SHORT).show();
+                    },
+                    calendar.get(Calendar.YEAR),
+                    calendar.get(Calendar.MONTH),
+                    calendar.get(Calendar.DAY_OF_MONTH)
+            );
+    
+            // Set max date to today
+            datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis());
+            datePickerDialog.show();
+        } catch (Exception e) {
+            Log.e("SettingsActivity", "Error showing date picker", e);
+            Toast.makeText(this, "Error showing date picker: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 

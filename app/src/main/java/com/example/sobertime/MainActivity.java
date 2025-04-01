@@ -56,8 +56,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private CardView inspirationCardView;
     private CardView communityCardView;
     private CardView progressReportCardView;
-
-    private Button resetDateButton;  // Make sure this matches your layout XML
     private ProgressBar milestoneProgressBar;
     
     // Drawer elements
@@ -249,16 +247,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         achievementsCardView = findViewById(R.id.achievementsCardView);
         statsCardView = findViewById(R.id.statsCardView);
         
-        // Find the reset date button - using the ID from activity_main.xml
-        try {
-            resetDateButton = findViewById(R.id.resetDateButton);
-            if (resetDateButton == null) {
-                Log.e(TAG, "resetDateButton not found in layout");
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error finding resetDateButton: " + e.getMessage());
-        }
-
         // Safely try to find the milestone progress bar
         milestoneProgressBar = findProgressBarSafely(R.id.milestoneProgressBar);
 
@@ -363,25 +351,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setupCardViewClickListener(inspirationCardView, InspirationActivity.class, "Inspirational Quotes");
         setupCardViewClickListener(communityCardView, CommunitySupportActivity.class, "Community Support");
         setupCardViewClickListener(progressReportCardView, ProgressReportActivity.class, "Progress Report");
-
-        // Setup reset date button only if it exists
-        if (resetDateButton != null) {
-            resetDateButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    try {
-                        showDatePickerDialog();
-                    } catch (Exception e) {
-                        Log.e(TAG, "Failed to show DatePickerDialog", e);
-                        Toast.makeText(MainActivity.this,
-                                "An error occurred while opening the date picker. Please try again.",
-                                Toast.LENGTH_SHORT).show();
-                    }
-                }
-            });
-        } else {
-            Log.e(TAG, "resetDateButton is null, cannot set OnClickListener");
-        }
     }
 
     /**

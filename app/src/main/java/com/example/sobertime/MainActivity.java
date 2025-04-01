@@ -159,16 +159,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        // Don't create a new toggle, just sync the existing one
+        // Simply create a new toggle and sync state
         if (drawerLayout != null && toolbar != null) {
-            // Find the existing toggle and sync it
-            for (int i = 0; i < drawerLayout.getDrawerListenerCount(); i++) {
-                DrawerLayout.DrawerListener listener = drawerLayout.getDrawerListener(i);
-                if (listener instanceof ActionBarDrawerToggle) {
-                    ((ActionBarDrawerToggle) listener).syncState();
-                    break;
-                }
-            }
+            ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                    this, drawerLayout, toolbar,
+                    R.string.navigation_drawer_open,
+                    R.string.navigation_drawer_close);
+            toggle.syncState();
         }
     }
 

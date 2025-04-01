@@ -42,6 +42,7 @@ import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
+    private static final String TAG = "MainActivity";
     private TextView dayCountTextView;
     private TextView soberSinceTextView;
     private TextView nextMilestoneTextView;
@@ -114,18 +115,35 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
     
     private void setupToolbarAndDrawer() {
-        toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        
-        drawerLayout = findViewById(R.id.drawer_layout);
-        navigationView = findViewById(R.id.nav_view);
-        
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawerLayout.addDrawerListener(toggle);
-        toggle.syncState();
-        
-        navigationView.setNavigationItemSelectedListener(this);
+        try {
+            toolbar = findViewById(R.id.toolbar);
+            if (toolbar != null) {
+                // Only set support action bar if we're using a Toolbar, not the default ActionBar
+                setSupportActionBar(toolbar);
+            } else {
+                Log.e(TAG, "Toolbar not found in layout");
+            }
+            
+            drawerLayout = findViewById(R.id.drawer_layout);
+            navigationView = findViewById(R.id.nav_view);
+            
+            if (drawerLayout != null && toolbar != null) {
+                ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                        this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+                drawerLayout.addDrawerListener(toggle);
+                toggle.syncState();
+            } else {
+                Log.e(TAG, "DrawerLayout or Toolbar not found in layout");
+            }
+            
+            if (navigationView != null) {
+                navigationView.setNavigationItemSelectedListener(this);
+            } else {
+                Log.e(TAG, "NavigationView not found in layout");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error setting up toolbar and drawer: " + e.getMessage());
+        }
     }
 
     // Apply saved theme preference
@@ -231,6 +249,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         achievementsCardView = findViewById(R.id.achievementsCardView);
         statsCardView = findViewById(R.id.statsCardView);
         
+        // Find the reset date button - using the ID from activity_main.xml
+        try {
+            resetDateButton = findViewById(R.id.resetDateButton);
+            if (resetDateButton == null) {
+                Log.e(TAG, "resetDateButton not found in layout");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error finding resetDateButton: " + e.getMessage());
+        }
+
         // Safely try to find the milestone progress bar
         milestoneProgressBar = findProgressBarSafely(R.id.milestoneProgressBar);
 
@@ -255,15 +283,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 return (androidx.cardview.widget.CardView) view;
             } else {
                 String resourceName = getResources().getResourceEntryName(id);
-                Log.d("MainActivity", "View with id " + id + " (" + resourceName + ") is not a CardView");
+                Log.d(TAG, "View with id " + id + " (" + resourceName + ") is not a CardView");
                 return null;
             }
         } catch (Exception e) {
             try {
                 String resourceName = getResources().getResourceEntryName(id);
-                Log.d("MainActivity", "View with id " + id + " (" + resourceName + ") not found");
+                Log.d(TAG, "View with id " + id + " (" + resourceName + ") not found");
             } catch (Exception e2) {
-                Log.d("MainActivity", "View with id " + id + " not found. Resource name could not be retrieved.");
+                Log.d(TAG, "View with id " + id + " not found. Resource name could not be retrieved.");
             }
             return null;
         }
@@ -279,9 +307,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } catch (Exception e) {
             try {
                 String resourceName = getResources().getResourceEntryName(id);
-                Log.d("MainActivity", "View with id " + id + " (" + resourceName + ") not found");
+                Log.d(TAG, "View with id " + id + " (" + resourceName + ") not found");
             } catch (Exception e2) {
-                Log.d("MainActivity", "View with id " + id + " not found, and resource name could not be retrieved");
+                Log.d(TAG, "View with id " + id + " not found, and resource name could not be retrieved");
             }
             return null;
         }
@@ -300,7 +328,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         startActivity(intent);
                     } catch (Exception e) {
                         // Log error and show toast to user
-                        Log.e("MainActivity", "Couldn't open Achievements", e);
+                        Log.e(TAG, "Couldn't open Achievements", e);
                         Toast.makeText(MainActivity.this,
                                 "Couldn't open Achievements: " + e.getMessage(),
                                 Toast.LENGTH_SHORT).show();
@@ -320,7 +348,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         startActivity(intent);
                     } catch (Exception e) {
                         // Log error and show toast to user
-                        Log.e("MainActivity", "Couldn't open Health Benefits", e);
+                        Log.e(TAG, "Couldn't open Health Benefits", e);
                         Toast.makeText(MainActivity.this,
                                 "Couldn't open Health Benefits: " + e.getMessage(),
                                 Toast.LENGTH_SHORT).show();
@@ -344,7 +372,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     try {
                         showDatePickerDialog();
                     } catch (Exception e) {
-                        Log.e("MainActivity", "Failed to show DatePickerDialog", e);
+                        Log.e(TAG, "Failed to show DatePickerDialog", e);
                         Toast.makeText(MainActivity.this,
                                 "An error occurred while opening the date picker. Please try again.",
                                 Toast.LENGTH_SHORT).show();
@@ -352,7 +380,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             });
         } else {
-            Log.e("MainActivity", "resetDateButton is null, cannot set OnClickListener");
+            Log.e(TAG, "resetDateButton is null, cannot set OnClickListener");
         }
     }
 

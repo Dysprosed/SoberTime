@@ -1,31 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Base application theme -->
-    <style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
-        <!-- Customize your theme here -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Primary brand color -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         
-        <!-- Use the Toolbar as the action bar -->
+        <!-- Make sure we're not using the default ActionBar -->
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+        
+        <!-- Other theme attributes -->
+        <item name="android:textColorPrimary">@color/colorText</item>
+        <item name="android:textColorSecondary">@color/colorTextLight</item>
+        <item name="android:windowBackground">@color/colorBackground</item>
     </style>
     
-    <!-- Other styles you might have -->
+    <!-- Card styles -->
     <style name="AppCard">
-        <item name="android:layout_marginBottom">16dp</item>
-        <item name="cardCornerRadius">12dp</item>
-        <item name="cardElevation">4dp</item>
-        <item name="cardBackgroundColor">@color/colorSurface</item>
-        <item name="android:foreground">?attr/selectableItemBackground</item>
-        <item name="android:clickable">true</item>
-        <item name="android:focusable">true</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">8dp</item>
+        <item name="android:layout_marginBottom">8dp</item>
+        <item name="cardCornerRadius">8dp</item>
+        <item name="cardElevation">2dp</item>
+        <item name="cardBackgroundColor">@android:color/white</item>
     </style>
     
+    <!-- Text styles -->
     <style name="CardTitleText">
         <item name="android:textSize">18sp</item>
         <item name="android:textStyle">bold</item>
-        <item name="android:layout_marginBottom">8dp</item>
+        <item name="android:textColor">@color/colorText</item>
+        <item name="android:layout_marginBottom">4dp</item>
     </style>
     
     <style name="CardContentText">
@@ -33,12 +41,14 @@
         <item name="android:textColor">@color/colorTextLight</item>
     </style>
     
-    <style name="RoundedButton" parent="Widget.MaterialComponents.Button">
-        <item name="android:background">@drawable/button_rounded</item>
+    <!-- Button styles -->
+    <style name="RoundedButton" parent="Widget.AppCompat.Button.Colored">
         <item name="android:textColor">@android:color/white</item>
         <item name="android:paddingStart">16dp</item>
         <item name="android:paddingEnd">16dp</item>
         <item name="android:paddingTop">8dp</item>
         <item name="android:paddingBottom">8dp</item>
+        <item name="android:elevation">2dp</item>
+        <item name="android:textStyle">bold</item>
     </style>
 </resources>

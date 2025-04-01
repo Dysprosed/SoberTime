@@ -144,7 +144,6 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp">
 
-                    <!-- Card content remains the same -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -181,14 +180,57 @@
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
-                <!-- Include the rest of your cards here, unchanged -->
                 <!-- Achievements Card -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/achievementsCardView"
                     style="@style/AppCard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
-                    <!-- ... existing content ... -->
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="16dp">
+
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginEnd="16dp"
+                            android:src="@drawable/ic_achievement"
+                            app:tint="@color/colorAccent" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/CardTitleText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Achievements"
+                                android:textColor="@color/colorAccent" />
+
+                            <TextView
+                                android:id="@+id/nextMilestoneTextView"
+                                style="@style/CardContentText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Next milestone: 365 days\n39 days to go!" />
+
+                            <!-- Progress Bar -->
+                            <ProgressBar
+                                android:id="@+id/milestoneProgressBar"
+                                style="?android:attr/progressBarStyleHorizontal"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:progressTint="@color/colorAccent"
+                                android:progress="89" />
+                        </LinearLayout>
+                    </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
                 <!-- Progress Report Card -->
@@ -197,7 +239,40 @@
                     style="@style/AppCard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
-                    <!-- ... existing content ... -->
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="16dp">
+
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginEnd="16dp"
+                            android:src="@drawable/ic_progress"
+                            app:tint="#795548" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/CardTitleText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Progress Report"
+                                android:textColor="#795548" />
+
+                            <TextView
+                                style="@style/CardContentText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="View detailed statistics of your journey" />
+                        </LinearLayout>
+                    </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
                 <!-- Health Benefits Card -->
@@ -206,7 +281,40 @@
                     style="@style/AppCard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
-                    <!-- ... existing content ... -->
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="16dp">
+
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginEnd="16dp"
+                            android:src="@drawable/ic_health"
+                            app:tint="@color/colorPhysical" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/CardTitleText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Health Benefits"
+                                android:textColor="@color/colorPhysical" />
+
+                            <TextView
+                                style="@style/CardContentText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Tap to see your physical, mental, and financial improvements" />
+                        </LinearLayout>
+                    </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
                 <!-- Journal Card -->
@@ -215,7 +323,40 @@
                     style="@style/AppCard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
-                    <!-- ... existing content ... -->
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="16dp">
+
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginEnd="16dp"
+                            android:src="@drawable/ic_journal"
+                            app:tint="@color/colorMental" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/CardTitleText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Your Journal"
+                                android:textColor="@color/colorMental" />
+
+                            <TextView
+                                style="@style/CardContentText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Record your thoughts, feelings, and victories" />
+                        </LinearLayout>
+                    </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
                 <!-- Emergency Help Card -->
@@ -224,7 +365,40 @@
                     style="@style/AppCard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
-                    <!-- ... existing content ... -->
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="16dp">
+
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginEnd="16dp"
+                            android:src="@drawable/ic_emergency"
+                            app:tint="#F44336" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/CardTitleText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Emergency Help"
+                                android:textColor="#F44336" />
+
+                            <TextView
+                                style="@style/CardContentText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Access resources and support when you need it most" />
+                        </LinearLayout>
+                    </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
                 <!-- Inspiration Card -->
@@ -233,7 +407,40 @@
                     style="@style/AppCard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
-                    <!-- ... existing content ... -->
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="16dp">
+
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginEnd="16dp"
+                            android:src="@drawable/ic_inspiration"
+                            app:tint="#9C27B0" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/CardTitleText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Inspirational Quotes"
+                                android:textColor="#9C27B0" />
+
+                            <TextView
+                                style="@style/CardContentText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Find motivation in quotes about recovery and strength" />
+                        </LinearLayout>
+                    </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
                 <!-- Community Support Card -->
@@ -242,7 +449,40 @@
                     style="@style/AppCard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
-                    <!-- ... existing content ... -->
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="16dp">
+
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginEnd="16dp"
+                            android:src="@drawable/ic_community"
+                            app:tint="#03A9F4" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/CardTitleText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Community Support"
+                                android:textColor="#03A9F4" />
+
+                            <TextView
+                                style="@style/CardContentText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Find meetings and resources near you" />
+                        </LinearLayout>
+                    </LinearLayout>
                 </androidx.cardview.widget.CardView>
             </LinearLayout>
         </ScrollView>

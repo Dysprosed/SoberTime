@@ -553,6 +553,18 @@
                 android:paddingEnd="16dp"
                 android:layout_marginBottom="24dp" />
 
+            <!-- Reset App Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/resetAppButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Reset App Data"
+                app:backgroundTint="@color/colorError"
+                app:cornerRadius="12dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:layout_marginBottom="24dp" />    
+
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

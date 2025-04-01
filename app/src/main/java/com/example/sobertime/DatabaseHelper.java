@@ -238,4 +238,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             return defaultValue;
         }
     }
+
+    // Reset Database
+    public void resetAllData() {
+        SQLiteDatabase db = getWritableDatabase();
+        // Clear all tables
+        db.delete("journal", null, null);
+        db.delete("settings", null, null);
+        // Add other tables as needed
+    }
 }

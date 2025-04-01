@@ -42,6 +42,7 @@ public class SettingsActivity extends BaseActivity {
     private Switch eveningNotificationSwitch;
     private Switch milestoneNotificationSwitch;
     private Button addCustomTimeButton;
+    private Button resetAppButton;
     private LinearLayout customTimesContainer;
 
     // Drink settings
@@ -126,6 +127,9 @@ public class SettingsActivity extends BaseActivity {
             
             // Backup/Restore
             backupRestoreButton = findViewById(R.id.backupRestoreButton);
+
+            // Reset App Button
+            resetAppButton = findViewById(R.id.resetAppButton);
 
             // Theme toggle switch - may not exist yet
             try {
@@ -266,7 +270,6 @@ public class SettingsActivity extends BaseActivity {
             });
 
             // Theme toggle switch listener - only if it exists
-            // In your setupListeners() method, add this for theme switch
             if (themeToggleSwitch != null) {
                 // In SettingsActivity.java, within the theme toggle switch listener
                 themeToggleSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -338,9 +341,62 @@ public class SettingsActivity extends BaseActivity {
                 }
             });
 
+            // Reset App button
+            resetAppButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    showResetConfirmationDialog();
+                }
+            });
+
         } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(this, "Error setting up listeners: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showResetConfirmationDialog() {
+        new AlertDialog.Builder(this)
+            .setTitle("Reset App Data")
+            .setMessage("This will reset ALL app data including your sobriety date, journal entries, and settings. This cannot be undone. Are you sure?")
+            .setPositiveButton("Reset Everything", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    resetAppData();
+                }
+            })
+            .setNegativeButton("Cancel", null)
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .show();
+    }
+
+    private void resetAppData() {
+        try {
+            // 1. Clear all SharedPreferences
+            getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().clear().apply();
+            getSharedPreferences(SOBRIETY_PREFS_NAME, MODE_PRIVATE).edit().clear().apply();
+            getSharedPreferences("SobrietyTrackerPrefs", MODE_PRIVATE).edit().clear().apply();
+            
+            // 2. Reset database
+            databaseHelper.resetAllData();
+
+            // 3. Reset onboarding status to ensure welcome screen appears
+            getSharedPreferences("SobrietyTrackerPrefs", MODE_PRIVATE)
+                .edit()
+                .putBoolean("onboarding_complete", false)
+                .apply();
+
+            // 4. Show success message
+            Toast.makeText(this, "All data has been reset", Toast.LENGTH_SHORT).show();
+            
+            // 5. Restart app from Welcome Activity
+            Intent intent = new Intent(this, WelcomeActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finishAffinity(); // Close all activities in this app
+        } catch (Exception e) {
+            Log.e("SettingsActivity", "Error resetting app data", e);
+            Toast.makeText(this, "Error resetting app: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 

@@ -8,7 +8,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -57,7 +56,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private CardView communityCardView;
     private CardView progressReportCardView;
 
-    private Button resetDateButton;
+    private Button resetDateButton;  // Make sure this matches your layout XML
     private ProgressBar milestoneProgressBar;
     
     // Drawer elements
@@ -231,8 +230,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // Changed milestonesCardView to achievementsCardView
         achievementsCardView = findViewById(R.id.achievementsCardView);
         statsCardView = findViewById(R.id.statsCardView);
-        resetDateButton = findViewById(R.id.resetDateButton);
-
+        
         // Safely try to find the milestone progress bar
         milestoneProgressBar = findProgressBarSafely(R.id.milestoneProgressBar);
 
@@ -292,40 +290,44 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     // Method to setup all card click listeners
     private void setupClickListeners() {
         // Changed to achievements card
-        achievementsCardView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    // Open achievements activity
-                    Intent intent = new Intent(MainActivity.this, AchievementsActivity.class);
-                    startActivity(intent);
-                } catch (Exception e) {
-                    // Log error and show toast to user
-                    Log.e("MainActivity", "Couldn't open Achievements", e);
-                    Toast.makeText(MainActivity.this,
-                            "Couldn't open Achievements: " + e.getMessage(),
-                            Toast.LENGTH_SHORT).show();
+        if (achievementsCardView != null) {
+            achievementsCardView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    try {
+                        // Open achievements activity
+                        Intent intent = new Intent(MainActivity.this, AchievementsActivity.class);
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        // Log error and show toast to user
+                        Log.e("MainActivity", "Couldn't open Achievements", e);
+                        Toast.makeText(MainActivity.this,
+                                "Couldn't open Achievements: " + e.getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                    }
                 }
-            }
-        });
+            });
+        }
 
-        statsCardView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    // Open health benefits activity
-                    Intent intent = new Intent(MainActivity.this, HealthBenefitsActivity.class);
-                    intent.putExtra("days_sober", getDaysSober());
-                    startActivity(intent);
-                } catch (Exception e) {
-                    // Log error and show toast to user
-                    Log.e("MainActivity", "Couldn't open Health Benefits", e);
-                    Toast.makeText(MainActivity.this,
-                            "Couldn't open Health Benefits: " + e.getMessage(),
-                            Toast.LENGTH_SHORT).show();
+        if (statsCardView != null) {
+            statsCardView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    try {
+                        // Open health benefits activity
+                        Intent intent = new Intent(MainActivity.this, HealthBenefitsActivity.class);
+                        intent.putExtra("days_sober", getDaysSober());
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        // Log error and show toast to user
+                        Log.e("MainActivity", "Couldn't open Health Benefits", e);
+                        Toast.makeText(MainActivity.this,
+                                "Couldn't open Health Benefits: " + e.getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                    }
                 }
-            }
-        });
+            });
+        }
 
         // Initialize click listeners for optional CardViews
         setupCardViewClickListener(journalCardView, JournalActivity.class, "Journal");
@@ -334,19 +336,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setupCardViewClickListener(communityCardView, CommunitySupportActivity.class, "Community Support");
         setupCardViewClickListener(progressReportCardView, ProgressReportActivity.class, "Progress Report");
 
-        resetDateButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    showDatePickerDialog();
-                } catch (Exception e) {
-                    Log.e("MainActivity", "Failed to show DatePickerDialog", e);
-                    Toast.makeText(MainActivity.this,
-                            "An error occurred while opening the date picker. Please try again.",
-                            Toast.LENGTH_SHORT).show();
+        // Setup reset date button only if it exists
+        if (resetDateButton != null) {
+            resetDateButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    try {
+                        showDatePickerDialog();
+                    } catch (Exception e) {
+                        Log.e("MainActivity", "Failed to show DatePickerDialog", e);
+                        Toast.makeText(MainActivity.this,
+                                "An error occurred while opening the date picker. Please try again.",
+                                Toast.LENGTH_SHORT).show();
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            Log.e("MainActivity", "resetDateButton is null, cannot set OnClickListener");
+        }
     }
 
     /**

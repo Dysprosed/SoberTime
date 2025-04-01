@@ -86,6 +86,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // Set up toolbar and drawer
         setupToolbarAndDrawer();
 
+        if (getSupportActionBar() == null) {
+            Log.e(TAG, "Support action bar is null after setup");
+        }
+        if (navigationView == null) {
+            Log.e(TAG, "Navigation view is null after setup");
+        }
+        if (drawerLayout == null) {
+            Log.e(TAG, "Drawer layout is null after setup");
+        }
+
         // Initialize preferences
         preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 
@@ -149,11 +159,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        // Re-sync the toggle state after onRestoreInstanceState has occurred
+        // Don't create a new toggle, just sync the existing one
         if (drawerLayout != null && toolbar != null) {
-            ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                    this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-            toggle.syncState();
+            // Find the existing toggle and sync it
+            for (int i = 0; i < drawerLayout.getDrawerListenerCount(); i++) {
+                DrawerLayout.DrawerListener listener = drawerLayout.getDrawerListener(i);
+                if (listener instanceof ActionBarDrawerToggle) {
+                    ((ActionBarDrawerToggle) listener).syncState();
+                    break;
+                }
+            }
         }
     }
 

@@ -115,6 +115,27 @@
                     android:textColor="@color/colorTextLight"
                     android:textSize="16sp" />
 
+                <!-- Next Milestone-->
+                <TextView
+                    android:id="@+id/nextMilestoneTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center"
+                    android:text="Next milestone: 30 days\n25 days to go!"
+                    android:textColor="@color/colorTextLight"
+                    android:textSize="16sp" />
+
+                <!-- Milestone Progress Bar -->
+                <ProgressBar
+                    android:id="@+id/milestoneProgressBar"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="16dp"
+                    android:progress="20" />
+
                 <!-- Today's Motivation Card -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/motivationCardView"

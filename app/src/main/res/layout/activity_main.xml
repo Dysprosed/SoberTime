@@ -115,27 +115,6 @@
                     android:textColor="@color/colorTextLight"
                     android:textSize="16sp" />
 
-                <!-- Next Milestone-->
-                <TextView
-                    android:id="@+id/nextMilestoneTextView"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:gravity="center"
-                    android:text="Next milestone: 30 days\n25 days to go!"
-                    android:textColor="@color/colorTextLight"
-                    android:textSize="16sp" />
-
-                <!-- Milestone Progress Bar -->
-                <ProgressBar
-                    android:id="@+id/milestoneProgressBar"
-                    style="?android:attr/progressBarStyleHorizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginBottom="16dp"
-                    android:progress="20" />
-
                 <!-- Today's Motivation Card -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/motivationCardView"
@@ -175,7 +154,7 @@
                                 style="@style/CardContentText"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="Rock bottom became the solid foundation on which I rebuilt my life. — J.K. Rowling" />
+                                tools:text="" />
                         </LinearLayout>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
@@ -218,17 +197,17 @@
                                 style="@style/CardContentText"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="Next milestone: 365 days\n39 days to go!" />
+                                tools:text="" />
 
                             <!-- Progress Bar -->
                             <ProgressBar
-                                android:id="@+id/milestoneProgressBar"
+                                android:id="@+id/achievementMilestoneProgressBar"
                                 style="?android:attr/progressBarStyleHorizontal"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="8dp"
                                 android:progressTint="@color/colorAccent"
-                                android:progress="89" />
+                                android:progress="" />
                         </LinearLayout>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>

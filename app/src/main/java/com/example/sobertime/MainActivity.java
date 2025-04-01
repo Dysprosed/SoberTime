@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private CardView inspirationCardView;
     private CardView communityCardView;
     private CardView progressReportCardView;
-    private ProgressBar milestoneProgressBar;
+    private ProgressBar achievementMilestoneProgressBar;
     
     // Drawer elements
     private DrawerLayout drawerLayout;
@@ -171,6 +171,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onResume() {
         super.onResume();
+        int daysSober = getDaysSober();
+        updateNextMilestone(daysSober);
         // Refresh data when returning to the app
         updateSobrietyInfo();
 
@@ -260,7 +262,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         statsCardView = findViewById(R.id.statsCardView);
         
         // Safely try to find the milestone progress bar
-        milestoneProgressBar = findProgressBarSafely(R.id.milestoneProgressBar);
+        achievementMilestoneProgressBar = findViewById(R.id.achievementMilestoneProgressBar);
 
         // Safely try to find all CardViews - no compile errors whether they exist or not
         journalCardView = findCardViewSafely(R.id.journalCardView);
@@ -475,9 +477,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             // Calculate progress percentage
             int progressPercentage = (int)(((float)progressDays / totalDaysInMilestone) * 100);
             
-            // Update progress bar if it exists
-            if (milestoneProgressBar != null) {
-                milestoneProgressBar.setProgress(progressPercentage);
+            // Update progress bar with the new ID
+            if (achievementMilestoneProgressBar != null) {
+                achievementMilestoneProgressBar.setProgress(progressPercentage);
             }
             
             // Update next milestone text
@@ -489,8 +491,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         daysToNextMilestone + " days to go!");
             }
         } else {
-            // No next milestone (may happen if all predefined milestones are achieved)
-            // Calculate next year milestone
+            // No predefined milestones left, calculate next year milestone
             int yearsSober = daysSober / 365;
             int nextYearMilestone = (yearsSober + 1) * 365;
             int daysToNextYearMilestone = nextYearMilestone - daysSober;
@@ -499,10 +500,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             nextMilestoneTextView.setText("Next milestone: " + nextYearMilestone + " days\n" +
                     daysToNextYearMilestone + " days to go!");
             
-            // Update progress bar
-            if (milestoneProgressBar != null) {
+            // Update progress bar with the new ID
+            if (achievementMilestoneProgressBar != null) {
                 int progressPercentage = (int)(((float)(daysSober % 365) / 365) * 100);
-                milestoneProgressBar.setProgress(progressPercentage);
+                achievementMilestoneProgressBar.setProgress(progressPercentage);
             }
         }
     }

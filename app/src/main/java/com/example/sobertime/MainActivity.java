@@ -116,8 +116,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         try {
             toolbar = findViewById(R.id.toolbar);
             if (toolbar != null) {
-                // Only set support action bar if we're using a Toolbar, not the default ActionBar
                 setSupportActionBar(toolbar);
+                // Add this line to show the hamburger icon
+                getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+                getSupportActionBar().setHomeButtonEnabled(true);
             } else {
                 Log.e(TAG, "Toolbar not found in layout");
             }
@@ -141,6 +143,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         } catch (Exception e) {
             Log.e(TAG, "Error setting up toolbar and drawer: " + e.getMessage());
+        }
+    }
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        // Re-sync the toggle state after onRestoreInstanceState has occurred
+        if (drawerLayout != null && toolbar != null) {
+            ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                    this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+            toggle.syncState();
         }
     }
 

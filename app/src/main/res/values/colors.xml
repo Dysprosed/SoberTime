@@ -30,6 +30,7 @@
     <!-- Card Colors -->
     <color name="cardBorder">#E0E0E0</color>
     <color name="cardBackground">#FFFFFF</color>
+    <color name="colorCardBackground">#FFFFFF</color>
 
     <!-- Other UI Colors -->
     <color name="celebrationBackground">#E8F5E9</color>

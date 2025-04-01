@@ -55,11 +55,34 @@ public class AchievementsAdapter extends RecyclerView.Adapter<AchievementsAdapte
             holder.iconImageView.setImageResource(R.drawable.ic_notification);
         }
 
-        // Style based on unlock status
-        if (achievement.isUnlocked()) {
+        // For time milestones, show the milestone date
+        if (achievement.getCategory() == Achievement.AchievementCategory.TIME_MILESTONE && 
+            !achievement.getMilestoneDate().isEmpty()) {
+            holder.dateTextView.setText("Date: " + achievement.getMilestoneDate());
+            holder.dateTextView.setVisibility(View.VISIBLE);
+            
+            // Also display days required
+            holder.daysBadgeTextView.setText(String.valueOf(achievement.getDaysRequired()));
+            holder.daysBadgeTextView.setVisibility(View.VISIBLE);
+        } else {
+            holder.dateTextView.setVisibility(View.GONE);
+            holder.daysBadgeTextView.setVisibility(View.GONE);
+        }
+
+        // Style based on unlock status and special handling for today's milestone
+        if (achievement.isToday()) {
+            // Today's milestone - special highlighting
+            holder.cardView.setCardBackgroundColor(ContextCompat.getColor(context, R.color.celebrationBackground));
+            holder.iconImageView.setAlpha(1.0f);
+            holder.titleTextView.setTextColor(ContextCompat.getColor(context, R.color.celebrationText));
+            holder.statusTextView.setText("TODAY! 🎉");
+            holder.statusTextView.setTextColor(ContextCompat.getColor(context, R.color.colorAccent));
+            holder.statusTextView.setVisibility(View.VISIBLE);
+        } else if (achievement.isUnlocked()) {
             // Unlocked achievement
             holder.cardView.setCardBackgroundColor(ContextCompat.getColor(context, R.color.colorSurface));
             holder.iconImageView.setAlpha(1.0f);
+            holder.titleTextView.setTextColor(ContextCompat.getColor(context, R.color.colorOnSurface));
             holder.statusTextView.setText("Unlocked: " + formatDate(achievement.getUnlockTime()));
             holder.statusTextView.setTextColor(ContextCompat.getColor(context, R.color.colorPhysical));
             holder.statusTextView.setVisibility(View.VISIBLE);
@@ -67,6 +90,7 @@ public class AchievementsAdapter extends RecyclerView.Adapter<AchievementsAdapte
             // Locked achievement
             holder.cardView.setCardBackgroundColor(ContextCompat.getColor(context, R.color.colorBackground));
             holder.iconImageView.setAlpha(0.5f);
+            holder.titleTextView.setTextColor(ContextCompat.getColor(context, R.color.colorTextLight));
             holder.statusTextView.setText("Locked");
             holder.statusTextView.setTextColor(ContextCompat.getColor(context, R.color.colorTextLight));
             holder.statusTextView.setVisibility(View.VISIBLE);
@@ -85,6 +109,8 @@ public class AchievementsAdapter extends RecyclerView.Adapter<AchievementsAdapte
         TextView descriptionTextView;
         TextView categoryTextView;
         TextView statusTextView;
+        TextView dateTextView;
+        TextView daysBadgeTextView;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -94,6 +120,8 @@ public class AchievementsAdapter extends RecyclerView.Adapter<AchievementsAdapte
             descriptionTextView = itemView.findViewById(R.id.achievementDescriptionTextView);
             categoryTextView = itemView.findViewById(R.id.achievementCategoryTextView);
             statusTextView = itemView.findViewById(R.id.achievementStatusTextView);
+            dateTextView = itemView.findViewById(R.id.achievementDateTextView);
+            daysBadgeTextView = itemView.findViewById(R.id.daysBadgeTextView);
         }
     }
 

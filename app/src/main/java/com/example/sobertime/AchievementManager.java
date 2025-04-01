@@ -14,9 +14,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -77,13 +81,14 @@ public class AchievementManager {
     }
     
     private void initializeAchievements() {
-        // Time milestones
+        // Time milestones (with day counts)
         addAchievement(new Achievement(
                 1,
                 "First Day",
                 "Complete your first day of sobriety",
                 "ic_achievement_day1",
-                Achievement.AchievementCategory.TIME_MILESTONE
+                Achievement.AchievementCategory.TIME_MILESTONE,
+                1
         ));
         
         addAchievement(new Achievement(
@@ -91,39 +96,80 @@ public class AchievementManager {
                 "One Week Strong",
                 "Complete one week of sobriety",
                 "ic_achievement_week1",
-                Achievement.AchievementCategory.TIME_MILESTONE
+                Achievement.AchievementCategory.TIME_MILESTONE,
+                7
         ));
         
         addAchievement(new Achievement(
                 3,
-                "30 Day Milestone",
-                "Complete one month of sobriety",
-                "ic_achievement_month1",
-                Achievement.AchievementCategory.TIME_MILESTONE
+                "Two Weeks Milestone",
+                "Complete two weeks of sobriety",
+                "ic_achievement_week2",
+                Achievement.AchievementCategory.TIME_MILESTONE,
+                14
         ));
         
         addAchievement(new Achievement(
                 4,
-                "90 Day Warrior",
-                "Complete three months of sobriety",
-                "ic_achievement_90days",
-                Achievement.AchievementCategory.TIME_MILESTONE
+                "30 Day Milestone",
+                "Complete one month of sobriety",
+                "ic_achievement_month1",
+                Achievement.AchievementCategory.TIME_MILESTONE,
+                30
         ));
         
         addAchievement(new Achievement(
                 5,
-                "Half Year Hero",
-                "Complete six months of sobriety",
-                "ic_achievement_6months",
-                Achievement.AchievementCategory.TIME_MILESTONE
+                "60 Day Milestone",
+                "Complete two months of sobriety",
+                "ic_achievement_60days",
+                Achievement.AchievementCategory.TIME_MILESTONE,
+                60
         ));
         
         addAchievement(new Achievement(
                 6,
+                "90 Day Warrior",
+                "Complete three months of sobriety",
+                "ic_achievement_90days",
+                Achievement.AchievementCategory.TIME_MILESTONE,
+                90
+        ));
+        
+        addAchievement(new Achievement(
+                7,
+                "Half Year Hero",
+                "Complete six months of sobriety",
+                "ic_achievement_6months",
+                Achievement.AchievementCategory.TIME_MILESTONE,
+                180
+        ));
+        
+        addAchievement(new Achievement(
+                8,
                 "One Year Champion",
                 "Complete one year of sobriety",
                 "ic_achievement_1year",
-                Achievement.AchievementCategory.TIME_MILESTONE
+                Achievement.AchievementCategory.TIME_MILESTONE,
+                365
+        ));
+        
+        addAchievement(new Achievement(
+                9,
+                "Two Year Legend",
+                "Complete two years of sobriety",
+                "ic_achievement_2years",
+                Achievement.AchievementCategory.TIME_MILESTONE,
+                730
+        ));
+        
+        addAchievement(new Achievement(
+                10,
+                "Three Year Inspiration",
+                "Complete three years of sobriety",
+                "ic_achievement_3years",
+                Achievement.AchievementCategory.TIME_MILESTONE,
+                1095
         ));
         
         // Journal achievements
@@ -279,38 +325,97 @@ public class AchievementManager {
     }
     
     /**
-     * Check for achievement unlocks based on days sober
+     * Get all time-based milestone achievements
      */
-    public void checkTimeAchievements(int daysSober) {
+    public List<Achievement> getTimeMilestones() {
+        List<Achievement> milestones = new ArrayList<>();
+        for (Achievement achievement : achievements) {
+            if (achievement.getCategory() == Achievement.AchievementCategory.TIME_MILESTONE) {
+                milestones.add(achievement);
+            }
+        }
+        return milestones;
+    }
+    
+    /**
+     * Update milestone dates based on sobriety start date
+     */
+    public void updateMilestoneDates(long sobrietyStartDate) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MMMM d, yyyy", Locale.getDefault());
+        
+        for (Achievement achievement : achievements) {
+            if (achievement.getCategory() == Achievement.AchievementCategory.TIME_MILESTONE) {
+                // Calculate milestone date
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTimeInMillis(sobrietyStartDate);
+                calendar.add(Calendar.DAY_OF_YEAR, achievement.getDaysRequired());
+                
+                Date milestoneDate = calendar.getTime();
+                String formattedDate = dateFormat.format(milestoneDate);
+                achievement.setMilestoneDate(formattedDate);
+            }
+        }
+    }
+    
+    /**
+     * Check for achievement unlocks based on days sober
+     * Returns the achievement if today is a milestone, null otherwise
+     */
+    public Achievement checkTimeAchievements(int daysSober) {
         boolean newAchievement = false;
+        Achievement todaysMilestone = null;
         
-        if (daysSober >= 1) {
-            newAchievement |= unlockAchievement(1);
+        // Reset "today" flag for all achievements
+        for (Achievement achievement : achievements) {
+            if (achievement.getCategory() == Achievement.AchievementCategory.TIME_MILESTONE) {
+                achievement.setToday(false);
+            }
         }
         
-        if (daysSober >= 7) {
-            newAchievement |= unlockAchievement(2);
-        }
-        
-        if (daysSober >= 30) {
-            newAchievement |= unlockAchievement(3);
-        }
-        
-        if (daysSober >= 90) {
-            newAchievement |= unlockAchievement(4);
-        }
-        
-        if (daysSober >= 180) {
-            newAchievement |= unlockAchievement(5);
-        }
-        
-        if (daysSober >= 365) {
-            newAchievement |= unlockAchievement(6);
+        // Check each time milestone
+        for (Achievement achievement : achievements) {
+            if (achievement.getCategory() == Achievement.AchievementCategory.TIME_MILESTONE) {
+                int daysRequired = achievement.getDaysRequired();
+                
+                if (daysSober >= daysRequired) {
+                    // Achievement should be unlocked
+                    if (!achievement.isUnlocked()) {
+                        achievement.setUnlocked(true);
+                        newAchievement = true;
+                    }
+                    
+                    // Check if this is today's milestone
+                    if (daysSober == daysRequired) {
+                        achievement.setToday(true);
+                        todaysMilestone = achievement;
+                    }
+                }
+            }
         }
         
         if (newAchievement) {
             saveAchievements();
         }
+        
+        return todaysMilestone;
+    }
+    
+    /**
+     * Get the next milestone based on current day count
+     */
+    public Achievement getNextMilestone(int daysSober) {
+        Achievement nextMilestone = null;
+        int daysToNext = Integer.MAX_VALUE;
+        
+        for (Achievement achievement : getTimeMilestones()) {
+            int days = achievement.getDaysRequired();
+            if (days > daysSober && (days - daysSober) < daysToNext) {
+                nextMilestone = achievement;
+                daysToNext = days - daysSober;
+            }
+        }
+        
+        return nextMilestone;
     }
     
     /**
@@ -440,5 +545,18 @@ public class AchievementManager {
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         
         notificationManager.notify(achievement.getId(), builder.build());
+    }
+    
+    /**
+     * Show celebration dialog for time milestone achievement
+     */
+    public void showMilestoneCelebration(Context context, Achievement milestone) {
+        // Only show celebration for time milestones
+        if (milestone != null && 
+            milestone.getCategory() == Achievement.AchievementCategory.TIME_MILESTONE) {
+            
+            // Use the MilestoneCelebration helper class
+            MilestoneCelebration.showCelebrationDialog(context, milestone.getDaysRequired());
+        }
     }
 }

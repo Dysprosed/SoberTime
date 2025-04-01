@@ -47,17 +47,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private TextView soberSinceTextView;
     private TextView nextMilestoneTextView;
     private TextView motivationTextView;
-    private CardView milestonesCardView;
+    private CardView achievementsCardView;
     private CardView statsCardView;
 
     // These are the new CardViews which might not exist yet
     private CardView journalCardView;
-    private CardView achievementsCardView;
     private CardView emergencyHelpCardView;
     private CardView inspirationCardView;
     private CardView communityCardView;
     private CardView progressReportCardView;
 
+    private Button resetDateButton;
     private ProgressBar milestoneProgressBar;
     
     // Drawer elements
@@ -103,6 +103,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // Initialize achievement manager
         achievementManager = AchievementManager.getInstance(this);
+        
+        // Update milestone dates based on sobriety start date
+        achievementManager.updateMilestoneDates(sobrietyStartDate);
 
         // Update UI with current data
         updateSobrietyInfo();
@@ -112,44 +115,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
     
     private void setupToolbarAndDrawer() {
-        // Find the toolbar in the layout
         toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
         
-        // Set the toolbar as the app bar
-        if (toolbar != null) {
-            // We need to set the app theme to NoActionBar first
-            // This code checks if we need to create a custom theme
-            int currentThemeId = getTheme().getResources().getIdentifier(
-                    "Theme.AppCompat.Light.NoActionBar", "style", getPackageName());
-            
-            if (currentThemeId != 0) {
-                // Only set the support action bar if we can find a valid NoActionBar theme
-                setSupportActionBar(toolbar);
-            } else {
-                // Log that we couldn't find the right theme - this is a fallback
-                Log.w("MainActivity", "Could not find NoActionBar theme, skipping toolbar setup");
-                return;
-            }
-        } else {
-            // Log that we couldn't find the toolbar
-            Log.w("MainActivity", "Toolbar not found in layout");
-            return;
-        }
-        
-        // Set up drawer layout
         drawerLayout = findViewById(R.id.drawer_layout);
         navigationView = findViewById(R.id.nav_view);
         
-        if (drawerLayout != null && navigationView != null) {
-            ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                    this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-            drawerLayout.addDrawerListener(toggle);
-            toggle.syncState();
-            
-            navigationView.setNavigationItemSelectedListener(this);
-        } else {
-            Log.w("MainActivity", "Drawer layout or navigation view not found");
-        }
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
+        
+        navigationView.setNavigationItemSelectedListener(this);
     }
 
     // Apply saved theme preference
@@ -251,15 +228,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         soberSinceTextView = findViewById(R.id.soberSinceTextView);
         nextMilestoneTextView = findViewById(R.id.nextMilestoneTextView);
         motivationTextView = findViewById(R.id.motivationTextView);
-        milestonesCardView = findViewById(R.id.milestonesCardView);
+        // Changed milestonesCardView to achievementsCardView
+        achievementsCardView = findViewById(R.id.achievementsCardView);
         statsCardView = findViewById(R.id.statsCardView);
+        resetDateButton = findViewById(R.id.resetDateButton);
 
         // Safely try to find the milestone progress bar
         milestoneProgressBar = findProgressBarSafely(R.id.milestoneProgressBar);
 
         // Safely try to find all CardViews - no compile errors whether they exist or not
         journalCardView = findCardViewSafely(R.id.journalCardView);
-        achievementsCardView = findCardViewSafely(R.id.achievementsCardView);
         emergencyHelpCardView = findCardViewSafely(R.id.emergencyHelpCardView);
         inspirationCardView = findCardViewSafely(R.id.inspirationCardView);
         communityCardView = findCardViewSafely(R.id.communityCardView);
@@ -313,19 +291,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     // Method to setup all card click listeners
     private void setupClickListeners() {
-        milestonesCardView.setOnClickListener(new View.OnClickListener() {
+        // Changed to achievements card
+        achievementsCardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 try {
-                    // Open milestones activity
-                    Intent intent = new Intent(MainActivity.this, MilestonesActivity.class);
-                    intent.putExtra("start_date", sobrietyStartDate);
+                    // Open achievements activity
+                    Intent intent = new Intent(MainActivity.this, AchievementsActivity.class);
                     startActivity(intent);
                 } catch (Exception e) {
                     // Log error and show toast to user
-                    Log.e("MainActivity", "Couldn't open Milestones", e);
+                    Log.e("MainActivity", "Couldn't open Achievements", e);
                     Toast.makeText(MainActivity.this,
-                            "Couldn't open Milestones: " + e.getMessage(),
+                            "Couldn't open Achievements: " + e.getMessage(),
                             Toast.LENGTH_SHORT).show();
                 }
             }
@@ -351,12 +329,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // Initialize click listeners for optional CardViews
         setupCardViewClickListener(journalCardView, JournalActivity.class, "Journal");
-        setupCardViewClickListener(achievementsCardView, AchievementsActivity.class, "Achievements");
         setupCardViewClickListener(emergencyHelpCardView, EmergencyHelpActivity.class, "Emergency Help");
         setupCardViewClickListener(inspirationCardView, InspirationActivity.class, "Inspirational Quotes");
         setupCardViewClickListener(communityCardView, CommunitySupportActivity.class, "Community Support");
         setupCardViewClickListener(progressReportCardView, ProgressReportActivity.class, "Progress Report");
 
+        resetDateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    showDatePickerDialog();
+                } catch (Exception e) {
+                    Log.e("MainActivity", "Failed to show DatePickerDialog", e);
+                    Toast.makeText(MainActivity.this,
+                            "An error occurred while opening the date picker. Please try again.",
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     /**
@@ -381,41 +371,63 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    private void updateSobrietyInfo() {
-        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        int userStatus = prefs.getInt("current_status", 0); // 0 = unknown, 1 = sober, 2 = seeking
-        
-        if (userStatus == 2) { // User is seeking support, not yet sober
-            // Show special UI for users who haven't started sobriety yet
-            dayCountTextView.setText("--");
-            soberSinceTextView.setText("Ready to begin your journey?");
-            nextMilestoneTextView.setText("Your first milestone awaits! Set your sobriety date to begin tracking.");
-            
-            // Set progress bar to 0 if it exists
-            if (milestoneProgressBar != null) {
-                milestoneProgressBar.setProgress(0);
-            }
-            
-            // Update motivation message for those still considering sobriety
-            motivationTextView.setText("The journey of a thousand miles begins with a single step.");
-            
-        } else {
-            // Regular sobriety tracking
-            int daysSober = getDaysSober();
-    
-            // Update day count
-            dayCountTextView.setText(String.valueOf(daysSober));
-    
-            // Update sober since text
-            soberSinceTextView.setText("Sober since: " + dateFormat.format(new Date(sobrietyStartDate)));
-    
-            // Update next milestone info
-            updateNextMilestone(daysSober);
-    
-            // Update motivation message
-            updateMotivationMessage(daysSober);
+    private void showDatePickerDialog() {
+        // Create Calendar instance from sobriety start date
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(sobrietyStartDate);
 
-        }
+        // Create DatePickerDialog
+        DatePickerDialog datePickerDialog = new DatePickerDialog(
+                this,
+                new DatePickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+                        Calendar selectedDate = Calendar.getInstance();
+                        selectedDate.set(year, month, dayOfMonth);
+
+                        // Save the new date
+                        sobrietyStartDate = selectedDate.getTimeInMillis();
+                        SharedPreferences.Editor editor = preferences.edit();
+                        editor.putLong(START_DATE_KEY, sobrietyStartDate);
+                        editor.apply();
+
+                        // Update milestone dates
+                        achievementManager.updateMilestoneDates(sobrietyStartDate);
+                        
+                        // Update UI
+                        updateSobrietyInfo();
+
+                        // Check achievements for new day count
+                        updateAchievements();
+
+                        // Reschedule notifications based on new date
+                        NotificationHelper.rescheduleNotifications(MainActivity.this, sobrietyStartDate);
+                    }
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+        );
+
+        // Set max date to today
+        datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis());
+        datePickerDialog.show();
+    }
+
+    private void updateSobrietyInfo() {
+        int daysSober = getDaysSober();
+
+        // Update day count
+        dayCountTextView.setText(String.valueOf(daysSober));
+
+        // Update sober since text
+        soberSinceTextView.setText("Sober since: " + dateFormat.format(new Date(sobrietyStartDate)));
+
+        // Update next milestone info
+        updateNextMilestone(daysSober);
+
+        // Update motivation message
+        updateMotivationMessage(daysSober);
     }
 
     private int getDaysSober() {
@@ -425,46 +437,57 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void updateNextMilestone(int daysSober) {
-        int[] milestones = {1, 7, 14, 30, 60, 90, 180, 365, 730, 1095};
-        int nextMilestone = -1;
-        int previousMilestone = 0;
-
-        for (int milestone : milestones) {
-            if (daysSober < milestone) {
-                nextMilestone = milestone;
-                break;
+        // Get next milestone from achievement manager
+        Achievement nextMilestone = achievementManager.getNextMilestone(daysSober);
+        
+        if (nextMilestone != null) {
+            int nextMilestoneDays = nextMilestone.getDaysRequired();
+            int daysToNextMilestone = nextMilestoneDays - daysSober;
+            
+            // Find previous milestone
+            int previousMilestoneDays = 0;
+            for (Achievement achievement : achievementManager.getTimeMilestones()) {
+                int days = achievement.getDaysRequired();
+                if (days < nextMilestoneDays && days > previousMilestoneDays && days <= daysSober) {
+                    previousMilestoneDays = days;
+                }
             }
-            previousMilestone = milestone;
-        }
-
-        if (nextMilestone == -1) {
-            // If we've passed all predefined milestones, calculate the next year milestone
-            int yearsSober = daysSober / 365;
-            nextMilestone = (yearsSober + 1) * 365;
-            previousMilestone = yearsSober * 365;
-        }
-
-        int daysToNextMilestone = nextMilestone - daysSober;
-        int totalDaysInMilestone = nextMilestone - previousMilestone;
-        int progressDays = daysSober - previousMilestone;
-
-        // Calculate progress percentage
-        int progressPercentage = (int)(((float)progressDays / totalDaysInMilestone) * 100);
-
-        // Update progress bar if it exists
-        if (milestoneProgressBar != null) {
-            milestoneProgressBar.setProgress(progressPercentage);
-        }
-
-        if (daysToNextMilestone == 0) {
-            // Today is a milestone!
-            nextMilestoneTextView.setText("Today is a milestone day! 🎉");
-
-            // Show celebration dialog
-            MilestoneCelebration.showCelebrationDialog(this, daysSober);
+            
+            int totalDaysInMilestone = nextMilestoneDays - previousMilestoneDays;
+            int progressDays = daysSober - previousMilestoneDays;
+            
+            // Calculate progress percentage
+            int progressPercentage = (int)(((float)progressDays / totalDaysInMilestone) * 100);
+            
+            // Update progress bar if it exists
+            if (milestoneProgressBar != null) {
+                milestoneProgressBar.setProgress(progressPercentage);
+            }
+            
+            // Update next milestone text
+            if (daysToNextMilestone == 0) {
+                // Today is a milestone!
+                nextMilestoneTextView.setText("Today is a milestone day! 🎉");
+            } else {
+                nextMilestoneTextView.setText("Next milestone: " + nextMilestoneDays + " days\n" +
+                        daysToNextMilestone + " days to go!");
+            }
         } else {
-            nextMilestoneTextView.setText("Next milestone: " + nextMilestone + " days\n" +
-                    daysToNextMilestone + " days to go!");
+            // No next milestone (may happen if all predefined milestones are achieved)
+            // Calculate next year milestone
+            int yearsSober = daysSober / 365;
+            int nextYearMilestone = (yearsSober + 1) * 365;
+            int daysToNextYearMilestone = nextYearMilestone - daysSober;
+            
+            // Update next milestone text
+            nextMilestoneTextView.setText("Next milestone: " + nextYearMilestone + " days\n" +
+                    daysToNextYearMilestone + " days to go!");
+            
+            // Update progress bar
+            if (milestoneProgressBar != null) {
+                int progressPercentage = (int)(((float)(daysSober % 365) / 365) * 100);
+                milestoneProgressBar.setProgress(progressPercentage);
+            }
         }
     }
 
@@ -497,16 +520,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void updateAchievements() {
+        int daysSober = getDaysSober();
+        
         // Check for achievement unlocks based on current day count
-        AchievementManager achievementManager = AchievementManager.getInstance(this);
-        achievementManager.checkTimeAchievements(getDaysSober());
+        Achievement todaysMilestone = achievementManager.checkTimeAchievements(daysSober);
+        
+        // Show celebration dialog if today is a milestone
+        if (todaysMilestone != null) {
+            achievementManager.showMilestoneCelebration(this, todaysMilestone);
+        }
 
         // Also check financial achievements
         DatabaseHelper databaseHelper = DatabaseHelper.getInstance(this);
         float drinkCost = databaseHelper.getFloatSetting("drink_cost", 8.50f);
         int drinksPerWeek = databaseHelper.getIntSetting("drinks_per_week", 15);
 
-        float drinksAvoided = (getDaysSober() / 7.0f) * drinksPerWeek;
+        float drinksAvoided = (daysSober / 7.0f) * drinksPerWeek;
         float moneySaved = drinksAvoided * drinkCost;
 
         achievementManager.checkFinancialAchievements(moneySaved);

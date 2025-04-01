@@ -34,6 +34,10 @@ public class AchievementsActivity extends BaseActivity {
 
         // Initialize achievement manager
         achievementManager = AchievementManager.getInstance(this);
+        
+        // Make sure milestone dates are updated
+        achievementManager.updateMilestoneDates(getSharedPreferences("SobrietyTrackerPrefs", MODE_PRIVATE)
+                .getLong("sobriety_start_date", System.currentTimeMillis()));
 
         // Initialize views
         initializeViews();
@@ -57,6 +61,7 @@ public class AchievementsActivity extends BaseActivity {
     private void setupTabs() {
         // Add tabs
         tabLayout.addTab(tabLayout.newTab().setText("All"));
+        tabLayout.addTab(tabLayout.newTab().setText("Milestones")); // New tab for milestones
         tabLayout.addTab(tabLayout.newTab().setText("Unlocked"));
         tabLayout.addTab(tabLayout.newTab().setText("Locked"));
 
@@ -68,10 +73,13 @@ public class AchievementsActivity extends BaseActivity {
                     case 0: // All
                         displayAchievements(achievementManager.getAllAchievements());
                         break;
-                    case 1: // Unlocked
+                    case 1: // Milestones
+                        displayAchievements(achievementManager.getTimeMilestones());
+                        break;
+                    case 2: // Unlocked
                         displayAchievements(achievementManager.getUnlockedAchievements());
                         break;
-                    case 2: // Locked
+                    case 3: // Locked
                         displayAchievements(achievementManager.getLockedAchievements());
                         break;
                 }
@@ -100,10 +108,13 @@ public class AchievementsActivity extends BaseActivity {
                 case 0: // All
                     emptyStateText.setText("No achievements available yet.");
                     break;
-                case 1: // Unlocked
+                case 1: // Milestones
+                    emptyStateText.setText("No milestone achievements available.");
+                    break;
+                case 2: // Unlocked
                     emptyStateText.setText("You haven't unlocked any achievements yet.\nKeep going on your sobriety journey!");
                     break;
-                case 2: // Locked
+                case 3: // Locked
                     emptyStateText.setText("You've unlocked all achievements!\nCongratulations on your amazing progress!");
                     break;
             }
@@ -121,5 +132,4 @@ public class AchievementsActivity extends BaseActivity {
             }
         }
     }
-
 }

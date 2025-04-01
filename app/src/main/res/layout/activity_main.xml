@@ -169,59 +169,6 @@
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
-                <!-- Milestones -->
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/milestonesCardView"
-                    style="@style/AppCard"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:padding="16dp">
-
-                        <ImageView
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:layout_gravity="center_vertical"
-                            android:layout_marginEnd="16dp"
-                            android:src="@drawable/ic_milestone"
-                            app:tint="@color/colorPrimary" />
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical">
-
-                            <TextView
-                                style="@style/CardTitleText"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="Milestone Progress"
-                                android:textColor="@color/colorPrimary" />
-
-                            <TextView
-                                android:id="@+id/nextMilestoneTextView"
-                                style="@style/CardContentText"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="Next milestone: 365 days\n39 days to go!" />
-
-                            <!-- Progress Bar -->
-                            <ProgressBar
-                                android:id="@+id/milestoneProgressBar"
-                                style="?android:attr/progressBarStyleHorizontal"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
-                                android:progressTint="@color/colorPrimary"
-                                android:progress="89" />
-                        </LinearLayout>
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
-
                 <!-- Health Benefits -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/statsCardView"
@@ -306,7 +253,7 @@
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
-                <!-- Achievements Card -->
+                <!-- Achievements Card (previously Milestones) -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/achievementsCardView"
                     style="@style/AppCard"
@@ -340,10 +287,21 @@
                                 android:textColor="@color/colorAccent" />
 
                             <TextView
+                                android:id="@+id/nextMilestoneTextView"
                                 style="@style/CardContentText"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="View your earned badges and accomplishments" />
+                                android:text="Next milestone: 365 days\n39 days to go!" />
+
+                            <!-- Progress Bar -->
+                            <ProgressBar
+                                android:id="@+id/milestoneProgressBar"
+                                style="?android:attr/progressBarStyleHorizontal"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:progressTint="@color/colorAccent"
+                                android:progress="89" />
                         </LinearLayout>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>

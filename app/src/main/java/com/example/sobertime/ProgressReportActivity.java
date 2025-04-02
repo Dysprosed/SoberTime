@@ -715,23 +715,18 @@ public class ProgressReportActivity extends BaseActivity {
             int savingsAchievements = 0;
             int challengeAchievements = 0;
             
-            // In the setupAchievementsChart() method:
+            // Alternative approach using if statements instead of switch
             for (Achievement achievement : achievements) {
                 AchievementCategory category = achievement.getCategory();
                 
-                switch (category) {
-                    case AchievementCategory.TIME:
-                        timeAchievements++;
-                        break;
-                    case AchievementCategory.JOURNAL:
-                        journalAchievements++;
-                        break;
-                    case AchievementCategory.SAVINGS:
-                        savingsAchievements++;
-                        break;
-                    case AchievementCategory.CHALLENGE:
-                        challengeAchievements++;
-                        break;
+                if (category == AchievementCategory.TIME) {
+                    timeAchievements++;
+                } else if (category == AchievementCategory.JOURNAL) {
+                    journalAchievements++;
+                } else if (category == AchievementCategory.SAVINGS) {
+                    savingsAchievements++;
+                } else if (category == AchievementCategory.CHALLENGE) {
+                    challengeAchievements++;
                 }
             }
             

@@ -280,15 +280,11 @@
                         android:textColor="@color/colorFinancial" />
 
                     <!-- Financial Comparison Chart -->
-                    <TextView
+                    <com.github.mikephil.charting.charts.BarChart
                         android:id="@+id/financialComparisonChart"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="Financial comparison visualization will appear here"
-                        android:gravity="center"
-                        android:padding="120dp"
-                        android:background="#EDE7F6"/>
+                        android:layout_height="220dp"
+                        android:layout_marginTop="8dp" />
 
                     <TextView
                         android:id="@+id/financialExamplesTextView"
@@ -328,15 +324,11 @@
                         android:textColor="@color/colorPhysical" />
 
                     <!-- Health Progress Chart -->
-                    <TextView
+                    <com.github.mikephil.charting.charts.LineChart
                         android:id="@+id/healthProgressChart"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="Health progress visualization will appear here"
-                        android:gravity="center"
-                        android:padding="120dp"
-                        android:background="#E8F5E9"/>
+                        android:layout_height="220dp"
+                        android:layout_marginTop="8dp" />
 
                     <TextView
                         android:id="@+id/healthDetailsTextView"
@@ -376,15 +368,11 @@
                         android:textColor="@color/colorMental" />
 
                     <!-- Time Investment Chart -->
-                    <TextView
+                    <com.github.mikephil.charting.charts.PieChart
                         android:id="@+id/timeInvestmentChart"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="Time investment visualization will appear here"
-                        android:gravity="center"
-                        android:padding="120dp"
-                        android:background="#E1F5FE"/>
+                        android:layout_height="220dp"
+                        android:layout_marginTop="8dp" />
 
                     <TextView
                         android:id="@+id/timeDetailsTextView"
@@ -424,15 +412,11 @@
                         android:textColor="@color/colorAccent" />
 
                     <!-- Achievements Chart -->
-                    <TextView
+                    <com.github.mikephil.charting.charts.HorizontalBarChart
                         android:id="@+id/achievementsChart"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="Achievements visualization will appear here"
-                        android:gravity="center"
-                        android:padding="120dp"
-                        android:background="#FFECB3"/>
+                        android:layout_height="220dp"
+                        android:layout_marginTop="8dp" />
 
                     <TextView
                         android:id="@+id/nextMilestoneTextView"

@@ -30,7 +30,7 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:text="May 1, 2024 - July 30, 2024"
-            android:textColor="@color/colorTextLight"
+            android:textColor="@color/colorText"
             android:textSize="16sp"
             android:layout_marginBottom="16dp" />
 
@@ -181,7 +181,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Financial"
-                    android:textColor="@color/colorTextLight"
+                    android:textColor="@color/colorText"
                     android:textSize="14sp"
                     android:gravity="center"
                     android:padding="8dp"/>
@@ -443,7 +443,7 @@
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
                 android:text="Email Report"
-                android:textColor="@color/colorTextLight"
+                android:textColor="@color/colorText"
                 android:backgroundTint="@color/colorPrimary"
                 android:drawableStart="@drawable/ic_email"
                 android:padding="12dp"
@@ -456,7 +456,7 @@
                 android:layout_weight="1"
                 android:layout_marginStart="8dp"
                 android:text="Share Progress"
-                android:textColor="@color/colorTextLight"
+                android:textColor="@color/colorText"
                 android:backgroundTint="@color/colorAccent"
                 android:drawableStart="@drawable/ic_share"
                 android:padding="12dp"

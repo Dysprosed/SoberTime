@@ -66,7 +66,7 @@
                         android:layout_height="wrap_content"
                         android:layout_columnWeight="1"
                         android:text="Days Sober:"
-                        android:textColor="@color/colorTextDark"
+                        android:textColor="@color/colorText"
                         android:textSize="16sp" />
 
                     <TextView
@@ -85,7 +85,7 @@
                         android:layout_height="wrap_content"
                         android:layout_columnWeight="1"
                         android:text="Money Saved:"
-                        android:textColor="@color/colorTextDark"
+                        android:textColor="@color/colorText"
                         android:textSize="16sp" />
 
                     <TextView
@@ -104,7 +104,7 @@
                         android:layout_height="wrap_content"
                         android:layout_columnWeight="1"
                         android:text="Calories Saved:"
-                        android:textColor="@color/colorTextDark"
+                        android:textColor="@color/colorText"
                         android:textSize="16sp" />
 
                     <TextView
@@ -123,7 +123,7 @@
                         android:layout_height="wrap_content"
                         android:layout_columnWeight="1"
                         android:text="Achievements:"
-                        android:textColor="@color/colorTextDark"
+                        android:textColor="@color/colorText"
                         android:textSize="16sp" />
 
                     <TextView
@@ -142,7 +142,7 @@
                         android:layout_height="wrap_content"
                         android:layout_columnWeight="1"
                         android:text="Journal Entries:"
-                        android:textColor="@color/colorTextDark"
+                        android:textColor="@color/colorText"
                         android:textSize="16sp" />
 
                     <TextView
@@ -203,7 +203,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Health"
-                    android:textColor="@color/colorTextDark"
+                    android:textColor="@color/colorText"
                     android:textSize="14sp"
                     android:gravity="center"
                     android:padding="8dp"/>
@@ -225,7 +225,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Time"
-                    android:textColor="@color/colorTextDark"
+                    android:textColor="@color/colorText"
                     android:textSize="14sp"
                     android:gravity="center"
                     android:padding="8dp"/>
@@ -246,7 +246,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Progress"
-                    android:textColor="@color/colorTextDark"
+                    android:textColor="@color/colorText"
                     android:textSize="14sp"
                     android:gravity="center"
                     android:padding="8dp"/>
@@ -291,7 +291,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:textColor="@color/colorTextDark"
+                        android:textColor="@color/colorText"
                         android:textSize="14sp"/>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -335,7 +335,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:textColor="@color/colorTextDark"
+                        android:textColor="@color/colorText"
                         android:textSize="14sp"/>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -379,7 +379,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:textColor="@color/colorTextDark"
+                        android:textColor="@color/colorText"
                         android:textSize="14sp"/>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -423,7 +423,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:textColor="@color/colorTextDark"
+                        android:textColor="@color/colorText"
                         android:textSize="14sp"/>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>

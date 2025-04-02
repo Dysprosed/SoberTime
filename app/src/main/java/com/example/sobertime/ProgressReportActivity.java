@@ -719,13 +719,13 @@ public class ProgressReportActivity extends BaseActivity {
             for (Achievement achievement : achievements) {
                 AchievementCategory category = achievement.getCategory();
                 
-                if (category == AchievementCategory.TIME) {
+                if (category == AchievementCategory.TIME_MILESTONE) {
                     timeAchievements++;
                 } else if (category == AchievementCategory.JOURNAL) {
                     journalAchievements++;
-                } else if (category == AchievementCategory.SAVINGS) {
+                } else if (category == AchievementCategory.FINANCIAL) {
                     savingsAchievements++;
-                } else if (category == AchievementCategory.CHALLENGE) {
+                } else if (category == AchievementCategory.COMMUNITY) {
                     challengeAchievements++;
                 }
             }

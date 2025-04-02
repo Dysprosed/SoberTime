@@ -13,7 +13,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
-import main.java.com.example.sobertime.BaseActivity;
+import com.example.sobertime.BaseActivity;
 
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -26,6 +26,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import android.graphics.Color;
+import com.github.mikephil.charting.components.LimitLine;
+import com.github.mikephil.charting.animation.Easing;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.charts.PieChart;
@@ -711,19 +714,15 @@ public class ProgressReportActivity extends BaseActivity {
             int challengeAchievements = 0;
             
             for (Achievement achievement : achievements) {
-                switch (achievement.getCategory()) {
-                    case Achievement.CATEGORY_TIME:
-                        timeAchievements++;
-                        break;
-                    case Achievement.CATEGORY_JOURNAL:
-                        journalAchievements++;
-                        break;
-                    case Achievement.CATEGORY_SAVINGS:
-                        savingsAchievements++;
-                        break;
-                    case Achievement.CATEGORY_CHALLENGE:
-                        challengeAchievements++;
-                        break;
+                int category = achievement.getCategory();
+                if (category == Achievement.CATEGORY_TIME) {
+                    timeAchievements++;
+                } else if (category == Achievement.CATEGORY_JOURNAL) {
+                    journalAchievements++;
+                } else if (category == Achievement.CATEGORY_SAVINGS) {
+                    savingsAchievements++;
+                } else if (category == Achievement.CATEGORY_CHALLENGE) {
+                    challengeAchievements++;
                 }
             }
             

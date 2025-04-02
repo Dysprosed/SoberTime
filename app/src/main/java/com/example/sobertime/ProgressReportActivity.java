@@ -15,7 +15,6 @@ import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 
 import com.example.sobertime.Achievement.AchievementCategory;
-import com.example.sobertime.AchievementCategory;
 import com.example.sobertime.BaseActivity;
 
 import java.text.NumberFormat;
@@ -716,20 +715,21 @@ public class ProgressReportActivity extends BaseActivity {
             int savingsAchievements = 0;
             int challengeAchievements = 0;
             
+            // In the setupAchievementsChart() method:
             for (Achievement achievement : achievements) {
                 AchievementCategory category = achievement.getCategory();
                 
                 switch (category) {
-                    case TIME:
+                    case AchievementCategory.TIME:
                         timeAchievements++;
                         break;
-                    case JOURNAL:
+                    case AchievementCategory.JOURNAL:
                         journalAchievements++;
                         break;
-                    case SAVINGS:
+                    case AchievementCategory.SAVINGS:
                         savingsAchievements++;
                         break;
-                    case CHALLENGE:
+                    case AchievementCategory.CHALLENGE:
                         challengeAchievements++;
                         break;
                 }

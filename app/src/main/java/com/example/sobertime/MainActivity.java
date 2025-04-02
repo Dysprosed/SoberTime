@@ -449,9 +449,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private int getDaysSober() {
-        long currentTime = System.currentTimeMillis();
-        long diffInMillis = currentTime - sobrietyStartDate;
-        return (int) TimeUnit.MILLISECONDS.toDays(diffInMillis);
+        Calendar startCalendar = Calendar.getInstance();
+        startCalendar.setTimeInMillis(sobrietyStartDate);
+        // Clear time portion to start at beginning of day
+        startCalendar.set(Calendar.HOUR_OF_DAY, 0);
+        startCalendar.set(Calendar.MINUTE, 0);
+        startCalendar.set(Calendar.SECOND, 0);
+        startCalendar.set(Calendar.MILLISECOND, 0);
+        
+        Calendar currentCalendar = Calendar.getInstance();
+        // Clear time portion to count full days
+        currentCalendar.set(Calendar.HOUR_OF_DAY, 0);
+        currentCalendar.set(Calendar.MINUTE, 0);
+        currentCalendar.set(Calendar.SECOND, 0);
+        currentCalendar.set(Calendar.MILLISECOND, 0);
+        
+        // Calculate days between (including today)
+        long diffInMillis = currentCalendar.getTimeInMillis() - startCalendar.getTimeInMillis();
+        return (int) TimeUnit.MILLISECONDS.toDays(diffInMillis) + 1; // Add 1 to count today
     }
 
     private void updateNextMilestone(int daysSober) {

@@ -42,6 +42,7 @@ public class AchievementManager {
     private Map<Integer, Achievement> achievementMap;
     private SharedPreferences preferences;
     private SobrietyTracker sobrietyTracker;
+    private DatabaseHelper databaseHelper;
     
     private static AchievementManager instance;
     
@@ -56,9 +57,20 @@ public class AchievementManager {
     private AchievementManager(Context context) {
         this.context = context.getApplicationContext();
         this.databaseHelper = DatabaseHelper.getInstance(context);
-        
-        // Initialize SobrietyTracker
         this.sobrietyTracker = SobrietyTracker.getInstance(context);
+        
+        // Initialize collections for achievements
+        this.achievements = new ArrayList<>();
+        this.achievementMap = new HashMap<>();
+        
+        // Initialize preferences
+        this.preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        
+        // Create notification channel for Android 8.0+
+        createNotificationChannel();
+        
+        // Initialize achievements list
+        initializeAchievements();
         
         // Load achievements
         loadAchievements();

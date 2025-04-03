@@ -177,7 +177,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onResume() {
         super.onResume();
-        int daysSober = getDaysSober();
+        int daysSober = sobrietyTracker.getDaysSober();
         updateNextMilestone(daysSober);
         // Refresh data when returning to the app
         updateSobrietyInfo();
@@ -352,7 +352,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     try {
                         // Open health benefits activity
                         Intent intent = new Intent(MainActivity.this, HealthBenefitsActivity.class);
-                        intent.putExtra("days_sober", getDaysSober());
+                        intent.putExtra("days_sober", sobrietyTracker.getDaysSober());
                         startActivity(intent);
                     } catch (Exception e) {
                         // Log error and show toast to user

@@ -988,7 +988,7 @@ public class ProgressReportActivity extends BaseActivity {
         
         try {
             // Calculate weeks since sobriety start
-            long sobrietyStartTimeMillis = sobrietyStartDate;
+            long sobrietyStartTimeMillis = sobrietyTracker.getSobrietyStartDate();
             
             for (JournalEntry entry : journalEntries) {
                 long entryTimeMillis = entry.getTimestamp();

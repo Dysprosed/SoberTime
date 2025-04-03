@@ -60,6 +60,14 @@ public class WelcomeActivity extends AppCompatActivity {
         // Set up click listeners
         setupClickListeners();
     }
+
+    private void saveUserStatus(int status) {
+        SharedPreferences preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putInt(CURRENT_STATUS_KEY, status);
+        editor.putBoolean(ONBOARDING_COMPLETE_KEY, true);
+        editor.apply();
+    }
     
     private void setupClickListeners() {
         // Yes button - show sobriety date dialog then date picker

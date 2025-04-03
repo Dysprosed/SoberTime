@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
+import android.util.Log;
 
 import com.example.sobertime.model.SobrietyTracker;
 
@@ -31,6 +32,98 @@ public class NotificationHelper {
     private static final int EVENING_NOTIFICATION_REQUEST_CODE = 1002;
     private static final int MILESTONE_NOTIFICATION_REQUEST_CODE = 1003;
     private static final int CUSTOM_NOTIFICATION_BASE_REQUEST_CODE = 2000;
+
+    private static final String TAG = "NotificationHelper";
+    private static final int MORNING_NOTIFICATION_ID = 101;
+    private static final int EVENING_NOTIFICATION_ID = 102;
+    private static final int MILESTONE_NOTIFICATION_ID = 103;
+    private static final int CUSTOM_NOTIFICATION_BASE_ID = 200;
+
+    private static void scheduleFixedTimeNotification(Context context, int hour, int minute, int notificationId) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, hour);
+        calendar.set(Calendar.MINUTE, minute);
+        calendar.set(Calendar.SECOND, 0);
+    
+        // If time has passed today, schedule for tomorrow
+        if (calendar.getTimeInMillis() < System.currentTimeMillis()) {
+            calendar.add(Calendar.DAY_OF_YEAR, 1);
+        }
+    
+        Intent intent = new Intent(context, NotificationReceiver.class);
+        intent.putExtra("notification_type", "custom");
+    
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                context,
+                notificationId,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+    
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+    
+        // Set repeating alarm for every day
+        alarmManager.setRepeating(
+                AlarmManager.RTC_WAKEUP,
+                calendar.getTimeInMillis(),
+                AlarmManager.INTERVAL_DAY,
+                pendingIntent
+        );
+    }
+    
+    private static void scheduleNotification(Context context, String title, String message, 
+                                            long triggerTimeMillis, int notificationId) {
+        Intent intent = new Intent(context, NotificationReceiver.class);
+        intent.putExtra("notification_type", "milestone");
+        intent.putExtra("notification_title", title);
+        intent.putExtra("notification_message", message);
+    
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                context,
+                notificationId,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+    
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+    
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (alarmManager.canScheduleExactAlarms()) {
+                    alarmManager.setExactAndAllowWhileIdle(
+                            AlarmManager.RTC_WAKEUP,
+                            triggerTimeMillis,
+                            pendingIntent
+                    );
+                } else {
+                    alarmManager.set(
+                            AlarmManager.RTC_WAKEUP,
+                            triggerTimeMillis,
+                            pendingIntent
+                    );
+                }
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        triggerTimeMillis,
+                        pendingIntent
+                );
+            } else {
+                alarmManager.setExact(
+                        AlarmManager.RTC_WAKEUP,
+                        triggerTimeMillis,
+                        pendingIntent
+                );
+            }
+        } catch (SecurityException e) {
+            // Fall back to inexact alarm if permission denied
+            alarmManager.set(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerTimeMillis,
+                    pendingIntent
+            );
+        }
+    }
 
     /**
      * Create the notification channel for Android 8.0 and higher

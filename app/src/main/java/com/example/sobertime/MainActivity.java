@@ -40,6 +40,8 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
+import com.example.sobertime.model.SobrietyTracker;
+
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "MainActivity";
@@ -63,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private Toolbar toolbar;
     private NavigationView navigationView;
 
-    private SharedPreferences preferences;
+    private SobrietyTracker sobrietyTracker;
     private static final String PREFS_NAME = "SobrietyTrackerPrefs";
     private static final String START_DATE_KEY = "sobriety_start_date";
 
@@ -82,6 +84,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Initialize SobrietyTracker instead of directly reading preferences
+        sobrietyTracker = SobrietyTracker.getInstance(this);
         
         // Set up toolbar and drawer
         setupToolbarAndDrawer();
@@ -96,11 +101,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Log.e(TAG, "Drawer layout is null after setup");
         }
 
+        // No need to initialize preferences anymore
         // Initialize preferences
-        preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        // preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 
         // Get sobriety start date from preferences, or use today's date as default
-        sobrietyStartDate = preferences.getLong(START_DATE_KEY, Calendar.getInstance().getTimeInMillis());
+        // sobrietyStartDate = preferences.getLong(START_DATE_KEY, Calendar.getInstance().getTimeInMillis());
 
         // Set up permission launcher
         setupPermissions();
@@ -392,8 +398,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void showDatePickerDialog() {
         // Create Calendar instance from sobriety start date
         Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(sobrietyStartDate);
-
+        calendar.setTimeInMillis(sobrietyTracker.getSobrietyStartDate());
+    
         // Create DatePickerDialog
         DatePickerDialog datePickerDialog = new DatePickerDialog(
                 this,
@@ -402,53 +408,51 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
                         Calendar selectedDate = Calendar.getInstance();
                         selectedDate.set(year, month, dayOfMonth);
-
-                        // Save the new date
-                        sobrietyStartDate = selectedDate.getTimeInMillis();
-                        SharedPreferences.Editor editor = preferences.edit();
-                        editor.putLong(START_DATE_KEY, sobrietyStartDate);
-                        editor.apply();
-
+    
+                        // Save the new date using SobrietyTracker
+                        sobrietyTracker.setSobrietyStartDate(selectedDate.getTimeInMillis());
+    
                         // Update milestone dates
-                        achievementManager.updateMilestoneDates(sobrietyStartDate);
+                        achievementManager.updateMilestoneDates(sobrietyTracker.getSobrietyStartDate());
                         
                         // Update UI
                         updateSobrietyInfo();
-
+    
                         // Check achievements for new day count
                         updateAchievements();
-
+    
                         // Reschedule notifications based on new date
-                        NotificationHelper.rescheduleNotifications(MainActivity.this, sobrietyStartDate);
+                        NotificationHelper.rescheduleNotifications(MainActivity.this, sobrietyTracker.getSobrietyStartDate());
                     }
                 },
                 calendar.get(Calendar.YEAR),
                 calendar.get(Calendar.MONTH),
                 calendar.get(Calendar.DAY_OF_MONTH)
         );
-
+    
         // Set max date to today
         datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis());
         datePickerDialog.show();
     }
 
     private void updateSobrietyInfo() {
-        int daysSober = getDaysSober();
-
+        // Get days sober from SobrietyTracker
+        int daysSober = sobrietyTracker.getDaysSober();
+    
         // Update day count
         dayCountTextView.setText(String.valueOf(daysSober));
-
+    
         // Update sober since text
-        soberSinceTextView.setText("Sober since: " + dateFormat.format(new Date(sobrietyStartDate)));
-
+        soberSinceTextView.setText("Sober since: " + dateFormat.format(new Date(sobrietyTracker.getSobrietyStartDate())));
+    
         // Update next milestone info
         updateNextMilestone(daysSober);
-
+    
         // Update motivation message
         updateMotivationMessage(daysSober);
     }
 
-    private int getDaysSober() {
+    /*private int getDaysSober() {
         Calendar startCalendar = Calendar.getInstance();
         startCalendar.setTimeInMillis(sobrietyStartDate);
         // Clear time portion to start at beginning of day
@@ -467,7 +471,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // Calculate days between (including today)
         long diffInMillis = currentCalendar.getTimeInMillis() - startCalendar.getTimeInMillis();
         return (int) TimeUnit.MILLISECONDS.toDays(diffInMillis) + 1; // Add 1 to count today
-    }
+    }*/
 
     private void updateNextMilestone(int daysSober) {
         // Get next milestone from achievement manager
@@ -552,7 +556,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void updateAchievements() {
-        int daysSober = getDaysSober();
+        // Get days sober from SobrietyTracker
+        int daysSober = sobrietyTracker.getDaysSober();
         
         // Check for achievement unlocks based on current day count
         Achievement todaysMilestone = achievementManager.checkTimeAchievements(daysSober);
@@ -561,15 +566,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (todaysMilestone != null) {
             achievementManager.showMilestoneCelebration(this, todaysMilestone);
         }
-
+    
         // Also check financial achievements
         DatabaseHelper databaseHelper = DatabaseHelper.getInstance(this);
         float drinkCost = databaseHelper.getFloatSetting("drink_cost", 8.50f);
         int drinksPerWeek = databaseHelper.getIntSetting("drinks_per_week", 15);
-
-        float drinksAvoided = (daysSober / 7.0f) * drinksPerWeek;
-        float moneySaved = drinksAvoided * drinkCost;
-
+    
+        // Use SobrietyTracker to calculate money saved instead of calculating it here
+        float moneySaved = sobrietyTracker.calculateMoneySaved(drinkCost, drinksPerWeek);
+    
         achievementManager.checkFinancialAchievements(moneySaved);
     }
     

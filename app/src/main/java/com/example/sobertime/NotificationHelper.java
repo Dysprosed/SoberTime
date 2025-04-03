@@ -9,6 +9,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 
+import com.example.sobertime.model.SobrietyTracker;
+
 import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 
@@ -60,50 +62,71 @@ public class NotificationHelper {
     }
 
     /**
-     * Schedule all notifications based on user preferences
+     * Schedule all notifications based on user preferences using SobrietyTracker
+     * @param context The application context
      */
     public static void scheduleNotifications(Context context) {
-        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-
-        // Schedule default notifications if enabled
-        if (prefs.getBoolean(MORNING_ENABLED_KEY, true)) {
-            scheduleMorningNotification(context);
+        SharedPreferences prefs = context.getSharedPreferences("SobrietyNotificationPrefs", Context.MODE_PRIVATE);
+        boolean notificationsEnabled = prefs.getBoolean("notifications_enabled", true);
+        
+        if (!notificationsEnabled) {
+            // Cancel all notifications if master switch is off
+            cancelAllNotifications(context);
+            return;
         }
-
-        if (prefs.getBoolean(EVENING_ENABLED_KEY, true)) {
-            scheduleEveningNotification(context);
+        
+        // Get sobriety start date from SobrietyTracker
+        SobrietyTracker sobrietyTracker = SobrietyTracker.getInstance(context);
+        long sobrietyStartDate = sobrietyTracker.getSobrietyStartDate();
+        
+        // Cancel existing notifications before creating new ones
+        cancelAllNotifications(context);
+        
+        // Schedule morning notifications if enabled
+        boolean morningEnabled = prefs.getBoolean("morning_notification_enabled", true);
+        if (morningEnabled) {
+            scheduleFixedTimeNotification(context, 8, 0, MORNING_NOTIFICATION_ID);
         }
-
-        if (prefs.getBoolean(MILESTONE_ENABLED_KEY, true)) {
-            scheduleMilestoneNotifications(context);
+        
+        // Schedule evening notifications if enabled
+        boolean eveningEnabled = prefs.getBoolean("evening_notification_enabled", true);
+        if (eveningEnabled) {
+            scheduleFixedTimeNotification(context, 20, 0, EVENING_NOTIFICATION_ID);
         }
-
+        
+        // Schedule milestone notifications if enabled
+        boolean milestoneEnabled = prefs.getBoolean("milestone_notification_enabled", true);
+        if (milestoneEnabled) {
+            scheduleMilestoneNotifications(context, sobrietyStartDate);
+        }
+        
         // Schedule custom time notifications
-        String customTimesString = prefs.getString(CUSTOM_TIMES_KEY, "");
+        String customTimesString = prefs.getString("custom_notification_times", "");
         if (!customTimesString.isEmpty()) {
             String[] customTimes = customTimesString.split(",");
             for (int i = 0; i < customTimes.length; i++) {
-                String[] timeParts = customTimes[i].split(":");
-                int hour = Integer.parseInt(timeParts[0]);
-                int minute = Integer.parseInt(timeParts[1]);
-
-                scheduleCustomTimeNotification(context, hour, minute, CUSTOM_NOTIFICATION_BASE_REQUEST_CODE + i);
+                try {
+                    String[] timeParts = customTimes[i].split(":");
+                    int hour = Integer.parseInt(timeParts[0]);
+                    int minute = Integer.parseInt(timeParts[1]);
+                    
+                    // Use base ID + index for custom notifications
+                    scheduleFixedTimeNotification(context, hour, minute, CUSTOM_NOTIFICATION_BASE_ID + i);
+                } catch (Exception e) {
+                    Log.e(TAG, "Error parsing custom time: " + customTimes[i], e);
+                }
             }
         }
     }
 
     /**
-     * Reschedule all notifications when sobriety start date changes
+     * Reschedule all notifications after sobriety start date has changed
+     * @param context The application context
+     * @param newStartDate The new sobriety start date (not used directly, using SobrietyTracker)
      */
     public static void rescheduleNotifications(Context context, long newStartDate) {
-        // Cancel all existing notifications
-        cancelAllNotifications(context);
-
-        // Schedule new notifications
+        // Simply call scheduleNotifications which will use the updated start date from SobrietyTracker
         scheduleNotifications(context);
-
-        // Update milestone notifications based on new start date
-        scheduleMilestoneNotifications(context);
     }
 
     /**
@@ -211,32 +234,37 @@ public class NotificationHelper {
         );
     }
 
-    /**
-     * Schedule notifications for upcoming milestones
-     */
-    private static void scheduleMilestoneNotifications(Context context) {
-        // Get sobriety start date
-        SharedPreferences prefs = context.getSharedPreferences("SobrietyTrackerPrefs", Context.MODE_PRIVATE);
-        long startDate = prefs.getLong("sobriety_start_date", System.currentTimeMillis());
-
-        // Calculate current days sober
-        long currentTime = System.currentTimeMillis();
-        long diffInMillis = currentTime - startDate;
-        int daysSober = (int) TimeUnit.MILLISECONDS.toDays(diffInMillis);
-
-        // Define milestones to notify about
-        int[] milestones = {1, 7, 14, 30, 60, 90, 180, 365, 730, 1095, 1460, 1825};
-
-        for (int milestone : milestones) {
-            if (daysSober < milestone) {
-                // Calculate when this milestone will be reached
-                long daysToMilestone = milestone - daysSober;
-                long milestoneTimeMillis = startDate + TimeUnit.DAYS.toMillis(milestone);
-
-                // Only schedule if milestone is within the next 100 days
-                if (daysToMilestone <= 100) {
-                    scheduleMilestoneNotification(context, milestone, milestoneTimeMillis);
-                }
+    // Updated to use SobrietyTracker
+    private static void scheduleMilestoneNotifications(Context context, long sobrietyStartDate) {
+        SobrietyTracker sobrietyTracker = SobrietyTracker.getInstance(context);
+        int currentDaysSober = sobrietyTracker.getDaysSober();
+        
+        // Get next milestones based on achievements
+        AchievementManager achievementManager = AchievementManager.getInstance(context);
+        Achievement nextMilestone = achievementManager.getNextMilestone(currentDaysSober);
+        
+        if (nextMilestone != null) {
+            // Calculate when the next milestone will be reached
+            int daysToMilestone = nextMilestone.getDaysRequired() - currentDaysSober;
+            
+            if (daysToMilestone > 0) {
+                // Calculate the date for this milestone
+                Calendar calendar = Calendar.getInstance();
+                calendar.add(Calendar.DAY_OF_YEAR, daysToMilestone);
+                
+                // Set time to 9:00 AM for milestone notification
+                calendar.set(Calendar.HOUR_OF_DAY, 9);
+                calendar.set(Calendar.MINUTE, 0);
+                calendar.set(Calendar.SECOND, 0);
+                
+                // Schedule notification
+                scheduleNotification(
+                        context,
+                        "Milestone Reached!",
+                        "Congratulations on " + nextMilestone.getDaysRequired() + " days of sobriety!",
+                        calendar.getTimeInMillis(),
+                        MILESTONE_NOTIFICATION_ID
+                );
             }
         }
     }

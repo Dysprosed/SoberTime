@@ -27,6 +27,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.cardview.widget.CardView;
 import com.example.sobertime.BaseActivity;
+import com.example.sobertime.model.SobrietyTracker;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -75,11 +76,15 @@ public class SettingsActivity extends BaseActivity {
     private SharedPreferences preferences;
     private List<String> customTimes;
     private DatabaseHelper databaseHelper;
+    private SobrietyTracker sobrietyTracker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
+
+        // Initialize SobrietyTracker
+        sobrietyTracker = SobrietyTracker.getInstance(this);
 
         // Set up action bar with back button
         try {
@@ -159,18 +164,18 @@ public class SettingsActivity extends BaseActivity {
             // Load notification settings
             boolean notificationsEnabled = preferences.getBoolean(NOTIFICATIONS_ENABLED_KEY, true);
             masterNotificationSwitch.setChecked(notificationsEnabled);
-
+    
             boolean morningEnabled = preferences.getBoolean(MORNING_ENABLED_KEY, true);
             boolean eveningEnabled = preferences.getBoolean(EVENING_ENABLED_KEY, true);
             boolean milestoneEnabled = preferences.getBoolean(MILESTONE_ENABLED_KEY, true);
-
+    
             morningNotificationSwitch.setChecked(morningEnabled);
             eveningNotificationSwitch.setChecked(eveningEnabled);
             milestoneNotificationSwitch.setChecked(milestoneEnabled);
-
+    
             // Update enabled state based on master switch
             updateNotificationSwitchesState(notificationsEnabled);
-
+    
             // Load custom notification times
             String customTimesString = preferences.getString(CUSTOM_TIMES_KEY, "");
             if (!customTimesString.isEmpty()) {
@@ -178,24 +183,23 @@ public class SettingsActivity extends BaseActivity {
             } else {
                 customTimes = new ArrayList<>();
             }
-
+    
             // Display custom times
             displayCustomTimes();
-
+    
             // Load drink settings
             float drinkCost = databaseHelper.getFloatSetting("drink_cost", 8.50f);
             int drinksPerWeek = databaseHelper.getIntSetting("drinks_per_week", 15);
             int caloriesPerDrink = databaseHelper.getIntSetting("calories_per_drink", 150);
-
+    
             drinkCostText.setText(String.format(Locale.getDefault(), "$%.2f", drinkCost));
             drinksPerWeekText.setText(String.valueOf(drinksPerWeek));
             caloriesPerDrinkText.setText(String.valueOf(caloriesPerDrink));
-
-            // Load sobriety date
-            SharedPreferences sobrietyPrefs = getSharedPreferences(SOBRIETY_PREFS_NAME, MODE_PRIVATE);
-            long sobrietyStartDate = sobrietyPrefs.getLong(START_DATE_KEY, System.currentTimeMillis());
+    
+            // Load sobriety date from SobrietyTracker instead of directly from SharedPreferences
+            long sobrietyStartDate = sobrietyTracker.getSobrietyStartDate();
             sobrietyDateText.setText(new SimpleDateFormat("MMMM d, yyyy", Locale.getDefault()).format(new Date(sobrietyStartDate)));
-
+    
         } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(this, "Error loading settings: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -380,17 +384,20 @@ public class SettingsActivity extends BaseActivity {
             
             // 2. Reset database
             databaseHelper.resetAllData();
-
-            // 3. Reset onboarding status to ensure welcome screen appears
+    
+            // 3. Reset sobriety tracker date to today
+            sobrietyTracker.setSobrietyStartDate(System.currentTimeMillis());
+    
+            // 4. Reset onboarding status to ensure welcome screen appears
             getSharedPreferences("SobrietyTrackerPrefs", MODE_PRIVATE)
                 .edit()
                 .putBoolean("onboarding_complete", false)
                 .apply();
-
-            // 4. Show success message
+    
+            // 5. Show success message
             Toast.makeText(this, "All data has been reset", Toast.LENGTH_SHORT).show();
             
-            // 5. Restart app from Welcome Activity
+            // 6. Restart app from Welcome Activity
             Intent intent = new Intent(this, WelcomeActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
@@ -403,9 +410,8 @@ public class SettingsActivity extends BaseActivity {
 
     private void showDatePickerDialog() {
         try {
-            // Get current sobriety date
-            SharedPreferences sobrietyPrefs = getSharedPreferences(SOBRIETY_PREFS_NAME, MODE_PRIVATE);
-            long currentDate = sobrietyPrefs.getLong(START_DATE_KEY, System.currentTimeMillis());
+            // Get current sobriety date from SobrietyTracker
+            long currentDate = sobrietyTracker.getSobrietyStartDate();
     
             // Set up calendar with current date
             Calendar calendar = Calendar.getInstance();
@@ -418,11 +424,9 @@ public class SettingsActivity extends BaseActivity {
                         Calendar newDate = Calendar.getInstance();
                         newDate.set(selectedYear, selectedMonth, selectedDay);
     
-                        // Save the new date
+                        // Save the new date using SobrietyTracker
                         long newStartDate = newDate.getTimeInMillis();
-                        SharedPreferences.Editor editor = sobrietyPrefs.edit();
-                        editor.putLong(START_DATE_KEY, newStartDate);
-                        editor.apply();
+                        sobrietyTracker.setSobrietyStartDate(newStartDate);
     
                         // Update UI
                         String formattedDate = new SimpleDateFormat("MMMM d, yyyy", Locale.getDefault()).format(new Date(newStartDate));

@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+import com.example.sobertime.model.SobrietyTracker; 
 
 import java.util.Calendar;
 
@@ -20,6 +21,7 @@ public class WelcomeActivity extends AppCompatActivity {
     private CardView notSoberCardView;
     private TextView skipTextView;
 
+    private SobrietyTracker sobrietyTracker;
     private static final String PREFS_NAME = "SobrietyTrackerPrefs";
     private static final String ONBOARDING_COMPLETE_KEY = "onboarding_complete";
     private static final String START_DATE_KEY = "sobriety_start_date";
@@ -33,6 +35,9 @@ public class WelcomeActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // Initialize SobrietyTracker
+        sobrietyTracker = SobrietyTracker.getInstance(this);
         
         // Check if onboarding is complete
         SharedPreferences preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
@@ -115,8 +120,8 @@ public class WelcomeActivity extends AppCompatActivity {
                         Calendar selectedDate = Calendar.getInstance();
                         selectedDate.set(year, month, dayOfMonth);
                         
-                        // Save the date and status
-                        saveSobrietyStartDate(selectedDate.getTimeInMillis());
+                        // Save the date using SobrietyTracker and set status
+                        sobrietyTracker.setSobrietyStartDate(selectedDate.getTimeInMillis());
                         saveUserStatus(STATUS_SOBER);
                         
                         // Show congratulation message
@@ -135,14 +140,6 @@ public class WelcomeActivity extends AppCompatActivity {
         SharedPreferences preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
         editor.putLong(START_DATE_KEY, startDate);
-        editor.apply();
-    }
-    
-    private void saveUserStatus(int status) {
-        SharedPreferences preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putInt(CURRENT_STATUS_KEY, status);
-        editor.putBoolean(ONBOARDING_COMPLETE_KEY, true);
         editor.apply();
     }
     

@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import com.example.sobertime.model.SobrietyTracker; 
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -45,11 +46,15 @@ public class BackupRestoreActivity extends BaseActivity {
     private static final String PREFS_NAME = "SobrietyTrackerPrefs";
     private static final String LAST_BACKUP_KEY = "last_backup_time";
     private static final String BACKUP_FILENAME = "sobriety_tracker_backup.json";
+    private SobrietyTracker sobrietyTracker;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_backup_restore);
+        
+        // Initialize SobrietyTracker
+        sobrietyTracker = SobrietyTracker.getInstance(this);
         
         // Set up action bar
         if (getSupportActionBar() != null) {
@@ -148,8 +153,8 @@ public class BackupRestoreActivity extends BaseActivity {
                     // Add settings
                     backupData.put("settings", getSettingsJson());
                     
-                    // Add sobriety start date
-                    long startDate = preferences.getLong("sobriety_start_date", System.currentTimeMillis());
+                    // Add sobriety start date from SobrietyTracker instead of preferences
+                    long startDate = sobrietyTracker.getSobrietyStartDate();
                     backupData.put("sobriety_start_date", startDate);
                     
                     // Add notification settings
@@ -276,11 +281,10 @@ public class BackupRestoreActivity extends BaseActivity {
                     restoreJournalEntries(backupJson.getJSONArray("journal_entries"));
                     restoreSettings(backupJson.getJSONObject("settings"));
                     
-                    // Restore sobriety start date
+                    // Restore sobriety start date using SobrietyTracker
                     if (backupJson.has("sobriety_start_date")) {
-                        SharedPreferences.Editor editor = preferences.edit();
-                        editor.putLong("sobriety_start_date", backupJson.getLong("sobriety_start_date"));
-                        editor.apply();
+                        long startDate = backupJson.getLong("sobriety_start_date");
+                        sobrietyTracker.setSobrietyStartDate(startDate);
                     }
                     
                     // Restore notification settings

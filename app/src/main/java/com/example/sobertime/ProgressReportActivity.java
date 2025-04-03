@@ -15,6 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 
 import com.example.sobertime.Achievement.AchievementCategory;
+import com.example.sobertime.model.SobrietyTracker; 
 import com.example.sobertime.BaseActivity;
 
 import java.text.NumberFormat;
@@ -56,8 +57,7 @@ import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 
 public class ProgressReportActivity extends BaseActivity {
 
-    private static final String PREFS_NAME = "SobrietyTrackerPrefs";
-    private static final String START_DATE_KEY = "sobriety_start_date";
+    private SobrietyTracker sobrietyTracker;
     
     // UI Elements
     private LinearLayout reportContainer;
@@ -88,7 +88,6 @@ public class ProgressReportActivity extends BaseActivity {
     private LinearLayout achievementsContent;
     
     // Data
-    private long sobrietyStartDate;
     private int totalDaysSober;
     private float moneySaved;
     private int caloriesSaved;
@@ -101,6 +100,9 @@ public class ProgressReportActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_progress_report);
+
+        // Initialize SobrietyTracker
+        sobrietyTracker = SobrietyTracker.getInstance(this);
         
         // Set up action bar
         if (getSupportActionBar() != null) {
@@ -111,10 +113,9 @@ public class ProgressReportActivity extends BaseActivity {
         databaseHelper = DatabaseHelper.getInstance(this);
         achievementManager = AchievementManager.getInstance(this);
         
-        // Get sobriety start date
-        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        sobrietyStartDate = prefs.getLong(START_DATE_KEY, System.currentTimeMillis());
-        totalDaysSober = getDaysSober();
+        // Get sobriety count from the tracker instead of calculating it here
+        // sobrietyStartDate = prefs.getLong(START_DATE_KEY, System.currentTimeMillis());
+        totalDaysSober = sobrietyTracker.getDaysSober();
         
         // Initialize views
         initializeViews();
@@ -176,15 +177,14 @@ public class ProgressReportActivity extends BaseActivity {
         try {
             // Load data needed for the report
             
-            // Get money saved calculation
+            // Get money saved calculation using SobrietyTracker
             float drinkCost = databaseHelper.getFloatSetting("drink_cost", 8.50f);
             int drinksPerWeek = databaseHelper.getIntSetting("drinks_per_week", 15);
-            float drinksAvoided = (totalDaysSober / 7.0f) * drinksPerWeek;
-            moneySaved = drinksAvoided * drinkCost;
+            moneySaved = sobrietyTracker.calculateMoneySaved(drinkCost, drinksPerWeek);
             
-            // Calculate calories saved
+            // Calculate calories saved using SobrietyTracker
             int caloriesPerDrink = databaseHelper.getIntSetting("calories_per_drink", 150);
-            caloriesSaved = (int) (drinksAvoided * caloriesPerDrink);
+            caloriesSaved = sobrietyTracker.calculateCaloriesSaved(caloriesPerDrink, drinksPerWeek);
             
             // Get achievements
             achievements = achievementManager.getUnlockedAchievements();
@@ -200,7 +200,7 @@ public class ProgressReportActivity extends BaseActivity {
         try {
             // Set date range text
             SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
-            String startDateStr = dateFormat.format(new Date(sobrietyStartDate));
+            String startDateStr = dateFormat.format(new Date(sobrietyTracker.getSobrietyStartDate()));
             String currentDateStr = dateFormat.format(new Date());
             dateRangeTextView.setText(startDateStr + " - " + currentDateStr);
             
@@ -356,7 +356,7 @@ public class ProgressReportActivity extends BaseActivity {
         try {
             // Create bar entries for financial comparison
             ArrayList<BarEntry> entries = new ArrayList<>();
-            
+        
             // Calculate savings every month for last 6 months
             Calendar calendar = Calendar.getInstance();
             calendar.setTimeInMillis(System.currentTimeMillis());
@@ -376,9 +376,11 @@ public class ProgressReportActivity extends BaseActivity {
                 SimpleDateFormat monthFormat = new SimpleDateFormat("MMM", Locale.getDefault());
                 monthLabels.add(monthFormat.format(monthCal.getTime()));
                 
-                // Calculate days sober in this month
-                int daysSoberInMonth = getDaysSoberInMonth(monthCal.get(Calendar.YEAR), 
-                                                        monthCal.get(Calendar.MONTH));
+                // Calculate days sober in this month using SobrietyTracker
+                int daysSoberInMonth = sobrietyTracker.getDaysSoberInMonth(
+                    monthCal.get(Calendar.YEAR), 
+                    monthCal.get(Calendar.MONTH)
+                );
                 
                 // Calculate money saved in this month
                 float drinksAvoidedInMonth = (daysSoberInMonth / 7.0f) * drinksPerWeek;
@@ -456,7 +458,7 @@ public class ProgressReportActivity extends BaseActivity {
         }
     }
     
-    // Helper method to calculate days sober in a specific month
+    /*// Helper method to calculate days sober in a specific month
     private int getDaysSoberInMonth(int year, int month) {
         // Create calendar for first day of month
         Calendar firstDayOfMonth = Calendar.getInstance();
@@ -487,7 +489,7 @@ public class ProgressReportActivity extends BaseActivity {
         return (int) TimeUnit.MILLISECONDS.toDays(
             Math.min(System.currentTimeMillis(), firstDayOfNextMonth.getTimeInMillis()) - 
             sobrietyStartMillis);
-    }
+    }*/
 
     private void setupHealthChart() {
         if (healthProgressChart == null) return;
@@ -1098,13 +1100,7 @@ public class ProgressReportActivity extends BaseActivity {
         
         return reportText.toString();
     }
-    
-    private int getDaysSober() {
-        long currentTime = System.currentTimeMillis();
-        long diffInMillis = currentTime - sobrietyStartDate;
-        return (int) TimeUnit.MILLISECONDS.toDays(diffInMillis);
-    }
-    
+     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_progress_report, menu);

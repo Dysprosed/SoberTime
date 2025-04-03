@@ -24,6 +24,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import com.example.sobertime.model.SobrietyTracker;  
+
 /**
  * Manages achievements, checks for unlocks, and handles notifications
  */
@@ -39,6 +41,7 @@ public class AchievementManager {
     private List<Achievement> achievements;
     private Map<Integer, Achievement> achievementMap;
     private SharedPreferences preferences;
+    private SobrietyTracker sobrietyTracker;
     
     private static AchievementManager instance;
     
@@ -51,19 +54,47 @@ public class AchievementManager {
     }
     
     private AchievementManager(Context context) {
-        this.context = context;
-        this.achievements = new ArrayList<>();
-        this.achievementMap = new HashMap<>();
-        this.preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        this.context = context.getApplicationContext();
+        this.databaseHelper = DatabaseHelper.getInstance(context);
         
-        // Create notification channel for achievements
-        createNotificationChannel();
+        // Initialize SobrietyTracker
+        this.sobrietyTracker = SobrietyTracker.getInstance(context);
         
-        // Initialize default achievements
-        initializeAchievements();
-        
-        // Load saved achievement state
+        // Load achievements
         loadAchievements();
+    }
+
+    /**
+     * Check for achievements based on current day count from SobrietyTracker
+     * @return The achievement unlocked today or null if none
+     */
+    public Achievement checkTimeAchievements() {
+        int daysSober = sobrietyTracker.getDaysSober();
+        return checkTimeAchievements(daysSober);
+    }
+
+    /**
+     * Get the next milestone based on current day count from SobrietyTracker
+     * @return The next milestone achievement or null if none
+     */
+    public Achievement getNextMilestone() {
+        int daysSober = sobrietyTracker.getDaysSober();
+        return getNextMilestone(daysSober);
+    }
+
+    /**
+     * Check for financial achievements using calculated money saved from SobrietyTracker
+     */
+    public void checkFinancialAchievements() {
+        // Get settings from database
+        float drinkCost = databaseHelper.getFloatSetting("drink_cost", 8.50f);
+        int drinksPerWeek = databaseHelper.getIntSetting("drinks_per_week", 15);
+        
+        // Calculate money saved using SobrietyTracker
+        float moneySaved = sobrietyTracker.calculateMoneySaved(drinkCost, drinksPerWeek);
+        
+        // Use the existing method
+        checkFinancialAchievements(moneySaved);
     }
     
     private void createNotificationChannel() {

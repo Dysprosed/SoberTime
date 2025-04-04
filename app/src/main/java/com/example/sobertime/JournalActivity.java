@@ -97,6 +97,10 @@ public class JournalActivity extends BaseActivity implements JournalAdapter.OnEn
                 // Reload entries on successful add/edit
                 loadJournalEntries();
                 
+                // Check for journal achievements
+                AchievementManager achievementManager = AchievementManager.getInstance(this);
+                achievementManager.checkJournalAchievements(journalEntries);
+                
                 if (requestCode == REQUEST_ADD_ENTRY) {
                     Toast.makeText(this, "Journal entry added", Toast.LENGTH_SHORT).show();
                 } else {

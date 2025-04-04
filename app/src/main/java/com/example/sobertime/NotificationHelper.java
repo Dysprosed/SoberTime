@@ -48,7 +48,13 @@ public class NotificationHelper {
         // If time has passed today, schedule for tomorrow
         if (calendar.getTimeInMillis() < System.currentTimeMillis()) {
             calendar.add(Calendar.DAY_OF_YEAR, 1);
+            Log.d(TAG, "Time " + hour + ":" + minute + " already passed today, scheduling for tomorrow");
         }
+
+        String scheduledTime = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                .format(calendar.getTime());
+        Log.d(TAG, "Scheduling fixed time notification ID " + notificationId + 
+                " at " + scheduledTime);
     
         Intent intent = new Intent(context, NotificationReceiver.class);
         intent.putExtra("notification_type", "custom");
@@ -69,6 +75,7 @@ public class NotificationHelper {
                 AlarmManager.INTERVAL_DAY,
                 pendingIntent
         );
+        Log.d(TAG, "Fixed time notification scheduled successfully for " + scheduledTime);
     }
     
     private static void scheduleNotification(Context context, String title, String message, 
@@ -162,22 +169,40 @@ public class NotificationHelper {
         SharedPreferences prefs = context.getSharedPreferences("SobrietyNotificationPrefs", Context.MODE_PRIVATE);
         boolean notificationsEnabled = prefs.getBoolean("notifications_enabled", true);
         
+        Log.d(TAG, "Scheduling notifications. Master switch enabled: " + notificationsEnabled);
+    
+        // Check notification permissions
+        boolean notificationsPermitted = areNotificationsEnabled(context);
+        boolean exactAlarmsPermitted = canScheduleExactAlarms(context);
+        
+        Log.d(TAG, "Notification permissions: notifications=" + notificationsPermitted + 
+                ", exactAlarms=" + exactAlarmsPermitted);
+        
         if (!notificationsEnabled) {
-            // Cancel all notifications if master switch is off
+            Log.d(TAG, "Notifications disabled by user preference. Cancelling all notifications.");
             cancelAllNotifications(context);
             return;
+        }
+
+        if (!notificationsPermitted) {
+            Log.w(TAG, "App notification permission denied. Notifications won't be shown.");
+            // Continue scheduling anyway in case user later enables notifications
         }
         
         // Get sobriety start date from SobrietyTracker
         SobrietyTracker sobrietyTracker = SobrietyTracker.getInstance(context);
         long sobrietyStartDate = sobrietyTracker.getSobrietyStartDate();
         
+        Log.d(TAG, "User has been sober for " + daysSober + " days (start date: " + 
+            new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date(sobrietyStartDate)) + ")");
+
         // Cancel existing notifications before creating new ones
         cancelAllNotifications(context);
         
         // Schedule morning notifications if enabled
         boolean morningEnabled = prefs.getBoolean("morning_notification_enabled", true);
         if (morningEnabled) {
+            Log.d(TAG, "Scheduling morning notification at 8:00 AM");
             scheduleFixedTimeNotification(context, 8, 0, MORNING_NOTIFICATION_ID);
         }
         

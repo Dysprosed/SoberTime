@@ -1,0 +1,13 @@
+{
+    "completeHTMLDocument": false,
+    "encodeEmails": true,
+    "ghCodeBlocks": true,
+    "ghCompatibleHeaderId": true,
+    "headerLevelStart": 3,
+    "openLinksInNewWindow": true,
+    "simpleLineBreaks": true,
+    "simplifiedAutoLink": true,
+    "strikethrough": true,
+    "tables": true,
+    "tasklists": true
+}

@@ -37,10 +37,6 @@ public class AccountabilityBuddyActivity extends BaseActivity {
     private Switch notifyOnRelapseSwitch;
     private Switch notifyOnMilestoneSwitch;
 
-    // Database Information
-    private static final String DATABASE_NAME = "sobriety_tracker.db";
-    private static final int DATABASE_VERSION = 2; // Change from 1 to 2
-
     private DatabaseHelper databaseHelper;
     private boolean hasBuddy = false;
 
@@ -320,11 +316,4 @@ public class AccountabilityBuddyActivity extends BaseActivity {
         }
     }
 
-    @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        if (oldVersion < 2) {
-            // Create the accountability_buddy table for existing users
-            db.execSQL(CREATE_TABLE_ACCOUNTABILITY_BUDDY);
-        }
-    }
 }

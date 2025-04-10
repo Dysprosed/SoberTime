@@ -42,6 +42,8 @@ public class NotificationHelper {
     private static final int CHECK_IN_NOTIFICATION_REQUEST_CODE = 1003;
     private static final int CHECK_IN_NOTIFICATION_ID = 3001;
 
+    int daysSober = 0;
+
     private static void scheduleFixedTimeNotification(Context context, int hour, int minute, int notificationId) {
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, hour);
@@ -162,6 +164,17 @@ public class NotificationHelper {
             return alarmManager.canScheduleExactAlarms();
         }
         return true; // Permission not required for older versions
+    }
+
+    public boolean areNotificationsEnabled(Context context) {
+        // For Android 8.0+
+        NotificationManager notificationManager = 
+                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            return notificationManager.areNotificationsEnabled();
+        }
+        // For older versions
+        return true;
     }
 
     public static void scheduleCheckInNotification(Context context) {

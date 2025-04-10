@@ -9,7 +9,7 @@ import android.content.SharedPreferences;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import androidx.core.app.NotificationCompat;
-import main.java.com.example.sobertime.CheckInActivity;
+import com.example.sobertime.CheckInActivity;
 
 import java.util.Calendar;
 import java.util.Random;
@@ -20,6 +20,7 @@ public class NotificationReceiver extends BroadcastReceiver {
     private static final String PREFS_NAME = "SobrietyTrackerPrefs";
     private static final String START_DATE_KEY = "sobriety_start_date";
     private static final int NOTIFICATION_ID = 1001;
+    private static final int CHECK_IN_NOTIFICATION_ID = 1001;
     private static final int MILESTONE_NOTIFICATION_ID = 2001;
 
     @Override

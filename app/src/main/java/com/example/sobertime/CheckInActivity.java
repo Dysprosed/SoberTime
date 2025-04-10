@@ -11,12 +11,19 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.content.Context;
 
 import androidx.appcompat.app.AlertDialog;
+
+import com.example.sobertime.model.SobrietyTracker;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+
+import javax.naming.Context;
+
+import com.example.sobertime.DatabaseHelper;
 
 public class CheckInActivity extends BaseActivity {
 
@@ -146,7 +153,7 @@ public class CheckInActivity extends BaseActivity {
 
             // Determine if we should send a message
             boolean shouldNotify = (maintainedSobriety && notifyOnCheckin) || 
-                                 (!maintainedSobriety && notifyOnRelapse);
+                                (!maintainedSobriety && notifyOnRelapse);
 
             if (shouldNotify && buddyPhone != null && !buddyPhone.isEmpty()) {
                 // Build message
@@ -157,23 +164,77 @@ public class CheckInActivity extends BaseActivity {
                             "maintaining their sobriety. No action needed.";
                 } else {
                     message = "Hi " + buddyName + ", this is a notification from SoberTime. " +
-                    "Your buddy has had a lapse and could use your support right now. " +
-                    "Please consider reaching out to them when you have a moment.";
-        }
+                            "Your buddy has had a lapse and could use your support right now. " +
+                            "Please consider reaching out to them when you have a moment.";
+                }
 
-        // Send SMS
-        try {
-            SmsManager smsManager = SmsManager.getDefault();
-            smsManager.sendTextMessage(buddyPhone, null, message, null, null);
-            
-            if (!maintainedSobriety) {
-                Toast.makeText(this, "Your buddy has been notified", Toast.LENGTH_SHORT).show();
+                // Send SMS
+                try {
+                    SmsManager smsManager = SmsManager.getDefault();
+                    smsManager.sendTextMessage(buddyPhone, null, message, null, null);
+                    
+                    if (!maintainedSobriety) {
+                        Toast.makeText(this, "Your buddy has been notified", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (Exception e) {
+                    Toast.makeText(this, "Failed to send message to buddy: " + e.getMessage(),
+                            Toast.LENGTH_SHORT).show();
+                }
             }
-        } catch (Exception e) {
-            Toast.makeText(this, "Failed to send message to buddy: " + e.getMessage(),
-                    Toast.LENGTH_SHORT).show();
         }
+        
+        cursor.close();
     }
+}
+
+public class SobrietyTracker {
+    private static SobrietyTracker instance;
+    
+    public static synchronized SobrietyTracker getInstance(Context context) {
+        if (instance == null) {
+            instance = new SobrietyTracker(context.getApplicationContext());
+        }
+        return instance;
+    }
+    
+    private Context context;
+    
+    private SobrietyTracker(Context context) {
+        this.context = context;
+    }
+
+public class SobrietyTracker {
+    private static SobrietyTracker instance;
+    
+    public static synchronized SobrietyTracker getInstance(Context context) {
+        if (instance == null) {
+            instance = new SobrietyTracker(context.getApplicationContext());
+        }
+        return instance;
+    }
+    
+    private Context context;
+    
+    private SobrietyTracker(Context context) {
+        this.context = context;
+    }
+public class SobrietyTracker {
+    private static SobrietyTracker instance;
+    
+    public static synchronized SobrietyTracker getInstance(Context context) {
+        if (instance == null) {
+            instance = new SobrietyTracker(context.getApplicationContext());
+        }
+        return instance;
+    }
+    
+    private Context context;
+    
+    private SobrietyTracker(Context context) {
+        this.context = context;
+        }
+    
+    // Add methods needed by CheckInActivity
 }
 
 cursor.close();

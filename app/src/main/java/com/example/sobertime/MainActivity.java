@@ -29,7 +29,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
-import main.java.com.example.sobertime.AccountabilityBuddyActivity;
+import com.example.sobertime.AccountabilityBuddyActivity;
 
 import com.google.android.material.navigation.NavigationView;
 

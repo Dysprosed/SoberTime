@@ -131,6 +131,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return id;
     }
     
+    public void ensureAccountabilityBuddyTableExists() {
+        SQLiteDatabase db = getWritableDatabase();
+        
+        // Check if table exists
+        Cursor cursor = db.rawQuery(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name=?", 
+                new String[]{"accountability_buddy"});
+        boolean tableExists = cursor.moveToFirst();
+        cursor.close();
+        
+        if (!tableExists) {
+            // Create the table if it doesn't exist
+            db.execSQL(CREATE_TABLE_ACCOUNTABILITY_BUDDY);
+        }
+    }
+
     public JournalEntry getJournalEntry(long id) {
         SQLiteDatabase db = this.getReadableDatabase();
         

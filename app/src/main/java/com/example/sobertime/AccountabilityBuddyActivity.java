@@ -78,7 +78,11 @@ public class AccountabilityBuddyActivity extends BaseActivity {
     }
 
     private void loadBuddyData() {
+        // Make sure the table exists
+        databaseHelper.ensureAccountabilityBuddyTableExists();
+        
         SQLiteDatabase db = databaseHelper.getReadableDatabase();
+        // Continue with the rest of your loadBuddyData method as before
         Cursor cursor = db.query(
                 "accountability_buddy",
                 null,

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorBackground"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Daily Check-In"
+        android:textColor="@color/colorPrimary"
+        android:textSize="28sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/dateTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:text="March 12, 2023"
+        android:textColor="@color/colorTextLight"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/timeTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="9:45 PM"
+        android:textColor="@color/colorTextLight"
+        android:textSize="18sp" />
+
+    <ImageView
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_marginTop="32dp"
+        android:src="@drawable/ic_notification"
+        app:tint="@color/colorPrimary" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:gravity="center"
+        android:text="How did today go?"
+        android:textColor="@color/colorTextDark"
+        android:textSize="20sp" />
+
+    <Button
+        android:id="@+id/soberButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:backgroundTint="@color/colorPhysical"
+        android:padding="16dp"
+        android:text="I Maintained My Sobriety Today"
+        android:textColor="@color/colorTextLight"
+        android:textSize="16sp" />
+
+    <Button
+        android:id="@+id/relapseButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:backgroundTint="@color/colorTextLight"
+        android:padding="16dp"
+        android:text="I Had a Lapse Today"
+        android:textColor="@color/colorTextDark"
+        android:textSize="16sp" />
+
+    <Button
+        android:id="@+id/skipButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:backgroundTint="@color/colorBackground"
+        android:text="Skip for Now"
+        android:textColor="@color/colorTextLight" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:gravity="center"
+        android:text="Be honest with yourself. Every day is a new opportunity."
+        android:textColor="@color/colorAccent"
+        android:textSize="16sp" />
+
+</LinearLayout>

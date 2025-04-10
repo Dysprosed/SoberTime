@@ -31,6 +31,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // Settings Table Columns
     private static final String SETTINGS_KEY = "key";
     private static final String SETTINGS_VALUE = "value";
+
+    // New table for accountability buddy
+    private static final String TABLE_ACCOUNTABILITY_BUDDY = "accountability_buddy";
+    private static final String BUDDY_NAME = "name";
+    private static final String BUDDY_PHONE = "phone";
+    private static final String BUDDY_ENABLED = "enabled";
+    private static final String BUDDY_NOTIFY_ON_CHECKIN = "notify_on_checkin";
+    private static final String BUDDY_NOTIFY_ON_RELAPSE = "notify_on_relapse";
+    private static final String BUDDY_NOTIFY_ON_MILESTONE = "notify_on_milestone";
     
     // Create Table Statements
     private static final String CREATE_TABLE_JOURNAL = 
@@ -47,6 +56,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "CREATE TABLE " + TABLE_SETTINGS + "("
                     + SETTINGS_KEY + " TEXT PRIMARY KEY, "
                     + SETTINGS_VALUE + " TEXT NOT NULL);";
+
+    private static final String CREATE_TABLE_ACCOUNTABILITY_BUDDY = 
+            "CREATE TABLE " + TABLE_ACCOUNTABILITY_BUDDY + "("
+                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + BUDDY_NAME + " TEXT, "
+                    + BUDDY_PHONE + " TEXT, "
+                    + BUDDY_ENABLED + " INTEGER DEFAULT 1, "
+                    + BUDDY_NOTIFY_ON_CHECKIN + " INTEGER DEFAULT 0, "
+                    + BUDDY_NOTIFY_ON_RELAPSE + " INTEGER DEFAULT 1, "
+                    + BUDDY_NOTIFY_ON_MILESTONE + " INTEGER DEFAULT 1);";
     
     private static DatabaseHelper instance;
     
@@ -66,6 +85,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(CREATE_TABLE_JOURNAL);
         db.execSQL(CREATE_TABLE_SETTINGS);
+        db.execSQL(CREATE_TABLE_ACCOUNTABILITY_BUDDY);
         
         // Initialize default settings
         ContentValues defaultSettings = new ContentValues();

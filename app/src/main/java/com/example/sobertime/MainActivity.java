@@ -29,6 +29,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import main.java.com.example.sobertime.AccountabilityBuddyActivity;
 
 import com.google.android.material.navigation.NavigationView;
 
@@ -325,6 +326,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     // Method to setup all card click listeners
     private void setupClickListeners() {
+        CardView accountabilityBuddyCardView = findCardViewSafely(R.id.accountabilityBuddyCardView);
+        if (accountabilityBuddyCardView != null) {
+            accountabilityBuddyCardView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    try {
+                        Intent intent = new Intent(MainActivity.this, AccountabilityBuddyActivity.class);
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        Log.e(TAG, "Couldn't open Accountability Buddy: " + e.getMessage(), e);
+                        Toast.makeText(MainActivity.this,
+                                "Couldn't open Accountability Buddy. Please try again later.",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        }
+        
         // Changed to achievements card
         if (achievementsCardView != null) {
             achievementsCardView.setOnClickListener(new View.OnClickListener() {

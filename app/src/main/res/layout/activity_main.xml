@@ -159,6 +159,48 @@
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
+                <!-- Accountability Buddy Card -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/accountabilityBuddyCardView"
+                    style="@style/AppCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="16dp">
+
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginEnd="16dp"
+                            android:src="@drawable/ic_community"
+                            app:tint="#009688" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/CardTitleText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Accountability Buddy"
+                                android:textColor="#009688" />
+
+                            <TextView
+                                style="@style/CardContentText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Connect with someone who can support your journey" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
                 <!-- Achievements Card -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/achievementsCardView"

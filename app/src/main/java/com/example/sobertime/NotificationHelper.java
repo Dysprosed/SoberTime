@@ -39,6 +39,9 @@ public class NotificationHelper {
     private static final int MILESTONE_NOTIFICATION_ID = 103;
     private static final int CUSTOM_NOTIFICATION_BASE_ID = 200;
 
+    private static final int CHECK_IN_NOTIFICATION_REQUEST_CODE = 1003;
+    private static final int CHECK_IN_NOTIFICATION_ID = 3001;
+
     private static void scheduleFixedTimeNotification(Context context, int hour, int minute, int notificationId) {
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, hour);
@@ -161,6 +164,39 @@ public class NotificationHelper {
         return true; // Permission not required for older versions
     }
 
+    public static void scheduleCheckInNotification(Context context) {
+        Calendar calendar = Calendar.getInstance();
+        
+        // Set time to 9:00 PM for check-in notification
+        calendar.set(Calendar.HOUR_OF_DAY, 21);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        
+        // If time has passed today, schedule for tomorrow
+        if (calendar.getTimeInMillis() < System.currentTimeMillis()) {
+            calendar.add(Calendar.DAY_OF_YEAR, 1);
+        }
+        
+        Intent intent = new Intent(context, NotificationReceiver.class);
+        intent.putExtra("notification_type", "check_in");
+        
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                context,
+                CHECK_IN_NOTIFICATION_REQUEST_CODE,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+        
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        
+        // Set repeating alarm for every day
+        alarmManager.setRepeating(
+                AlarmManager.RTC_WAKEUP,
+                calendar.getTimeInMillis(),
+                AlarmManager.INTERVAL_DAY,
+                pendingIntent
+        );
+    }
     /**
      * Schedule all notifications based on user preferences using SobrietyTracker
      * @param context The application context

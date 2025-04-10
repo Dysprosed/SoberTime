@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import androidx.core.app.NotificationCompat;
+import main.java.com.example.sobertime.CheckInActivity;
 
 import java.util.Calendar;
 import java.util.Random;
@@ -43,10 +44,47 @@ public class NotificationReceiver extends BroadcastReceiver {
                 case "custom":
                     sendCustomNotification(context);
                     break;
+                case "check_in":
+                    sendCheckInNotification(context);
+                    break;
             }
         }
     }
 
+
+    private void sendCheckInNotification(Context context) {
+        // Create intent for check-in activity
+        Intent intent = new Intent(context, CheckInActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                context, 
+                0, 
+                intent, 
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+        
+        // Get notification sound
+        Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        
+        // Build the notification
+        NotificationCompat.Builder notificationBuilder = 
+                new NotificationCompat.Builder(context, "sobriety_tracker_channel")
+                        .setSmallIcon(R.drawable.ic_notification)
+                        .setContentTitle("Daily Sobriety Check-In")
+                        .setContentText("How did your day go? Tap to record your progress.")
+                        .setPriority(NotificationCompat.PRIORITY_HIGH)
+                        .setCategory(NotificationCompat.CATEGORY_REMINDER)
+                        .setSound(defaultSoundUri)
+                        .setContentIntent(pendingIntent)
+                        .setAutoCancel(true);
+        
+        // Get notification manager
+        NotificationManager notificationManager = 
+                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        
+        // Show notification
+        notificationManager.notify(CHECK_IN_NOTIFICATION_ID, notificationBuilder.build());
+    }
     /**
      * Send morning motivation notification
      */

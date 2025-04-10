@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SEND_SMS" />
 
     <application
         android:allowBackup="false"
@@ -14,6 +15,16 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
+        <activity
+            android:name=".AccountabilityBuddyActivity"
+            android:parentActivityName=".MainActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".CheckInActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:exported="false" />
+        
         <activity
             android:name=".WelcomeActivity"
             android:exported="true">

@@ -221,7 +221,3 @@ public class SobrietyTracker {
 
     // Add methods needed by CheckInActivity
 }
-
-cursor.close();
-}
-}

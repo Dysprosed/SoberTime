@@ -187,37 +187,3 @@ public class CheckInActivity extends BaseActivity {
     }
 }
 
-public class SobrietyTracker {
-    private static SobrietyTracker instance;
-    
-    public static synchronized SobrietyTracker getInstance(Context context) {
-        if (instance == null) {
-            instance = new SobrietyTracker(context.getApplicationContext());
-        }
-        return instance;
-    }
-    
-    private Context context;
-    
-    private SobrietyTracker(Context context) {
-        this.context = context;
-    }
-
-public class SobrietyTracker {
-    private static SobrietyTracker instance;
-
-    public static synchronized SobrietyTracker getInstance(Context context) {
-        if (instance == null) {
-            instance = new SobrietyTracker(context.getApplicationContext());
-        }
-        return instance;
-    }
-
-    private Context context;
-
-    private SobrietyTracker(Context context) {
-        this.context = context;
-    }
-
-    // Add methods needed by CheckInActivity
-}

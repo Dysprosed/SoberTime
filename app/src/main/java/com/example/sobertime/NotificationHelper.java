@@ -42,9 +42,6 @@ public class NotificationHelper {
     private static final int CHECK_IN_NOTIFICATION_REQUEST_CODE = 1003;
     private static final int CHECK_IN_NOTIFICATION_ID = 3001;
 
-    int daysSober = sobrietyTracker.getDaysSober();
-    int daysSober = 0;
-
     private static void scheduleFixedTimeNotification(Context context, int hour, int minute, int notificationId) {
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, hour);
@@ -242,6 +239,8 @@ public class NotificationHelper {
         // Get sobriety start date from SobrietyTracker
         SobrietyTracker sobrietyTracker = SobrietyTracker.getInstance(context);
         long sobrietyStartDate = sobrietyTracker.getSobrietyStartDate();
+
+        int daysSober = sobrietyTracker.getDaysSober();
         
         Log.d(TAG, "User has been sober for " + daysSober + " days (start date: " + 
             new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date(sobrietyStartDate)) + ")");

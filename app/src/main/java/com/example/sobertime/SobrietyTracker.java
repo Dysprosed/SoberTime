@@ -1,4 +1,4 @@
-package com.example.sobertime.model;
+package com.example.sobertime;
 
 import android.content.Context;
 import android.content.SharedPreferences;

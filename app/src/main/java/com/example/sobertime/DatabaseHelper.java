@@ -40,9 +40,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String BUDDY_NOTIFY_ON_CHECKIN = "notify_on_checkin";
     private static final String BUDDY_NOTIFY_ON_RELAPSE = "notify_on_relapse";
     private static final String BUDDY_NOTIFY_ON_MILESTONE = "notify_on_milestone";
-
-    private static final String DATABASE_NAME = "sobriety_tracker.db";
-    private static final int DATABASE_VERSION = 2; // Change from 1 to 2
     
     // Create Table Statements
     private static final String CREATE_TABLE_JOURNAL = 
@@ -112,14 +109,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if (oldVersion < 2) {
             // Create the accountability_buddy table for existing users
             db.execSQL(CREATE_TABLE_ACCOUNTABILITY_BUDDY);
-        }
-    }
-
-    @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // This will be implemented when we have database schema changes in future versions
-        if (oldVersion < 2) {
-            // Future upgrade logic will go here
         }
     }
     

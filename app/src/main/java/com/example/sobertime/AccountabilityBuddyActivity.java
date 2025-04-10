@@ -1,5 +1,7 @@
 package com.example.sobertime;
 
+import com.example.sobertime.DatabaseHelper;
+
 import android.Manifest;
 import android.content.ContentValues;
 import android.content.DialogInterface;
@@ -34,6 +36,10 @@ public class AccountabilityBuddyActivity extends BaseActivity {
     private Switch notifyOnCheckinSwitch;
     private Switch notifyOnRelapseSwitch;
     private Switch notifyOnMilestoneSwitch;
+
+    // Database Information
+    private static final String DATABASE_NAME = "sobriety_tracker.db";
+    private static final int DATABASE_VERSION = 2; // Change from 1 to 2
 
     private DatabaseHelper databaseHelper;
     private boolean hasBuddy = false;
@@ -311,6 +317,14 @@ public class AccountabilityBuddyActivity extends BaseActivity {
                 updateBuddyEnabled(false);
                 updateUIState(false);
             }
+        }
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        if (oldVersion < 2) {
+            // Create the accountability_buddy table for existing users
+            db.execSQL(CREATE_TABLE_ACCOUNTABILITY_BUDDY);
         }
     }
 }

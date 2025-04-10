@@ -15,13 +15,11 @@ import android.content.Context;
 
 import androidx.appcompat.app.AlertDialog;
 
-import com.example.sobertime.model.SobrietyTracker;
+import com.example.sobertime.SobrietyTracker;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
-
-import javax.naming.Context;
 
 import com.example.sobertime.DatabaseHelper;
 

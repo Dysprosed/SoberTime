@@ -42,6 +42,7 @@ public class NotificationHelper {
     private static final int CHECK_IN_NOTIFICATION_REQUEST_CODE = 1003;
     private static final int CHECK_IN_NOTIFICATION_ID = 3001;
 
+    int daysSober = sobrietyTracker.getDaysSober();
     int daysSober = 0;
 
     private static void scheduleFixedTimeNotification(Context context, int hour, int minute, int notificationId) {
@@ -166,7 +167,7 @@ public class NotificationHelper {
         return true; // Permission not required for older versions
     }
 
-    public boolean areNotificationsEnabled(Context context) {
+    public static boolean areNotificationsEnabled(Context context) {
         // For Android 8.0+
         NotificationManager notificationManager = 
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);

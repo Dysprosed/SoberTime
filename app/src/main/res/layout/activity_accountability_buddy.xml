@@ -52,8 +52,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:orientation="vertical">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -75,77 +74,54 @@
                         android:text="Enable" />
                 </LinearLayout>
 
+                <!-- Display buddy info -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:orientation="horizontal">
+                    android:orientation="vertical">
 
-                    <LinearLayout
-                        android:layout_width="0dp"
+                    <TextView
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:text="Name:"
+                        android:textStyle="bold" />
 
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Your Information"
-                            android:textStyle="bold"
-                            android:textSize="16sp"
-                            android:layout_marginBottom="8dp"/>
+                    <TextView
+                        android:id="@+id/buddyNameTextView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Not set"
+                        android:layout_marginBottom="8dp" />
 
-                        <EditText
-                            android:id="@+id/yourNameEditText"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:hint="Your Name"
-                            android:inputType="textPersonName"
-                            android:layout_marginBottom="8dp"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Phone:"
+                        android:textStyle="bold" />
 
-                        <EditText
-                            android:id="@+id/yourPhoneEditText"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:hint="Your Phone Number"
-                            android:inputType="phone"
-                            android:layout_marginBottom="16dp"/>
+                    <TextView
+                        android:id="@+id/buddyPhoneTextView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Not set" />
+                </LinearLayout>
 
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="1dp"
-                            android:background="#DDDDDD"
-                            android:layout_marginBottom="16dp"/>
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Buddy Information"
-                            android:textStyle="bold"
-                            android:textSize="16sp"
-                            android:layout_marginBottom="8dp"/>
-
-                        <EditText
-                            android:id="@+id/buddyNameEditText"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:hint="Buddy's Name"
-                            android:inputType="textPersonName"
-                            android:layout_marginBottom="8dp"/>
-
-                        <EditText
-                            android:id="@+id/buddyPhoneEditText"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:hint="Buddy's Phone Number"
-                            android:inputType="phone"/>
-                    </LinearLayout>
-
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:orientation="horizontal">
+                    
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"/>
+                        
                     <Button
                         android:id="@+id/editBuddyButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
                         android:backgroundTint="@color/colorPrimary"
                         android:text="Edit"
                         android:textColor="@color/colorTextLight" />

@@ -245,6 +245,7 @@ public class NotificationHelper {
         Log.d(TAG, "User has been sober for " + daysSober + " days (start date: " + 
             new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date(sobrietyStartDate)) + ")");
 
+        scheduleCheckInNotification(context);
         // Cancel existing notifications before creating new ones
         cancelAllNotifications(context);
         

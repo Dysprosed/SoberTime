@@ -116,9 +116,26 @@ public class CheckInActivity extends BaseActivity {
     }
 
     private void recordCheckIn(boolean maintainedSobriety) {
-        // Record check-in in database
-        // Implementation would go here
-
+        SobrietyTracker sobrietyTracker = SobrietyTracker.getInstance(this);
+        
+        if (maintainedSobriety) {
+            // Confirm sobriety for today
+            sobrietyTracker.confirmSobrietyForToday();
+            
+            // We could also record this confirmation in a new table for history
+            // recordConfirmationInDatabase(true);
+            
+            Toast.makeText(this, "Sobriety confirmed for today!", Toast.LENGTH_SHORT).show();
+        } else {
+            // Reset the counter
+            sobrietyTracker.resetSobrietyCounter();
+            
+            // We could also record this in a new table for history
+            // recordConfirmationInDatabase(false);
+            
+            Toast.makeText(this, "Counter reset. Every new beginning is progress.", Toast.LENGTH_LONG).show();
+        }
+        
         // Notify accountability buddy if needed
         notifyBuddyIfNeeded(maintainedSobriety);
     }

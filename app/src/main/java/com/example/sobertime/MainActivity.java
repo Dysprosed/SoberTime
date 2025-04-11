@@ -455,20 +455,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void updateSobrietyInfo() {
-        // Get days sober from SobrietyTracker
-        int daysSober = sobrietyTracker.getDaysSober();
-    
+        // Get confirmed days sober from SobrietyTracker
+        int confirmedDaysSober = sobrietyTracker.getConfirmedDaysSober();
+        
         // Update day count
-        dayCountTextView.setText(String.valueOf(daysSober));
-    
-        // Update sober since text
+        dayCountTextView.setText(String.valueOf(confirmedDaysSober));
+        
+        // Update sober since text (still uses the start date for this)
         soberSinceTextView.setText("Sober since: " + dateFormat.format(new Date(sobrietyTracker.getSobrietyStartDate())));
-    
+        
         // Update next milestone info
-        updateNextMilestone(daysSober);
-    
+        updateNextMilestone(confirmedDaysSober);
+        
         // Update motivation message
-        updateMotivationMessage(daysSober);
+        updateMotivationMessage(confirmedDaysSober);
     }
 
     /*private int getDaysSober() {

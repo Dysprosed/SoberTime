@@ -88,37 +88,57 @@
                         android:orientation="vertical">
 
                         <TextView
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Name:"
-                            android:textColor="@color/colorTextLight"
-                            android:textSize="14sp" />
+                            android:text="Your Information"
+                            android:textStyle="bold"
+                            android:textSize="16sp"
+                            android:layout_marginBottom="8dp"/>
+
+                        <EditText
+                            android:id="@+id/yourNameEditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Your Name"
+                            android:inputType="textPersonName"
+                            android:layout_marginBottom="8dp"/>
+
+                        <EditText
+                            android:id="@+id/yourPhoneEditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Your Phone Number"
+                            android:inputType="phone"
+                            android:layout_marginBottom="16dp"/>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="#DDDDDD"
+                            android:layout_marginBottom="16dp"/>
 
                         <TextView
-                            android:id="@+id/buddyNameTextView"
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:text="Not set"
-                            android:textColor="@color/colorTextDark"
-                            android:textSize="16sp" />
+                            android:text="Buddy Information"
+                            android:textStyle="bold"
+                            android:textSize="16sp"
+                            android:layout_marginBottom="8dp"/>
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                        <EditText
+                            android:id="@+id/buddyNameEditText"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="Phone:"
-                            android:textColor="@color/colorTextLight"
-                            android:textSize="14sp" />
+                            android:hint="Buddy's Name"
+                            android:inputType="textPersonName"
+                            android:layout_marginBottom="8dp"/>
 
-                        <TextView
-                            android:id="@+id/buddyPhoneTextView"
-                            android:layout_width="wrap_content"
+                        <EditText
+                            android:id="@+id/buddyPhoneEditText"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:text="Not set"
-                            android:textColor="@color/colorTextDark"
-                            android:textSize="16sp" />
+                            android:hint="Buddy's Phone Number"
+                            android:inputType="phone"/>
                     </LinearLayout>
 
                     <Button
@@ -137,7 +157,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:backgroundTint="@color/colorAccent"
-                    android:text="Send Test Message"
+                    android:text="Add Accountability Buddy"
                     android:textColor="@color/colorTextLight" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>

@@ -172,11 +172,11 @@ public class CheckInActivity extends BaseActivity {
                 // Build message
                 String message;
                 if (maintainedSobriety) {
-                    message = "Hi " + buddyName + ", this is a notification from SoberTime. " +
+                    message = "Hi " + buddyName + ", this is a notification from New Dawn. " +
                             "Your buddy has completed their daily check-in and is still " +
                             "maintaining their sobriety. No action needed.";
                 } else {
-                    message = "Hi " + buddyName + ", this is a notification from SoberTime. " +
+                    message = "Hi " + buddyName + ", this is a notification from New Dawn. " +
                             "Your buddy has had a lapse and could use your support right now. " +
                             "Please consider reaching out to them when you have a moment.";
                 }

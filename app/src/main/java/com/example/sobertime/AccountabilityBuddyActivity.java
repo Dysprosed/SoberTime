@@ -1,5 +1,7 @@
 package com.example.sobertime;
 
+import java.util.ArrayList;
+
 import com.example.sobertime.DatabaseHelper;
 
 import android.Manifest;
@@ -36,6 +38,8 @@ public class AccountabilityBuddyActivity extends BaseActivity {
     private Switch notifyOnCheckinSwitch;
     private Switch notifyOnRelapseSwitch;
     private Switch notifyOnMilestoneSwitch;
+    private String userName;
+    private String userPhone;
 
     private DatabaseHelper databaseHelper;
     private boolean hasBuddy = false;
@@ -82,7 +86,6 @@ public class AccountabilityBuddyActivity extends BaseActivity {
         databaseHelper.ensureAccountabilityBuddyTableExists();
         
         SQLiteDatabase db = databaseHelper.getReadableDatabase();
-        // Continue with the rest of your loadBuddyData method as before
         Cursor cursor = db.query(
                 "accountability_buddy",
                 null,
@@ -92,34 +95,48 @@ public class AccountabilityBuddyActivity extends BaseActivity {
                 null,
                 null
         );
-
+    
         if (cursor.moveToFirst()) {
             hasBuddy = true;
             String name = cursor.getString(cursor.getColumnIndex("name"));
             String phone = cursor.getString(cursor.getColumnIndex("phone"));
+            
+            // Load user information
+            int userNameIndex = cursor.getColumnIndex("user_name");
+            int userPhoneIndex = cursor.getColumnIndex("user_phone");
+            
+            if (userNameIndex != -1) {
+                userName = cursor.getString(userNameIndex);
+            }
+            if (userPhoneIndex != -1) {
+                userPhone = cursor.getString(userPhoneIndex);
+            }
+            
             boolean enabled = cursor.getInt(cursor.getColumnIndex("enabled")) == 1;
             boolean notifyCheckin = cursor.getInt(cursor.getColumnIndex("notify_on_checkin")) == 1;
             boolean notifyRelapse = cursor.getInt(cursor.getColumnIndex("notify_on_relapse")) == 1;
             boolean notifyMilestone = cursor.getInt(cursor.getColumnIndex("notify_on_milestone")) == 1;
-
+    
             buddyNameTextView.setText(name);
             buddyPhoneTextView.setText(phone);
             enableBuddySwitch.setChecked(enabled);
             notifyOnCheckinSwitch.setChecked(notifyCheckin);
             notifyOnRelapseSwitch.setChecked(notifyRelapse);
             notifyOnMilestoneSwitch.setChecked(notifyMilestone);
-
+    
             // Update UI based on whether buddy is enabled
             updateUIState(enabled);
         } else {
             // No buddy set up yet
             hasBuddy = false;
+            userName = "";
+            userPhone = "";
             buddyNameTextView.setText("Not set");
             buddyPhoneTextView.setText("Not set");
             enableBuddySwitch.setChecked(false);
             updateUIState(false);
         }
-
+    
         cursor.close();
     }
 
@@ -135,15 +152,15 @@ public class AccountabilityBuddyActivity extends BaseActivity {
         editBuddyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showEditBuddyDialog();
+                showAddBuddyDialog();
             }
         });
 
-        // Test message button
+        // Add Accountability Buddy button
         testMessageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sendTestMessage();
+                showAddBuddyDialog();
             }
         });
 
@@ -157,7 +174,7 @@ public class AccountabilityBuddyActivity extends BaseActivity {
                 } else if (isChecked) {
                     // If no buddy is set yet but the switch is turned on, prompt to add a buddy
                     enableBuddySwitch.setChecked(false);
-                    showEditBuddyDialog();
+                    showAddBuddyDialog();
                 }
             }
         });
@@ -185,37 +202,53 @@ public class AccountabilityBuddyActivity extends BaseActivity {
         });
     }
 
-    private void showEditBuddyDialog() {
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_edit_buddy, null);
-        final EditText nameEditText = dialogView.findViewById(R.id.nameEditText);
-        final EditText phoneEditText = dialogView.findViewById(R.id.phoneEditText);
-
-        // Pre-fill fields if buddy exists
-        if (hasBuddy) {
-            nameEditText.setText(buddyNameTextView.getText());
-            phoneEditText.setText(buddyPhoneTextView.getText());
+    private void showAddBuddyDialog() {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_add_buddy, null);
+        final EditText yourNameEditText = dialogView.findViewById(R.id.yourNameEditText);
+        final EditText yourPhoneEditText = dialogView.findViewById(R.id.yourPhoneEditText);
+        final EditText buddyNameEditText = dialogView.findViewById(R.id.buddyNameEditText);
+        final EditText buddyPhoneEditText = dialogView.findViewById(R.id.buddyPhoneEditText);
+    
+        // Pre-fill fields if info exists
+        if (!TextUtils.isEmpty(userName)) {
+            yourNameEditText.setText(userName);
         }
-
+        if (!TextUtils.isEmpty(userPhone)) {
+            yourPhoneEditText.setText(userPhone);
+        }
+        
+        if (hasBuddy) {
+            buddyNameEditText.setText(buddyNameTextView.getText());
+            buddyPhoneEditText.setText(buddyPhoneTextView.getText());
+        }
+    
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Accountability Buddy")
+        builder.setTitle("Add Accountability Buddy")
                 .setView(dialogView)
                 .setPositiveButton("Save", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        String name = nameEditText.getText().toString().trim();
-                        String phone = phoneEditText.getText().toString().trim();
-
-                        if (TextUtils.isEmpty(name) || TextUtils.isEmpty(phone)) {
+                        String yourName = yourNameEditText.getText().toString().trim();
+                        String yourPhone = yourPhoneEditText.getText().toString().trim();
+                        String buddyName = buddyNameEditText.getText().toString().trim();
+                        String buddyPhone = buddyPhoneEditText.getText().toString().trim();
+    
+                        if (TextUtils.isEmpty(yourName) || TextUtils.isEmpty(yourPhone) || 
+                            TextUtils.isEmpty(buddyName) || TextUtils.isEmpty(buddyPhone)) {
                             Toast.makeText(AccountabilityBuddyActivity.this, 
-                                    "Name and phone are required", Toast.LENGTH_SHORT).show();
+                                    "All fields are required", Toast.LENGTH_SHORT).show();
                             return;
                         }
-
-                        saveBuddyInfo(name, phone);
+    
+                        // Save all info
+                        saveBuddyInfo(buddyName, buddyPhone, yourName, yourPhone);
+                        
+                        // Show confirmation dialog for sending message
+                        showSendMessageConfirmationDialog(buddyName, buddyPhone, yourName, yourPhone);
                     }
                 })
                 .setNegativeButton("Cancel", null);
-
+    
         if (hasBuddy) {
             builder.setNeutralButton("Delete", new DialogInterface.OnClickListener() {
                 @Override
@@ -224,16 +257,18 @@ public class AccountabilityBuddyActivity extends BaseActivity {
                 }
             });
         }
-
+    
         builder.show();
     }
 
-    private void saveBuddyInfo(String name, String phone) {
+    private void saveBuddyInfo(String buddyName, String buddyPhone, String yourName, String yourPhone) {
         SQLiteDatabase db = databaseHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put("name", name);
-        values.put("phone", phone);
-
+        values.put("name", buddyName);
+        values.put("phone", buddyPhone);
+        values.put("user_name", yourName);
+        values.put("user_phone", yourPhone);
+    
         if (hasBuddy) {
             // Update existing buddy
             db.update("accountability_buddy", values, null, null);
@@ -246,10 +281,55 @@ public class AccountabilityBuddyActivity extends BaseActivity {
             db.insert("accountability_buddy", null, values);
             hasBuddy = true;
         }
-
+    
+        // Save the user info
+        userName = yourName;
+        userPhone = yourPhone;
+    
         // Refresh the UI
         loadBuddyData();
         Toast.makeText(this, "Buddy information saved", Toast.LENGTH_SHORT).show();
+    }
+
+    private void showSendMessageConfirmationDialog(final String buddyName, final String buddyPhone, 
+                                                final String yourName, final String yourPhone) {
+        new AlertDialog.Builder(this)
+                .setTitle("Send Invitation Message")
+                .setMessage("We'll send a text message to " + buddyName + " explaining that you've " +
+                        "selected them as your sobriety accountability buddy. They'll be given " +
+                        "information on how to support you and how to opt out if they prefer not to participate.")
+                .setPositiveButton("Send Message", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        sendBuddyInvite(buddyName, buddyPhone, yourName, yourPhone);
+                    }
+                })
+                .setNegativeButton("Not Now", null)
+                .show();
+    }
+
+    private void sendBuddyInvite(String buddyName, String buddyPhone, String userName, String userPhone) {
+        if (TextUtils.isEmpty(buddyPhone)) {
+            Toast.makeText(this, "No valid buddy phone number", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String message = "Hi " + buddyName + ", this is a message from New Dawn, a sobriety app. " + 
+                userName + " has selected you as their sobriety accountability buddy. " +
+                "As an accountability buddy, you may receive notifications when they check in, " +
+                "reach milestones, or if they need extra support. " +
+                "If you'd prefer not to participate, please contact " + userName + " directly at " + 
+                userPhone + " to let them know. Thank you for your support!";
+        
+        try {
+            SmsManager smsManager = SmsManager.getDefault();
+            ArrayList<String> parts = smsManager.divideMessage(message);
+            smsManager.sendMultipartTextMessage(buddyPhone, null, parts, null, null);
+            Toast.makeText(this, "Invitation sent to " + buddyName, Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Toast.makeText(this, "Failed to send message: " + e.getMessage(), 
+                    Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void deleteBuddy() {
@@ -272,26 +352,6 @@ public class AccountabilityBuddyActivity extends BaseActivity {
         ContentValues values = new ContentValues();
         values.put(setting, enabled ? 1 : 0);
         db.update("accountability_buddy", values, null, null);
-    }
-
-    private void sendTestMessage() {
-        String phone = buddyPhoneTextView.getText().toString();
-        if (TextUtils.isEmpty(phone) || phone.equals("Not set")) {
-            Toast.makeText(this, "No valid phone number", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        String message = "This is a test message from SoberTime. " + 
-                buddyNameTextView.getText() + " has added you as their accountability buddy.";
-        
-        try {
-            SmsManager smsManager = SmsManager.getDefault();
-            smsManager.sendTextMessage(phone, null, message, null, null);
-            Toast.makeText(this, "Test message sent", Toast.LENGTH_SHORT).show();
-        } catch (Exception e) {
-            Toast.makeText(this, "Failed to send message: " + e.getMessage(), 
-                    Toast.LENGTH_SHORT).show();
-        }
     }
 
     private void checkSmsPermission() {

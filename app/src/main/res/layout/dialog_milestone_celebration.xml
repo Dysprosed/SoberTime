@@ -11,7 +11,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:gravity="center"
+        android:layout_marginTop="16dp">
 
         <ImageView
             android:id="@+id/celebrationImageView"
@@ -42,7 +43,9 @@
             android:textColor="@color/colorText"
             android:textSize="16sp" />
 
+        <!-- On smaller screens, buttons will stack vertically -->
         <LinearLayout
+            android:id="@+id/buttonContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -50,26 +53,21 @@
 
             <Button
                 android:id="@+id/shareButton"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
                 android:background="@drawable/button_rounded"
-                android:drawableStart="@drawable/ic_share"
-                android:drawablePadding="8dp"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
                 android:text="Share"
                 android:textColor="@android:color/white" />
 
             <Button
                 android:id="@+id/closeButton"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
                 android:background="@drawable/button_rounded"
-                android:backgroundTint="#EFEFEF"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
                 android:text="Close"
                 android:textColor="@android:color/white" />
         </LinearLayout>

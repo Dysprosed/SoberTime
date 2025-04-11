@@ -41,7 +41,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
-import com.example.sobertime.model.SobrietyTracker;
+import com.example.sobertime.SobrietyTracker;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 

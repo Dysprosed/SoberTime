@@ -326,6 +326,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     // Method to setup all card click listeners
     private void setupClickListeners() {
+        CardView checkInCardView = findCardViewSafely(R.id.checkInCardView);
+        if (checkInCardView != null) {
+            checkInCardView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    try {
+                        Intent intent = new Intent(MainActivity.this, CheckInActivity.class);
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        Log.e(TAG, "Couldn't open Check-In: " + e.getMessage(), e);
+                        Toast.makeText(MainActivity.this,
+                                "Couldn't open Check-In. Please try again later.",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        }
+        
         CardView accountabilityBuddyCardView = findCardViewSafely(R.id.accountabilityBuddyCardView);
         if (accountabilityBuddyCardView != null) {
             accountabilityBuddyCardView.setOnClickListener(new View.OnClickListener() {
@@ -608,6 +626,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else if (id == R.id.nav_about) {
             // Open About activity
             Intent intent = new Intent(MainActivity.this, AboutActivity.class);
+            startActivity(intent);
+        } else if (id == R.id.nav_check_in) {
+            Intent intent = new Intent(MainActivity.this, CheckInActivity.class);
             startActivity(intent);
         }
         

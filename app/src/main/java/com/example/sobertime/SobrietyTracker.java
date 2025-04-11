@@ -155,6 +155,19 @@ public class SobrietyTracker {
         editor.apply();
     }
 
+    /**
+     * Calculate money saved by not drinking
+     * @param drinkCost the average cost per drink
+     * @param drinksPerWeek average number of drinks consumed per week before sobriety
+     * @return total money saved during the sobriety period
+     */
+    public float calculateMoneySaved(float drinkCost, int drinksPerWeek) {
+        int daysSober = getDaysSober();
+        float daysInWeek = 7.0f;
+        float drinksPerDay = drinksPerWeek / daysInWeek;
+        return daysSober * drinksPerDay * drinkCost;
+    }
+
     public static synchronized SobrietyTracker getInstance(Context context) {
         if (instance == null) {
             instance = new SobrietyTracker(context.getApplicationContext());

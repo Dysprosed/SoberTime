@@ -66,11 +66,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:background="@drawable/button_outlined"
+                android:background="@drawable/button_rounded"
+                android:backgroundTint="#EFEFEF"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
                 android:text="Close"
-                android:textColor="@color/colorPrimary" />
+                android:textColor="@android:color/white" />
         </LinearLayout>
     </LinearLayout>
 </androidx.cardview.widget.CardView>

@@ -37,13 +37,7 @@ public class AccountabilityBuddyActivity extends BaseActivity {
 
     private static final int SMS_PERMISSION_REQUEST_CODE = 101;
 
-    private Button editBuddyButton;
-    private Button testMessageButton;
-    private Switch enableBuddySwitch;
-    private Switch notifyOnCheckinSwitch;
-    private Switch notifyOnRelapseSwitch;
-    private Switch notifyOnMilestoneSwitch;
-    private String userName;
+-   private String userName;
     private String userPhone;
 
     private RecyclerView buddiesRecyclerView;
@@ -214,51 +208,6 @@ public class AccountabilityBuddyActivity extends BaseActivity {
             @Override
             public void onClick(View v) {
                 showAddBuddyDialog();
-            }
-        });
-
-        // Add Accountability Buddy button
-        testMessageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showAddBuddyDialog();
-            }
-        });
-
-        // Enable buddy switch
-        enableBuddySwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (hasBuddy) {
-                    updateBuddyEnabled(/* buddyId */ 1, isChecked);  // Use real buddyId when available
-                    updateUIState(isChecked);
-                } else if (isChecked) {
-                    // If no buddy is set yet but the switch is turned on, prompt to add a buddy
-                    enableBuddySwitch.setChecked(false);
-                    showAddBuddyDialog();
-                }
-            }
-        });
-
-        // Notification switches
-        notifyOnCheckinSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                updateBuddyNotificationSetting(/* buddyId */ 1, "notify_on_checkin", isChecked);  // Use real buddyId
-            }
-        });
-
-        notifyOnRelapseSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                updateBuddyNotificationSetting(/* buddyId */ 1, "notify_on_checkin", isChecked);  // Use real buddyId
-            }
-        });
-
-        notifyOnMilestoneSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                updateBuddyNotificationSetting(/* buddyId */ 1, "notify_on_checkin", isChecked);  // Use real buddyId
             }
         });
     }

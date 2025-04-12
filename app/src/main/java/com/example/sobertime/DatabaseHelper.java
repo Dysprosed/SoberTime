@@ -145,7 +145,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if (!tableExists) {
             // Create the table with consistent column names
             db.execSQL("CREATE TABLE accountability_buddy (" +
-                    "_id INTEGER PRIMARY KEY AUTOINCREMENT," + // Using _id consistently
+                    "_id INTEGER PRIMARY KEY AUTOINCREMENT," +
                     "name TEXT," +
                     "phone TEXT," +
                     "user_name TEXT," +
@@ -156,8 +156,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     "notify_on_milestone INTEGER DEFAULT 1" +
                     ")");
         } else {
-            // Check and add columns that might be missing
-            addColumnIfNotExists(db, "accountability_buddy", "_id", "INTEGER PRIMARY KEY AUTOINCREMENT");
+            // Check if ID column exists, if not, we need to recreate the table
+            Cursor columnsQuery = db.rawQuery("PRAGMA table_info(accountability_buddy)", null);
+            boolean hasIdColumn = false;
+            
+            if (columnsQuery.moveToFirst()) {
+                do {
+                    String columnName = columnsQuery.getString(columnsQuery.getColumnIndex("name"));
+                    if ("_id".equals(columnName) || "id".equals(columnName)) {
+                        hasIdColumn = true;
+                        break;
+                    }
+                } while (columnsQuery.moveToNext());
+            }
+            columnsQuery.close();
+            
+            // Only add non-primary key columns
             addColumnIfNotExists(db, "accountability_buddy", "name", "TEXT");
             addColumnIfNotExists(db, "accountability_buddy", "phone", "TEXT");
             addColumnIfNotExists(db, "accountability_buddy", "user_name", "TEXT");
@@ -208,10 +222,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
         
         if (!columnExists) {
+            // Skip adding PRIMARY KEY columns to existing tables - not supported in SQLite
+            if (type.contains("PRIMARY KEY")) {
+                return; // Skip this operation - cannot add PRIMARY KEY with ALTER TABLE
+            }
+            
             try {
                 db.execSQL("ALTER TABLE " + table + " ADD COLUMN " + column + " " + type);
             } catch (Exception e) {
-                // Some column types can't be added with constraints, handle gracefully
+                // Log the error but continue
             }
         }
     }

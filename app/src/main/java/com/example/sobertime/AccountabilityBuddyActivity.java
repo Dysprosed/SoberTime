@@ -208,7 +208,7 @@ public class AccountabilityBuddyActivity extends BaseActivity {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (hasBuddy) {
-                    updateBuddyEnabled(isChecked);
+                    updateBuddyEnabled(/* buddyId */ 1, isChecked);  // Use real buddyId when available
                     updateUIState(isChecked);
                 } else if (isChecked) {
                     // If no buddy is set yet but the switch is turned on, prompt to add a buddy
@@ -222,21 +222,21 @@ public class AccountabilityBuddyActivity extends BaseActivity {
         notifyOnCheckinSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                updateBuddyNotificationSetting("notify_on_checkin", isChecked);
+                updateBuddyNotificationSetting(/* buddyId */ 1, "notify_on_checkin", isChecked);  // Use real buddyId
             }
         });
 
         notifyOnRelapseSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                updateBuddyNotificationSetting("notify_on_relapse", isChecked);
+                updateBuddyNotificationSetting(/* buddyId */ 1, "notify_on_checkin", isChecked);  // Use real buddyId
             }
         });
 
         notifyOnMilestoneSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                updateBuddyNotificationSetting("notify_on_milestone", isChecked);
+                updateBuddyNotificationSetting(/* buddyId */ 1, "notify_on_checkin", isChecked);  // Use real buddyId
             }
         });
     }
@@ -256,9 +256,10 @@ public class AccountabilityBuddyActivity extends BaseActivity {
             yourPhoneEditText.setText(userPhone);
         }
         
-        if (hasBuddy) {
-            buddyNameEditText.setText(buddyNameTextView.getText());
-            buddyPhoneEditText.setText(buddyPhoneTextView.getText());
+        if (hasBuddy && !buddyList.isEmpty()) {
+            AccountabilityBuddy firstBuddy = buddyList.get(0);
+            buddyNameEditText.setText(firstBuddy.getName());
+            buddyPhoneEditText.setText(firstBuddy.getPhone());
         }
     
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -292,7 +293,7 @@ public class AccountabilityBuddyActivity extends BaseActivity {
             builder.setNeutralButton("Delete", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    deleteBuddy();
+                    deleteBuddy(/* buddyId */ 1);  // Use real buddyId
                 }
             });
         }

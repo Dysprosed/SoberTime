@@ -1,4 +1,4 @@
-package main.java.com.example.sobertime;
+package com.example.sobertime.model;
 
 public class AccountabilityBuddy {
     private long id;

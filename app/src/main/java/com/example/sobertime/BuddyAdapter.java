@@ -1,4 +1,4 @@
-package main.java.com.example.sobertime;
+package com.example.sobertime.adapter;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -14,7 +14,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.sobertime.R;
-import com.example.sobertime.AccountabilityBuddy;
+import com.example.sobertime.model.AccountabilityBuddy;
 
 import java.util.List;
 
@@ -69,9 +69,9 @@ public class BuddyAdapter extends RecyclerView.Adapter<BuddyAdapter.BuddyViewHol
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 int adapterPosition = holder.getAdapterPosition();
                 if (adapterPosition != RecyclerView.NO_POSITION) {
-                    AccountabilityBuddy buddy = buddyList.get(adapterPosition);
-                    buddy.setEnabled(isChecked);
-                    listener.onBuddyEnabledChanged(buddy, isChecked);
+                    AccountabilityBuddy currentBuddy = buddyList.get(adapterPosition);
+                    currentBuddy.setEnabled(isChecked);
+                    listener.onBuddyEnabledChanged(currentBuddy, isChecked);
                 }
             }
         });
@@ -79,27 +79,27 @@ public class BuddyAdapter extends RecyclerView.Adapter<BuddyAdapter.BuddyViewHol
         holder.notifyCheckinCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
             int adapterPosition = holder.getAdapterPosition();
             if (adapterPosition != RecyclerView.NO_POSITION) {
-                AccountabilityBuddy buddy = buddyList.get(adapterPosition);
-                buddy.setNotifyOnCheckin(isChecked);
-                listener.onNotificationSettingChanged(buddy, "notify_on_checkin", isChecked);
+                AccountabilityBuddy currentBuddy = buddyList.get(adapterPosition);
+                currentBuddy.setNotifyOnCheckin(isChecked);
+                listener.onNotificationSettingChanged(currentBuddy, "notify_on_checkin", isChecked);
             }
         });
         
         holder.notifyRelapseCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
             int adapterPosition = holder.getAdapterPosition();
             if (adapterPosition != RecyclerView.NO_POSITION) {
-                AccountabilityBuddy buddy = buddyList.get(adapterPosition);
-                buddy.setNotifyOnRelapse(isChecked);
-                listener.onNotificationSettingChanged(buddy, "notify_on_relapse", isChecked);
+                AccountabilityBuddy currentBuddy = buddyList.get(adapterPosition);
+                currentBuddy.setNotifyOnRelapse(isChecked);
+                listener.onNotificationSettingChanged(currentBuddy, "notify_on_relapse", isChecked);
             }
         });
         
         holder.notifyMilestoneCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
             int adapterPosition = holder.getAdapterPosition();
             if (adapterPosition != RecyclerView.NO_POSITION) {
-                AccountabilityBuddy buddy = buddyList.get(adapterPosition);
-                buddy.setNotifyOnMilestone(isChecked);
-                listener.onNotificationSettingChanged(buddy, "notify_on_milestone", isChecked);
+                AccountabilityBuddy currentBuddy = buddyList.get(adapterPosition);
+                currentBuddy.setNotifyOnMilestone(isChecked);
+                listener.onNotificationSettingChanged(currentBuddy, "notify_on_milestone", isChecked);
             }
         });
         

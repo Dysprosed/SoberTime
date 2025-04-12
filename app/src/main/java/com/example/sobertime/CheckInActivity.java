@@ -12,6 +12,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.content.Context;
+import android.util.Log;
 
 import androidx.appcompat.app.AlertDialog;
 

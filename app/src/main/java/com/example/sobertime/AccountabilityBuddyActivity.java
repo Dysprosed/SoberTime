@@ -419,9 +419,36 @@ public class AccountabilityBuddyActivity extends BaseActivity {
         }
     }
 
+    // Helper method to determine the correct ID column name
+    private String getIdColumnName(SQLiteDatabase db) {
+        Cursor cursor = db.rawQuery("PRAGMA table_info(accountability_buddy)", null);
+        String idColumnName = "_id"; // Default
+        
+        if (cursor.moveToFirst()) {
+            do {
+                String columnName = cursor.getString(cursor.getColumnIndex("name"));
+                if ("_id".equals(columnName)) {
+                    idColumnName = "_id";
+                    break;
+                } else if ("id".equals(columnName)) {
+                    idColumnName = "id";
+                    break;
+                }
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        
+        return idColumnName;
+    }
+
     private void deleteBuddy(long buddyId) {
         SQLiteDatabase db = databaseHelper.getWritableDatabase();
-        db.delete("accountability_buddy", "_id = ?", new String[]{String.valueOf(buddyId)});
+        
+        // Check which column name exists in the table
+        String idColumnName = getIdColumnName(db);
+        
+        // Use the correct column name
+        db.delete("accountability_buddy", idColumnName + " = ?", new String[]{String.valueOf(buddyId)});
         Toast.makeText(this, "Buddy removed", Toast.LENGTH_SHORT).show();
     }
 
@@ -429,14 +456,24 @@ public class AccountabilityBuddyActivity extends BaseActivity {
         SQLiteDatabase db = databaseHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("enabled", enabled ? 1 : 0);
-        db.update("accountability_buddy", values, "_id = ?", new String[]{String.valueOf(buddyId)});
+        
+        // Check which column name exists in the table
+        String idColumnName = getIdColumnName(db);
+        
+        // Use the correct column name
+        db.update("accountability_buddy", values, idColumnName + " = ?", new String[]{String.valueOf(buddyId)});
     }
 
     private void updateBuddyNotificationSetting(long buddyId, String setting, boolean enabled) {
         SQLiteDatabase db = databaseHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(setting, enabled ? 1 : 0);
-        db.update("accountability_buddy", values, "_id = ?", new String[]{String.valueOf(buddyId)});
+        
+        // Check which column name exists in the table
+        String idColumnName = getIdColumnName(db);
+        
+        // Use the correct column name
+        db.update("accountability_buddy", values, idColumnName + " = ?", new String[]{String.valueOf(buddyId)});
     }
 
     private void checkSmsPermission() {

@@ -195,13 +195,6 @@ public class AccountabilityBuddyActivity extends BaseActivity {
         buddyAdapter.notifyDataSetChanged();
     }
 
-    private void updateUIState(boolean enabled) {
-        notifyOnCheckinSwitch.setEnabled(enabled);
-        notifyOnRelapseSwitch.setEnabled(enabled);
-        notifyOnMilestoneSwitch.setEnabled(enabled);
-        testMessageButton.setEnabled(enabled && hasBuddy);
-    }
-
     private void setupListeners() {
         // Set up "Add Buddy" button
         addBuddyButton.setOnClickListener(new View.OnClickListener() {
@@ -465,9 +458,15 @@ public class AccountabilityBuddyActivity extends BaseActivity {
                 Toast.makeText(this, 
                         "SMS permission denied. Buddy notifications will not work.", 
                         Toast.LENGTH_LONG).show();
-                enableBuddySwitch.setChecked(false);
-                updateBuddyEnabled(1, false);
-                updateUIState(false);
+                
+                // Disable all buddies if SMS permission is denied
+                SQLiteDatabase db = databaseHelper.getWritableDatabase();
+                ContentValues values = new ContentValues();
+                values.put("enabled", 0);
+                db.update("accountability_buddy", values, null, null);
+                
+                // Refresh the UI to show disabled state
+                loadBuddyData();
             }
         }
     }

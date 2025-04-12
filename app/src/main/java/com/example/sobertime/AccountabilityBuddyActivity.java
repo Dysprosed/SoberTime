@@ -37,7 +37,7 @@ public class AccountabilityBuddyActivity extends BaseActivity {
 
     private static final int SMS_PERMISSION_REQUEST_CODE = 101;
 
--   private String userName;
+    private String userName;
     private String userPhone;
 
     private RecyclerView buddiesRecyclerView;

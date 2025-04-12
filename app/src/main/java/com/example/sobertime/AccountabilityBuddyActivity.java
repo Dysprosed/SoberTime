@@ -81,7 +81,6 @@ public class AccountabilityBuddyActivity extends BaseActivity {
         checkSmsPermission();
     }
 
-    @Override
     protected void initializeViews() {
         // Find the RecyclerView and Button
         buddiesRecyclerView = findViewById(R.id.buddiesRecyclerView);
@@ -495,7 +494,7 @@ public class AccountabilityBuddyActivity extends BaseActivity {
                         "SMS permission denied. Buddy notifications will not work.", 
                         Toast.LENGTH_LONG).show();
                 enableBuddySwitch.setChecked(false);
-                updateBuddyEnabled(false);
+                updateBuddyEnabled(1, false);
                 updateUIState(false);
             }
         }

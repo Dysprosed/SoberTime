@@ -152,13 +152,36 @@ public class AccountabilityBuddyActivity extends BaseActivity {
         if (cursor.moveToFirst()) {
             do {
                 AccountabilityBuddy buddy = new AccountabilityBuddy();
-                buddy.setId(cursor.getLong(cursor.getColumnIndex("_id")));
-                buddy.setName(cursor.getString(cursor.getColumnIndex("name")));
-                buddy.setPhone(cursor.getString(cursor.getColumnIndex("phone")));
-                buddy.setEnabled(cursor.getInt(cursor.getColumnIndex("enabled")) == 1);
-                buddy.setNotifyOnCheckin(cursor.getInt(cursor.getColumnIndex("notify_on_checkin")) == 1);
-                buddy.setNotifyOnRelapse(cursor.getInt(cursor.getColumnIndex("notify_on_relapse")) == 1);
-                buddy.setNotifyOnMilestone(cursor.getInt(cursor.getColumnIndex("notify_on_milestone")) == 1);
+                
+                // Try to get column indexes safely
+                int idColIndex = cursor.getColumnIndex("_id");
+                if (idColIndex == -1) {
+                    idColIndex = cursor.getColumnIndex("id"); // Try alternative column name
+                }
+                
+                // Only set ID if we found a valid column
+                if (idColIndex != -1) {
+                    buddy.setId(cursor.getLong(idColIndex));
+                }
+                
+                // Safely get other columns with fallback defaults
+                int nameColIndex = cursor.getColumnIndex("name");
+                buddy.setName(nameColIndex != -1 ? cursor.getString(nameColIndex) : "Unknown");
+                
+                int phoneColIndex = cursor.getColumnIndex("phone");
+                buddy.setPhone(phoneColIndex != -1 ? cursor.getString(phoneColIndex) : "");
+                
+                int enabledColIndex = cursor.getColumnIndex("enabled");
+                buddy.setEnabled(enabledColIndex != -1 && cursor.getInt(enabledColIndex) == 1);
+                
+                int notifyCheckinColIndex = cursor.getColumnIndex("notify_on_checkin");
+                buddy.setNotifyOnCheckin(notifyCheckinColIndex != -1 && cursor.getInt(notifyCheckinColIndex) == 1);
+                
+                int notifyRelapseColIndex = cursor.getColumnIndex("notify_on_relapse");
+                buddy.setNotifyOnRelapse(notifyRelapseColIndex == -1 || cursor.getInt(notifyRelapseColIndex) == 1);
+                
+                int notifyMilestoneColIndex = cursor.getColumnIndex("notify_on_milestone");
+                buddy.setNotifyOnMilestone(notifyMilestoneColIndex == -1 || cursor.getInt(notifyMilestoneColIndex) == 1);
                 
                 buddyList.add(buddy);
             } while (cursor.moveToNext());

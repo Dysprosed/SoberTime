@@ -143,9 +143,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
         
         if (!tableExists) {
-            // Create the table with the user info columns
+            // Create the table with consistent column names
             db.execSQL("CREATE TABLE accountability_buddy (" +
-                    "_id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "_id INTEGER PRIMARY KEY AUTOINCREMENT," + // Using _id consistently
                     "name TEXT," +
                     "phone TEXT," +
                     "user_name TEXT," +
@@ -156,31 +156,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     "notify_on_milestone INTEGER DEFAULT 1" +
                     ")");
         } else {
-            // Check if user fields exist, add them if they don't
-            cursor = db.rawQuery("PRAGMA table_info(accountability_buddy)", null);
-            
-            boolean hasUserName = false;
-            boolean hasUserPhone = false;
-            
-            if (cursor.moveToFirst()) {
-                do {
-                    String columnName = cursor.getString(cursor.getColumnIndex("name"));
-                    if ("user_name".equals(columnName)) {
-                        hasUserName = true;
-                    } else if ("user_phone".equals(columnName)) {
-                        hasUserPhone = true;
-                    }
-                } while (cursor.moveToNext());
-            }
-            cursor.close();
-            
-            // Add columns if they don't exist
-            if (!hasUserName) {
-                db.execSQL("ALTER TABLE accountability_buddy ADD COLUMN user_name TEXT");
-            }
-            if (!hasUserPhone) {
-                db.execSQL("ALTER TABLE accountability_buddy ADD COLUMN user_phone TEXT");
-            }
+            // Check and add columns that might be missing
+            addColumnIfNotExists(db, "accountability_buddy", "_id", "INTEGER PRIMARY KEY AUTOINCREMENT");
+            addColumnIfNotExists(db, "accountability_buddy", "name", "TEXT");
+            addColumnIfNotExists(db, "accountability_buddy", "phone", "TEXT");
+            addColumnIfNotExists(db, "accountability_buddy", "user_name", "TEXT");
+            addColumnIfNotExists(db, "accountability_buddy", "user_phone", "TEXT");
+            addColumnIfNotExists(db, "accountability_buddy", "enabled", "INTEGER DEFAULT 0");
+            addColumnIfNotExists(db, "accountability_buddy", "notify_on_checkin", "INTEGER DEFAULT 0");
+            addColumnIfNotExists(db, "accountability_buddy", "notify_on_relapse", "INTEGER DEFAULT 1");
+            addColumnIfNotExists(db, "accountability_buddy", "notify_on_milestone", "INTEGER DEFAULT 1");
         }
     }
 
@@ -206,6 +191,31 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return entry;
     }
     
+    // Helper method to add a column if it doesn't exist
+    private void addColumnIfNotExists(SQLiteDatabase db, String table, String column, String type) {
+        Cursor cursor = db.rawQuery("PRAGMA table_info(" + table + ")", null);
+        boolean columnExists = false;
+        
+        if (cursor.moveToFirst()) {
+            do {
+                String columnName = cursor.getString(cursor.getColumnIndex("name"));
+                if (column.equalsIgnoreCase(columnName)) {
+                    columnExists = true;
+                    break;
+                }
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        
+        if (!columnExists) {
+            try {
+                db.execSQL("ALTER TABLE " + table + " ADD COLUMN " + column + " " + type);
+            } catch (Exception e) {
+                // Some column types can't be added with constraints, handle gracefully
+            }
+        }
+    }
+
     public List<JournalEntry> getAllJournalEntries() {
         List<JournalEntry> entries = new ArrayList<>();
         

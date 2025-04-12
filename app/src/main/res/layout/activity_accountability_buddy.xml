@@ -52,101 +52,6 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        style="@style/CardTitleText"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Your Buddy"
-                        android:textColor="@color/colorPrimary" />
-
-                    <Switch
-                        android:id="@+id/enableBuddySwitch"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Enable" />
-                </LinearLayout>
-
-                <!-- Display buddy info -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Name:"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/buddyNameTextView"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Not set"
-                        android:layout_marginBottom="8dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Phone:"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/buddyPhoneTextView"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Not set" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:orientation="horizontal">
-                    
-                    <View
-                        android:layout_width="0dp"
-                        android:layout_height="0dp"
-                        android:layout_weight="1"/>
-                        
-                    <Button
-                        android:id="@+id/editBuddyButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:backgroundTint="@color/colorPrimary"
-                        android:text="Edit"
-                        android:textColor="@color/colorTextLight" />
-                </LinearLayout>
-
-                <Button
-                    android:id="@+id/testMessageButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:backgroundTint="@color/colorAccent"
-                    android:text="Add Accountability Buddy"
-                    android:textColor="@color/colorTextLight" />
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <!-- Notification Settings Card -->
-        <androidx.cardview.widget.CardView
-            style="@style/AppCard"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="16dp">
 
@@ -154,68 +59,32 @@
                     style="@style/CardTitleText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Notification Settings"
+                    android:text="Your Accountability Buddies"
                     android:textColor="@color/colorPrimary" />
 
-                <LinearLayout
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/buddiesRecyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp" />
+
+                <TextView
+                    android:id="@+id/emptyBuddiesText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:orientation="horizontal">
+                    android:gravity="center"
+                    android:text="No buddies added yet"
+                    android:visibility="gone" />
 
-                    <TextView
-                        style="@style/CardContentText"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:layout_weight="1"
-                        android:text="Notify on daily check-ins" />
-
-                    <Switch
-                        android:id="@+id/notifyOnCheckinSwitch"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
-
-                <LinearLayout
+                <Button
+                    android:id="@+id/addBuddyButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        style="@style/CardContentText"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:layout_weight="1"
-                        android:text="Notify when sobriety resets" />
-
-                    <Switch
-                        android:id="@+id/notifyOnRelapseSwitch"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        style="@style/CardContentText"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:layout_weight="1"
-                        android:text="Notify on milestones" />
-
-                    <Switch
-                        android:id="@+id/notifyOnMilestoneSwitch"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
+                    android:layout_marginTop="16dp"
+                    android:backgroundTint="@color/colorAccent"
+                    android:text="Add Accountability Buddy"
+                    android:textColor="@color/colorTextLight" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
     </LinearLayout>

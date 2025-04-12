@@ -22,6 +22,13 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import com.example.sobertime.adapter.BuddyAdapter;
+import com.example.sobertime.model.AccountabilityBuddy;
+import java.util.ArrayList;
+import java.util.List;
+
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -30,8 +37,6 @@ public class AccountabilityBuddyActivity extends BaseActivity {
 
     private static final int SMS_PERMISSION_REQUEST_CODE = 101;
 
-    private TextView buddyNameTextView;
-    private TextView buddyPhoneTextView;
     private Button editBuddyButton;
     private Button testMessageButton;
     private Switch enableBuddySwitch;
@@ -40,6 +45,12 @@ public class AccountabilityBuddyActivity extends BaseActivity {
     private Switch notifyOnMilestoneSwitch;
     private String userName;
     private String userPhone;
+
+    private RecyclerView buddiesRecyclerView;
+    private TextView emptyBuddiesText;
+    private Button addBuddyButton;
+    private List<AccountabilityBuddy> buddyList;
+    private BuddyAdapter buddyAdapter;
 
     private DatabaseHelper databaseHelper;
     private boolean hasBuddy = false;
@@ -70,20 +81,63 @@ public class AccountabilityBuddyActivity extends BaseActivity {
         checkSmsPermission();
     }
 
-    private void initializeViews() {
-        buddyNameTextView = findViewById(R.id.buddyNameTextView);
-        buddyPhoneTextView = findViewById(R.id.buddyPhoneTextView);
-        editBuddyButton = findViewById(R.id.editBuddyButton);
-        testMessageButton = findViewById(R.id.testMessageButton);
-        enableBuddySwitch = findViewById(R.id.enableBuddySwitch);
-        notifyOnCheckinSwitch = findViewById(R.id.notifyOnCheckinSwitch);
-        notifyOnRelapseSwitch = findViewById(R.id.notifyOnRelapseSwitch);
-        notifyOnMilestoneSwitch = findViewById(R.id.notifyOnMilestoneSwitch);
+    @Override
+    protected void initializeViews() {
+        // Find the RecyclerView and Button
+        buddiesRecyclerView = findViewById(R.id.buddiesRecyclerView);
+        emptyBuddiesText = findViewById(R.id.emptyBuddiesText);
+        addBuddyButton = findViewById(R.id.addBuddyButton);
+        
+        // Initialize RecyclerView
+        buddiesRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        buddyList = new ArrayList<>();
+        buddyAdapter = new BuddyAdapter(this, buddyList, new BuddyAdapter.OnBuddyActionListener() {
+            @Override
+            public void onBuddyEditClicked(AccountabilityBuddy buddy, int position) {
+                showEditBuddyDialog(buddy, position);
+            }
+            
+            @Override
+            public void onBuddyDeleteClicked(AccountabilityBuddy buddy, int position) {
+                confirmDeleteBuddy(buddy, position);
+            }
+            
+            @Override
+            public void onBuddyEnabledChanged(AccountabilityBuddy buddy, boolean enabled) {
+                updateBuddyEnabled(buddy.getId(), enabled);
+            }
+            
+            @Override
+            public void onNotificationSettingChanged(AccountabilityBuddy buddy, String setting, boolean enabled) {
+                updateBuddyNotificationSetting(buddy.getId(), setting, enabled);
+            }
+        });
+        buddiesRecyclerView.setAdapter(buddyAdapter);
+    }
+
+    private void confirmDeleteBuddy(AccountabilityBuddy buddy, int position) {
+        new AlertDialog.Builder(this)
+                .setTitle("Remove Buddy")
+                .setMessage("Are you sure you want to remove " + buddy.getName() + " as an accountability buddy?")
+                .setPositiveButton("Remove", (dialog, which) -> {
+                    deleteBuddy(buddy.getId());
+                    buddyList.remove(position);
+                    buddyAdapter.notifyItemRemoved(position);
+                    if (buddyList.isEmpty()) {
+                        buddiesRecyclerView.setVisibility(View.GONE);
+                        emptyBuddiesText.setVisibility(View.VISIBLE);
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     private void loadBuddyData() {
         // Make sure the table exists
         databaseHelper.ensureAccountabilityBuddyTableExists();
+        
+        // Clear the existing list
+        buddyList.clear();
         
         SQLiteDatabase db = databaseHelper.getReadableDatabase();
         Cursor cursor = db.query(
@@ -97,47 +151,32 @@ public class AccountabilityBuddyActivity extends BaseActivity {
         );
     
         if (cursor.moveToFirst()) {
-            hasBuddy = true;
-            String name = cursor.getString(cursor.getColumnIndex("name"));
-            String phone = cursor.getString(cursor.getColumnIndex("phone"));
+            do {
+                AccountabilityBuddy buddy = new AccountabilityBuddy();
+                buddy.setId(cursor.getLong(cursor.getColumnIndex("_id")));
+                buddy.setName(cursor.getString(cursor.getColumnIndex("name")));
+                buddy.setPhone(cursor.getString(cursor.getColumnIndex("phone")));
+                buddy.setEnabled(cursor.getInt(cursor.getColumnIndex("enabled")) == 1);
+                buddy.setNotifyOnCheckin(cursor.getInt(cursor.getColumnIndex("notify_on_checkin")) == 1);
+                buddy.setNotifyOnRelapse(cursor.getInt(cursor.getColumnIndex("notify_on_relapse")) == 1);
+                buddy.setNotifyOnMilestone(cursor.getInt(cursor.getColumnIndex("notify_on_milestone")) == 1);
+                
+                buddyList.add(buddy);
+            } while (cursor.moveToNext());
             
-            // Load user information
-            int userNameIndex = cursor.getColumnIndex("user_name");
-            int userPhoneIndex = cursor.getColumnIndex("user_phone");
-            
-            if (userNameIndex != -1) {
-                userName = cursor.getString(userNameIndex);
-            }
-            if (userPhoneIndex != -1) {
-                userPhone = cursor.getString(userPhoneIndex);
-            }
-            
-            boolean enabled = cursor.getInt(cursor.getColumnIndex("enabled")) == 1;
-            boolean notifyCheckin = cursor.getInt(cursor.getColumnIndex("notify_on_checkin")) == 1;
-            boolean notifyRelapse = cursor.getInt(cursor.getColumnIndex("notify_on_relapse")) == 1;
-            boolean notifyMilestone = cursor.getInt(cursor.getColumnIndex("notify_on_milestone")) == 1;
-    
-            buddyNameTextView.setText(name);
-            buddyPhoneTextView.setText(phone);
-            enableBuddySwitch.setChecked(enabled);
-            notifyOnCheckinSwitch.setChecked(notifyCheckin);
-            notifyOnRelapseSwitch.setChecked(notifyRelapse);
-            notifyOnMilestoneSwitch.setChecked(notifyMilestone);
-    
-            // Update UI based on whether buddy is enabled
-            updateUIState(enabled);
+            // Show RecyclerView, hide empty text
+            buddiesRecyclerView.setVisibility(View.VISIBLE);
+            emptyBuddiesText.setVisibility(View.GONE);
         } else {
-            // No buddy set up yet
-            hasBuddy = false;
-            userName = "";
-            userPhone = "";
-            buddyNameTextView.setText("Not set");
-            buddyPhoneTextView.setText("Not set");
-            enableBuddySwitch.setChecked(false);
-            updateUIState(false);
+            // No buddies - show empty text
+            buddiesRecyclerView.setVisibility(View.GONE);
+            emptyBuddiesText.setVisibility(View.VISIBLE);
         }
-    
+        
         cursor.close();
+        
+        // Update adapter with new data
+        buddyAdapter.notifyDataSetChanged();
     }
 
     private void updateUIState(boolean enabled) {
@@ -148,8 +187,8 @@ public class AccountabilityBuddyActivity extends BaseActivity {
     }
 
     private void setupListeners() {
-        // Edit buddy button
-        editBuddyButton.setOnClickListener(new View.OnClickListener() {
+        // Set up "Add Buddy" button
+        addBuddyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 showAddBuddyDialog();
@@ -261,6 +300,89 @@ public class AccountabilityBuddyActivity extends BaseActivity {
         builder.show();
     }
 
+    private void showEditBuddyDialog(AccountabilityBuddy buddy, int position) {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_add_buddy, null);
+        final EditText yourNameEditText = dialogView.findViewById(R.id.yourNameEditText);
+        final EditText yourPhoneEditText = dialogView.findViewById(R.id.yourPhoneEditText);
+        final EditText buddyNameEditText = dialogView.findViewById(R.id.buddyNameEditText);
+        final EditText buddyPhoneEditText = dialogView.findViewById(R.id.buddyPhoneEditText);
+    
+        // Pre-fill fields with user info
+        if (!TextUtils.isEmpty(userName)) {
+            yourNameEditText.setText(userName);
+        }
+        if (!TextUtils.isEmpty(userPhone)) {
+            yourPhoneEditText.setText(userPhone);
+        }
+    
+        // Pre-fill with buddy's existing info
+        buddyNameEditText.setText(buddy.getName());
+        buddyPhoneEditText.setText(buddy.getPhone());
+    
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Edit Accountability Buddy")
+                .setView(dialogView)
+                .setPositiveButton("Save", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String yourName = yourNameEditText.getText().toString().trim();
+                        String yourPhone = yourPhoneEditText.getText().toString().trim();
+                        String buddyName = buddyNameEditText.getText().toString().trim();
+                        String buddyPhone = buddyPhoneEditText.getText().toString().trim();
+    
+                        if (TextUtils.isEmpty(yourName) || TextUtils.isEmpty(yourPhone) || 
+                            TextUtils.isEmpty(buddyName) || TextUtils.isEmpty(buddyPhone)) {
+                            Toast.makeText(AccountabilityBuddyActivity.this, 
+                                    "All fields are required", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+    
+                        // Update buddy with new info (preserve the ID)
+                        buddy.setName(buddyName);
+                        buddy.setPhone(buddyPhone);
+                        
+                        // Update in database
+                        updateBuddyInfo(buddy, yourName, yourPhone);
+                        
+                        // Refresh UI
+                        buddyAdapter.notifyItemChanged(position);
+                        
+                        // If phone number changed, ask about sending invitation
+                        if (!buddyPhone.equals(buddy.getPhone())) {
+                            showSendMessageConfirmationDialog(buddyName, buddyPhone, yourName, yourPhone);
+                        }
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .setNeutralButton("Delete", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        confirmDeleteBuddy(buddy, position);
+                    }
+                });
+    
+        builder.show();
+    }
+
+    // Helper method to update buddy info in database
+    private void updateBuddyInfo(AccountabilityBuddy buddy, String yourName, String yourPhone) {
+        SQLiteDatabase db = databaseHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("name", buddy.getName());
+        values.put("phone", buddy.getPhone());
+        values.put("user_name", yourName);
+        values.put("user_phone", yourPhone);
+        
+        // Update existing buddy
+        db.update("accountability_buddy", values, "_id = ?", new String[]{String.valueOf(buddy.getId())});
+        
+        // Save the user info
+        userName = yourName;
+        userPhone = yourPhone;
+        
+        Toast.makeText(this, "Buddy information updated", Toast.LENGTH_SHORT).show();
+    }
+
     private void saveBuddyInfo(String buddyName, String buddyPhone, String yourName, String yourPhone) {
         SQLiteDatabase db = databaseHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -332,26 +454,24 @@ public class AccountabilityBuddyActivity extends BaseActivity {
         }
     }
 
-    private void deleteBuddy() {
+    private void deleteBuddy(long buddyId) {
         SQLiteDatabase db = databaseHelper.getWritableDatabase();
-        db.delete("accountability_buddy", null, null);
-        hasBuddy = false;
-        loadBuddyData();
+        db.delete("accountability_buddy", "_id = ?", new String[]{String.valueOf(buddyId)});
         Toast.makeText(this, "Buddy removed", Toast.LENGTH_SHORT).show();
     }
 
-    private void updateBuddyEnabled(boolean enabled) {
+    private void updateBuddyEnabled(long buddyId, boolean enabled) {
         SQLiteDatabase db = databaseHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("enabled", enabled ? 1 : 0);
-        db.update("accountability_buddy", values, null, null);
+        db.update("accountability_buddy", values, "_id = ?", new String[]{String.valueOf(buddyId)});
     }
 
-    private void updateBuddyNotificationSetting(String setting, boolean enabled) {
+    private void updateBuddyNotificationSetting(long buddyId, String setting, boolean enabled) {
         SQLiteDatabase db = databaseHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(setting, enabled ? 1 : 0);
-        db.update("accountability_buddy", values, null, null);
+        db.update("accountability_buddy", values, "_id = ?", new String[]{String.valueOf(buddyId)});
     }
 
     private void checkSmsPermission() {

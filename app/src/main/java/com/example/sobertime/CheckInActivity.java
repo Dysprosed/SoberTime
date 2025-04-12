@@ -151,23 +151,23 @@ public class CheckInActivity extends BaseActivity {
         Cursor cursor = db.query(
                 "accountability_buddy",
                 null,
-                "enabled = 1",  // Only get enabled buddy
+                "enabled = 1",  // Only get enabled buddies
                 null,
                 null,
                 null,
                 null
         );
-
-        if (cursor.moveToFirst()) {
+    
+        while (cursor.moveToNext()) {
             String buddyName = cursor.getString(cursor.getColumnIndex("name"));
             String buddyPhone = cursor.getString(cursor.getColumnIndex("phone"));
             boolean notifyOnCheckin = cursor.getInt(cursor.getColumnIndex("notify_on_checkin")) == 1;
             boolean notifyOnRelapse = cursor.getInt(cursor.getColumnIndex("notify_on_relapse")) == 1;
-
+    
             // Determine if we should send a message
             boolean shouldNotify = (maintainedSobriety && notifyOnCheckin) || 
                                 (!maintainedSobriety && notifyOnRelapse);
-
+    
             if (shouldNotify && buddyPhone != null && !buddyPhone.isEmpty()) {
                 // Build message
                 String message;
@@ -180,23 +180,18 @@ public class CheckInActivity extends BaseActivity {
                             "Your buddy has had a lapse and could use your support right now. " +
                             "Please consider reaching out to them when you have a moment.";
                 }
-
+    
                 // Send SMS
                 try {
                     SmsManager smsManager = SmsManager.getDefault();
                     smsManager.sendTextMessage(buddyPhone, null, message, null, null);
-                    
-                    if (!maintainedSobriety) {
-                        Toast.makeText(this, "Your buddy has been notified", Toast.LENGTH_SHORT).show();
-                    }
                 } catch (Exception e) {
-                    Toast.makeText(this, "Failed to send message to buddy: " + e.getMessage(),
-                            Toast.LENGTH_SHORT).show();
+                    Log.e("CheckInActivity", "Failed to send message to buddy: " + e.getMessage());
                 }
             }
         }
         
-        cursor.close();
+            cursor.close();
+        }
     }
-}
 

@@ -422,7 +422,9 @@ public class AccountabilityBuddyActivity extends BaseActivity {
     // Helper method to determine the correct ID column name
     private String getIdColumnName(SQLiteDatabase db) {
         Cursor cursor = db.rawQuery("PRAGMA table_info(accountability_buddy)", null);
-        String idColumnName = "_id"; // Default
+        
+        // Default to standard Android column name
+        String idColumnName = "_id";
         
         if (cursor.moveToFirst()) {
             do {

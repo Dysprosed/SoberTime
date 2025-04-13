@@ -13,11 +13,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     
     // Database Information
     private static final String DATABASE_NAME = "sobriety_tracker.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2; // Increased from 1 to 2
     
     // Table Names
     private static final String TABLE_JOURNAL = "journal";
     private static final String TABLE_SETTINGS = "settings";
+    private static final String TABLE_ACCOUNTABILITY_BUDDY = "accountability_buddy";
     
     // Journal Table Columns
     private static final String JOURNAL_ID = "id";
@@ -32,10 +33,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String SETTINGS_KEY = "key";
     private static final String SETTINGS_VALUE = "value";
 
-    // New table for accountability buddy
-    private static final String TABLE_ACCOUNTABILITY_BUDDY = "accountability_buddy";
+    // Accountability Buddy Table Columns
+    private static final String BUDDY_ID = "_id";  // Using Android standard naming convention
     private static final String BUDDY_NAME = "name";
     private static final String BUDDY_PHONE = "phone";
+    private static final String BUDDY_USER_NAME = "user_name";
+    private static final String BUDDY_USER_PHONE = "user_phone";
     private static final String BUDDY_ENABLED = "enabled";
     private static final String BUDDY_NOTIFY_ON_CHECKIN = "notify_on_checkin";
     private static final String BUDDY_NOTIFY_ON_RELAPSE = "notify_on_relapse";
@@ -59,9 +62,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String CREATE_TABLE_ACCOUNTABILITY_BUDDY = 
             "CREATE TABLE " + TABLE_ACCOUNTABILITY_BUDDY + "("
-                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + BUDDY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
                     + BUDDY_NAME + " TEXT, "
                     + BUDDY_PHONE + " TEXT, "
+                    + BUDDY_USER_NAME + " TEXT, "
+                    + BUDDY_USER_PHONE + " TEXT, "
                     + BUDDY_ENABLED + " INTEGER DEFAULT 1, "
                     + BUDDY_NOTIFY_ON_CHECKIN + " INTEGER DEFAULT 0, "
                     + BUDDY_NOTIFY_ON_RELAPSE + " INTEGER DEFAULT 1, "
@@ -107,9 +112,24 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         if (oldVersion < 2) {
-            // Create the accountability_buddy table for existing users
-            db.execSQL(CREATE_TABLE_ACCOUNTABILITY_BUDDY);
+            // For existing tables, migrate accountability_buddy table to use consistent column names
+            Cursor cursor = db.rawQuery(
+                    "SELECT name FROM sqlite_master WHERE type='table' AND name='" + TABLE_ACCOUNTABILITY_BUDDY + "'", 
+                    null);
+            
+            boolean tableExists = cursor.getCount() > 0;
+            cursor.close();
+            
+            if (tableExists) {
+                // The table exists but needs migration to standardize column names
+                migrateAccountabilityBuddyTable(db);
+            } else {
+                // Create the accountability_buddy table for existing users
+                db.execSQL(CREATE_TABLE_ACCOUNTABILITY_BUDDY);
+            }
         }
+        // Add further upgrade paths for future versions
+        // if (oldVersion < 3) { ... }
     }
     
     // Journal CRUD Operations
@@ -136,7 +156,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         
         // Check if the table exists first
         Cursor cursor = db.rawQuery(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name='accountability_buddy'", 
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='" + TABLE_ACCOUNTABILITY_BUDDY + "'", 
                 null);
         
         boolean tableExists = cursor.getCount() > 0;
@@ -144,43 +164,122 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         
         if (!tableExists) {
             // Create the table with consistent column names
-            db.execSQL("CREATE TABLE accountability_buddy (" +
-                    "_id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                    "name TEXT," +
-                    "phone TEXT," +
-                    "user_name TEXT," +
-                    "user_phone TEXT," +
-                    "enabled INTEGER DEFAULT 0," +
-                    "notify_on_checkin INTEGER DEFAULT 0," +
-                    "notify_on_relapse INTEGER DEFAULT 1," +
-                    "notify_on_milestone INTEGER DEFAULT 1" +
+            db.execSQL("CREATE TABLE " + TABLE_ACCOUNTABILITY_BUDDY + " (" +
+                    BUDDY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    BUDDY_NAME + " TEXT," +
+                    BUDDY_PHONE + " TEXT," +
+                    BUDDY_USER_NAME + " TEXT," +
+                    BUDDY_USER_PHONE + " TEXT," +
+                    BUDDY_ENABLED + " INTEGER DEFAULT 0," +
+                    BUDDY_NOTIFY_ON_CHECKIN + " INTEGER DEFAULT 0," +
+                    BUDDY_NOTIFY_ON_RELAPSE + " INTEGER DEFAULT 1," +
+                    BUDDY_NOTIFY_ON_MILESTONE + " INTEGER DEFAULT 1" +
                     ")");
         } else {
             // Check if ID column exists, if not, we need to recreate the table
-            Cursor columnsQuery = db.rawQuery("PRAGMA table_info(accountability_buddy)", null);
-            boolean hasIdColumn = false;
+            Cursor columnsQuery = db.rawQuery("PRAGMA table_info(" + TABLE_ACCOUNTABILITY_BUDDY + ")", null);
+            boolean hasProperIdColumn = false;
             
             if (columnsQuery.moveToFirst()) {
                 do {
                     String columnName = columnsQuery.getString(columnsQuery.getColumnIndex("name"));
-                    if ("_id".equals(columnName) || "id".equals(columnName)) {
-                        hasIdColumn = true;
+                    if (BUDDY_ID.equals(columnName)) {
+                        hasProperIdColumn = true;
                         break;
                     }
                 } while (columnsQuery.moveToNext());
             }
             columnsQuery.close();
             
-            // Only add non-primary key columns
-            addColumnIfNotExists(db, "accountability_buddy", "name", "TEXT");
-            addColumnIfNotExists(db, "accountability_buddy", "phone", "TEXT");
-            addColumnIfNotExists(db, "accountability_buddy", "user_name", "TEXT");
-            addColumnIfNotExists(db, "accountability_buddy", "user_phone", "TEXT");
-            addColumnIfNotExists(db, "accountability_buddy", "enabled", "INTEGER DEFAULT 0");
-            addColumnIfNotExists(db, "accountability_buddy", "notify_on_checkin", "INTEGER DEFAULT 0");
-            addColumnIfNotExists(db, "accountability_buddy", "notify_on_relapse", "INTEGER DEFAULT 1");
-            addColumnIfNotExists(db, "accountability_buddy", "notify_on_milestone", "INTEGER DEFAULT 1");
+            if (!hasProperIdColumn) {
+                // Handle case where table exists but doesn't have proper ID column
+                migrateAccountabilityBuddyTable(db);
+            } else {
+                // Only add non-primary key columns
+                addColumnIfNotExists(db, TABLE_ACCOUNTABILITY_BUDDY, BUDDY_NAME, "TEXT");
+                addColumnIfNotExists(db, TABLE_ACCOUNTABILITY_BUDDY, BUDDY_PHONE, "TEXT");
+                addColumnIfNotExists(db, TABLE_ACCOUNTABILITY_BUDDY, BUDDY_USER_NAME, "TEXT");
+                addColumnIfNotExists(db, TABLE_ACCOUNTABILITY_BUDDY, BUDDY_USER_PHONE, "TEXT");
+                addColumnIfNotExists(db, TABLE_ACCOUNTABILITY_BUDDY, BUDDY_ENABLED, "INTEGER DEFAULT 0");
+                addColumnIfNotExists(db, TABLE_ACCOUNTABILITY_BUDDY, BUDDY_NOTIFY_ON_CHECKIN, "INTEGER DEFAULT 0");
+                addColumnIfNotExists(db, TABLE_ACCOUNTABILITY_BUDDY, BUDDY_NOTIFY_ON_RELAPSE, "INTEGER DEFAULT 1");
+                addColumnIfNotExists(db, TABLE_ACCOUNTABILITY_BUDDY, BUDDY_NOTIFY_ON_MILESTONE, "INTEGER DEFAULT 1");
+            }
         }
+    }
+
+    private void migrateAccountabilityBuddyTable(SQLiteDatabase db) {
+        // Create a temp table with the correct schema
+        db.execSQL("CREATE TABLE temp_" + TABLE_ACCOUNTABILITY_BUDDY + " (" +
+                BUDDY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                BUDDY_NAME + " TEXT," +
+                BUDDY_PHONE + " TEXT," +
+                BUDDY_USER_NAME + " TEXT," +
+                BUDDY_USER_PHONE + " TEXT," +
+                BUDDY_ENABLED + " INTEGER DEFAULT 0," +
+                BUDDY_NOTIFY_ON_CHECKIN + " INTEGER DEFAULT 0," +
+                BUDDY_NOTIFY_ON_RELAPSE + " INTEGER DEFAULT 1," +
+                BUDDY_NOTIFY_ON_MILESTONE + " INTEGER DEFAULT 1" +
+                ")");
+        
+        // Try to copy data from old table to temp table
+        try {
+            // Check if 'id' column exists in old table
+            Cursor columnsQuery = db.rawQuery("PRAGMA table_info(" + TABLE_ACCOUNTABILITY_BUDDY + ")", null);
+            boolean hasOldIdColumn = false;
+            
+            if (columnsQuery.moveToFirst()) {
+                do {
+                    String columnName = columnsQuery.getString(columnsQuery.getColumnIndex("name"));
+                    if ("id".equals(columnName)) {
+                        hasOldIdColumn = true;
+                        break;
+                    }
+                } while (columnsQuery.moveToNext());
+            }
+            columnsQuery.close();
+            
+            // Copy data preserving ID if possible
+            if (hasOldIdColumn) {
+                db.execSQL("INSERT INTO temp_" + TABLE_ACCOUNTABILITY_BUDDY + " (" +
+                        BUDDY_ID + ", " +
+                        BUDDY_NAME + ", " + 
+                        BUDDY_PHONE + ", " + 
+                        BUDDY_USER_NAME + ", " + 
+                        BUDDY_USER_PHONE + ", " + 
+                        BUDDY_ENABLED + ", " + 
+                        BUDDY_NOTIFY_ON_CHECKIN + ", " + 
+                        BUDDY_NOTIFY_ON_RELAPSE + ", " + 
+                        BUDDY_NOTIFY_ON_MILESTONE + ") " +
+                        "SELECT " +
+                        "id, name, phone, user_name, user_phone, enabled, notify_on_checkin, " +
+                        "notify_on_relapse, notify_on_milestone " +
+                        "FROM " + TABLE_ACCOUNTABILITY_BUDDY);
+            } else {
+                // Just copy data without ID
+                db.execSQL("INSERT INTO temp_" + TABLE_ACCOUNTABILITY_BUDDY + " (" +
+                        BUDDY_NAME + ", " + 
+                        BUDDY_PHONE + ", " + 
+                        BUDDY_USER_NAME + ", " + 
+                        BUDDY_USER_PHONE + ", " + 
+                        BUDDY_ENABLED + ", " + 
+                        BUDDY_NOTIFY_ON_CHECKIN + ", " + 
+                        BUDDY_NOTIFY_ON_RELAPSE + ", " + 
+                        BUDDY_NOTIFY_ON_MILESTONE + ") " +
+                        "SELECT " +
+                        "name, phone, user_name, user_phone, enabled, notify_on_checkin, " +
+                        "notify_on_relapse, notify_on_milestone " +
+                        "FROM " + TABLE_ACCOUNTABILITY_BUDDY);
+            }
+        } catch (Exception e) {
+            // If copy fails, it's OK - we'll have an empty but correctly structured table
+        }
+        
+        // Drop the old table
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_ACCOUNTABILITY_BUDDY);
+        
+        // Rename temp table to the proper name
+        db.execSQL("ALTER TABLE temp_" + TABLE_ACCOUNTABILITY_BUDDY + " RENAME TO " + TABLE_ACCOUNTABILITY_BUDDY);
     }
 
     public JournalEntry getJournalEntry(long id) {

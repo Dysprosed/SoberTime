@@ -9,5 +9,19 @@
     "simplifiedAutoLink": true,
     "strikethrough": true,
     "tables": true,
-    "tasklists": true
+    "tasklists": true,
+    "kanban": {
+    
+        "trackTime": false,
+        "simpleIDs": true,
+        "noTimeTrackingIfIdle": false,
+        "noSystemUser": false,
+        "noScmUser": false,
+        "maxExportNameLength": 48,
+        "exportPath": "",
+        "exportOnSave": false,
+        "cleanupExports": true,
+        "canExecute": false,
+        "openOnStartup": true
+    }
 }

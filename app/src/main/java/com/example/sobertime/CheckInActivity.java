@@ -37,6 +37,9 @@ public class CheckInActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_check_in);
 
+        // Add check for auto-prompt
+        boolean isAutomaticPrompt = getIntent().getBooleanExtra("automatic_prompt", false);
+
         // Set up action bar
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle("Daily Check-in");

@@ -7,14 +7,12 @@ import android.content.SharedPreferences;
 
 public class SobrietyTracker {
     private static SobrietyTracker instance;
-    private static final String PREFS_NAME = "SobrietyTrackerPrefs";
-    private static final String START_DATE_KEY = "sobriety_start_date";
-
-    private static final String LAST_CONFIRMED_DATE_KEY = "last_confirmed_date";
-    private static final String CONFIRMED_DAYS_KEY = "confirmed_days_count";
-
-    private static final String CURRENT_STREAK_KEY = "current_checkin_streak";
-    private static final String BEST_STREAK_KEY = "best_checkin_streak";
+    public static final String PREFS_NAME = "SobrietyTrackerPrefs";
+    public static final String START_DATE_KEY = "sobriety_start_date";
+    public static final String LAST_CONFIRMED_DATE_KEY = "last_confirmed_date";
+    public static final String CONFIRMED_DAYS_KEY = "confirmed_days_count";
+    public static final String CURRENT_STREAK_KEY = "current_checkin_streak";
+    public static final String BEST_STREAK_KEY = "best_checkin_streak";
     
     private Context context;
     

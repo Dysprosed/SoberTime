@@ -178,6 +178,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onResume() {
         super.onResume();
+        checkIfCheckInNeeded();
         int daysSober = sobrietyTracker.getDaysSober();
         updateNextMilestone(daysSober);
         // Refresh data when returning to the app
@@ -191,6 +192,140 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             checkExactAlarmPermission();
         }
+    }
+
+    /**
+     * Checks if user needs to check in and opens the check-in screen if necessary
+     */
+    private void checkIfCheckInNeeded() {
+        SharedPreferences prefs = getSharedPreferences("CheckInPrefs", MODE_PRIVATE);
+        long lastPromptTime = prefs.getLong("last_checkin_prompt", 0);
+        long currentTime = System.currentTimeMillis();
+        
+        // Don't show the check-in prompt more than once per hour
+        if (currentTime - lastPromptTime < 60 * 60 * 1000) {
+            return;
+        }
+        
+        SobrietyTracker tracker = SobrietyTracker.getInstance(this);
+        
+        // SPECIAL CASE: First launch detection
+        // If last confirmed date is 0 and app has been installed for more than 1 hour
+        SharedPreferences trackerPrefs = getSharedPreferences(SobrietyTracker.PREFS_NAME, MODE_PRIVATE);
+        long lastConfirmed = trackerPrefs.getLong(SobrietyTracker.LAST_CONFIRMED_DATE_KEY, 0);
+        if (lastConfirmed == 0) {
+            SharedPreferences firstLaunchPrefs = getSharedPreferences("app_first_launch", MODE_PRIVATE);
+            long firstLaunchTime = firstLaunchPrefs.getLong("first_launch_time", 0);
+            
+            if (firstLaunchTime == 0) {
+                // This is the first launch, save the time
+                firstLaunchPrefs.edit().putLong("first_launch_time", currentTime).apply();
+            } else if (currentTime - firstLaunchTime > 3600000) { // 1 hour in milliseconds
+                // It's been an hour since first launch and still no check-in, prompt user
+                prefs.edit().putLong("last_checkin_prompt", currentTime).apply();
+                Intent intent = new Intent(this, CheckInActivity.class);
+                intent.putExtra("automatic_prompt", true);
+                intent.putExtra("first_time_prompt", true);
+                startActivity(intent);
+                return;
+            }
+        }
+        
+        // Check if user hasn't checked in recently (in last 24 hours)
+        if (!tracker.hasCheckedInRecently()) {
+            // Save the time we prompted for check-in
+            prefs.edit().putLong("last_checkin_prompt", currentTime).apply();
+            
+            // Open the check-in activity
+            Intent intent = new Intent(this, CheckInActivity.class);
+            intent.putExtra("automatic_prompt", true);
+            startActivity(intent);
+            return;
+        }
+        
+        // Get current time
+        Calendar now = Calendar.getInstance();
+        
+        // Check custom check-in times from settings
+        boolean hasCustomTime = false;
+        SharedPreferences settingsPrefs = getSharedPreferences("app_settings", MODE_PRIVATE);
+        String customTimesString = settingsPrefs.getString("custom_notification_times", "");
+        
+        if (!customTimesString.isEmpty()) {
+            String[] customTimes = customTimesString.split(",");
+            for (String timeString : customTimes) {
+                try {
+                    String[] parts = timeString.split(":");
+                    int hour = Integer.parseInt(parts[0]);
+                    int minute = Integer.parseInt(parts[1]);
+                    
+                    Calendar checkTimeCalendar = Calendar.getInstance();
+                    checkTimeCalendar.set(Calendar.HOUR_OF_DAY, hour);
+                    checkTimeCalendar.set(Calendar.MINUTE, minute);
+                    checkTimeCalendar.set(Calendar.SECOND, 0);
+                    
+                    // If current time is within 30 minutes after check-in time and user hasn't checked in today
+                    long timeDiff = now.getTimeInMillis() - checkTimeCalendar.getTimeInMillis();
+                    if (timeDiff > 0 && timeDiff < 30*60*1000 && !hasCheckedInToday(tracker)) {
+                        hasCustomTime = true;
+                        // Save the time we prompted for check-in
+                        prefs.edit().putLong("last_checkin_prompt", currentTime).apply();
+                        
+                        // Open the check-in activity
+                        Intent intent = new Intent(this, CheckInActivity.class);
+                        intent.putExtra("automatic_prompt", true);
+                        startActivity(intent);
+                        return;
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error parsing custom time: " + timeString, e);
+                }
+            }
+        }
+        
+        // If no custom times found or they're not due yet, fallback to default time (9:00 PM)
+        if (!hasCustomTime) {
+            Calendar defaultCheckInTime = Calendar.getInstance();
+            // Default to 9:00 PM if no setting found
+            int defaultHour = settingsPrefs.getInt("evening_check_hour", 21);
+            int defaultMinute = settingsPrefs.getInt("evening_check_minute", 0);
+            
+            defaultCheckInTime.set(Calendar.HOUR_OF_DAY, defaultHour);
+            defaultCheckInTime.set(Calendar.MINUTE, defaultMinute);
+            defaultCheckInTime.set(Calendar.SECOND, 0);
+            
+            // If it's past check-in time and we haven't checked in today
+            if (now.after(defaultCheckInTime) && !hasCheckedInToday(tracker)) {
+                // Save the time we prompted for check-in
+                prefs.edit().putLong("last_checkin_prompt", currentTime).apply();
+                
+                // Open the check-in activity
+                Intent intent = new Intent(this, CheckInActivity.class);
+                intent.putExtra("automatic_prompt", true);
+                startActivity(intent);
+            }
+        }
+    }
+
+    /**
+     * Checks if the user has already checked in today
+     */
+    private boolean hasCheckedInToday(SobrietyTracker tracker) {
+        SharedPreferences prefs = getSharedPreferences(SobrietyTracker.PREFS_NAME, MODE_PRIVATE);
+        long lastConfirmed = prefs.getLong(SobrietyTracker.LAST_CONFIRMED_DATE_KEY, 0);
+        
+        if (lastConfirmed == 0) {
+            return false;
+        }
+        
+        Calendar lastConfirmedCal = Calendar.getInstance();
+        lastConfirmedCal.setTimeInMillis(lastConfirmed);
+        
+        Calendar todayCal = Calendar.getInstance();
+        
+        // Compare just the date portions
+        return lastConfirmedCal.get(Calendar.YEAR) == todayCal.get(Calendar.YEAR) &&
+               lastConfirmedCal.get(Calendar.DAY_OF_YEAR) == todayCal.get(Calendar.DAY_OF_YEAR);
     }
 
     private void setupPermissions() {

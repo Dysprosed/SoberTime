@@ -1,6 +1,8 @@
 package com.example.sobertime;
 
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.media.AudioAttributes;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
@@ -12,9 +14,18 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AlertDialog;
 
+
+import com.example.sobertime.SobrietyTracker;
+
+import com.example.sobertime.SobrietyTracker;
+
+import com.example.sobertime.SobrietyTracker;
+
+import com.example.sobertime.SobrietyTracker;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;

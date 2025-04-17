@@ -9,7 +9,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.util.Log;
-import main.java.com.example.sobertime.IntrusiveNotificationReceiver;
+import com.example.sobertime.IntrusiveNotificationReceiver;
 
 import com.example.sobertime.model.SobrietyTracker;
 

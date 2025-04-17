@@ -24,6 +24,18 @@
             android:name=".CheckInActivity"
             android:theme="@style/AppTheme"
             android:exported="false" />
+
+        <activity
+            android:name=".IntrusiveCheckInActivity"
+            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:excludeFromRecents="true"
+            android:showOnLockScreen="true"
+            android:turnScreenOn="true"
+            android:launchMode="singleTask" />
+
+        <receiver
+            android:name=".IntrusiveNotificationReceiver"
+            android:exported="false" />
         
         <activity
             android:name=".WelcomeActivity"
@@ -43,8 +55,6 @@
             android:name=".HealthBenefitsActivity"
             android:parentActivityName=".MainActivity"
             android:exported="false" />
-
-        <!-- Removed MilestonesActivity -->
         
         <activity
             android:name=".SettingsActivity"

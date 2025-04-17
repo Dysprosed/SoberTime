@@ -65,6 +65,27 @@
   "in-progress": [
     {
       "assignedTo": {
+        "name": "dyspr"
+      },
+      "category": "Feature",
+      "creation_time": "2025-04-17T20:25:08.058Z",
+      "description": {
+        "content": "Implement an on-screen, pop-up notification",
+        "mime": "text/markdown"
+      },
+      "details": {
+        "content": "Overlays any existing visual element. If the phone is off, or locked, an alarm goes off similar to how the phone's alarm or timer would go off. User must turn it off by completing their check-in. The extent to which this check-in and related notifications are intentionally annoying can be configured by the user in the settings, but by default, they are set to the most obnoxious settings. ",
+        "mime": "text/markdown"
+      },
+      "id": "6",
+      "prio": 1,
+      "references": [],
+      "title": "Pop-up Notifications"
+    }
+  ],
+  "testing": [
+    {
+      "assignedTo": {
         "name": "Dysprosed"
       },
       "category": "Feature",
@@ -79,6 +100,5 @@
       "title": "Aggressive Check-in on Log-in"
     }
   ],
-  "testing": [],
   "done": []
 }

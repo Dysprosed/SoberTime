@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.util.Log;
+import main.java.com.example.sobertime.IntrusiveNotificationReceiver;
 
 import com.example.sobertime.model.SobrietyTracker;
 
@@ -26,6 +27,8 @@ public class NotificationHelper {
     private static final String EVENING_ENABLED_KEY = "evening_notification_enabled";
     private static final String MILESTONE_ENABLED_KEY = "milestone_notification_enabled";
     private static final String CUSTOM_TIMES_KEY = "custom_notification_times";
+
+    private static final int INTRUSIVE_NOTIFICATION_REQUEST_CODE = 1005;
 
     // Request codes for pending intents
     private static final int MORNING_NOTIFICATION_REQUEST_CODE = 1001;
@@ -164,6 +167,87 @@ public class NotificationHelper {
         return true; // Permission not required for older versions
     }
 
+    /**
+     * Schedule an intrusive alarm-style check-in notification
+     */
+    public static void scheduleIntrusiveCheckInNotification(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences("notification_settings", Context.MODE_PRIVATE);
+        boolean intrusiveEnabled = prefs.getBoolean("intrusive_notifications_enabled", true); // Default to enabled
+        
+        if (!intrusiveEnabled) {
+            // Fall back to regular check-in notification if intrusive is disabled
+            scheduleCheckInNotification(context);
+            return;
+        }
+        
+        Calendar calendar = Calendar.getInstance();
+        
+        // Get custom time from settings or use default (9:00 PM)
+        int hour = prefs.getInt("check_in_hour", 21);
+        int minute = prefs.getInt("check_in_minute", 0);
+        
+        calendar.set(Calendar.HOUR_OF_DAY, hour);
+        calendar.set(Calendar.MINUTE, minute);
+        calendar.set(Calendar.SECOND, 0);
+        
+        // If time has passed today, schedule for tomorrow
+        if (calendar.getTimeInMillis() < System.currentTimeMillis()) {
+            calendar.add(Calendar.DAY_OF_YEAR, 1);
+        }
+        
+        Intent intent = new Intent(context, IntrusiveNotificationReceiver.class);
+        
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                context,
+                INTRUSIVE_NOTIFICATION_REQUEST_CODE,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+        
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        
+        // Try to schedule exact alarm
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (alarmManager.canScheduleExactAlarms()) {
+                    alarmManager.setExactAndAllowWhileIdle(
+                            AlarmManager.RTC_WAKEUP,
+                            calendar.getTimeInMillis(),
+                            pendingIntent
+                    );
+                } else {
+                    // Fall back to inexact alarm
+                    alarmManager.setRepeating(
+                            AlarmManager.RTC_WAKEUP,
+                            calendar.getTimeInMillis(),
+                            AlarmManager.INTERVAL_DAY,
+                            pendingIntent
+                    );
+                }
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.getTimeInMillis(),
+                        pendingIntent
+                );
+            } else {
+                alarmManager.setExact(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.getTimeInMillis(),
+                        pendingIntent
+                );
+            }
+        } catch (SecurityException e) {
+            // Fall back to inexact alarm if permission is denied
+            alarmManager.setRepeating(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.getTimeInMillis(),
+                    AlarmManager.INTERVAL_DAY,
+                    pendingIntent
+            );
+        }
+    }
+
     public static boolean areNotificationsEnabled(Context context) {
         // For Android 8.0+
         NotificationManager notificationManager = 
@@ -222,37 +306,32 @@ public class NotificationHelper {
         boolean notificationsPermitted = areNotificationsEnabled(context);
         boolean exactAlarmsPermitted = canScheduleExactAlarms(context);
         
-        Log.d(TAG, "Notification permissions: notifications=" + notificationsPermitted + 
-                ", exactAlarms=" + exactAlarmsPermitted);
-        
         if (!notificationsEnabled) {
             Log.d(TAG, "Notifications disabled by user preference. Cancelling all notifications.");
             cancelAllNotifications(context);
             return;
         }
-
-        if (!notificationsPermitted) {
-            Log.w(TAG, "App notification permission denied. Notifications won't be shown.");
-            // Continue scheduling anyway in case user later enables notifications
-        }
-        
+    
         // Get sobriety start date from SobrietyTracker
         SobrietyTracker sobrietyTracker = SobrietyTracker.getInstance(context);
-        long sobrietyStartDate = sobrietyTracker.getSobrietyStartDate();
-
-        int daysSober = sobrietyTracker.getDaysSober();
+    
+        // Check if user prefers intrusive notifications
+        SharedPreferences notifSettings = context.getSharedPreferences("notification_settings", Context.MODE_PRIVATE);
+        boolean intrusiveEnabled = notifSettings.getBoolean("intrusive_notifications_enabled", true);
         
-        Log.d(TAG, "User has been sober for " + daysSober + " days (start date: " + 
-            new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date(sobrietyStartDate)) + ")");
-
-        scheduleCheckInNotification(context);
+        // Schedule appropriate check-in notification
+        if (intrusiveEnabled) {
+            scheduleIntrusiveCheckInNotification(context);
+        } else {
+            scheduleCheckInNotification(context);
+        }
+        
         // Cancel existing notifications before creating new ones
         cancelAllNotifications(context);
         
         // Schedule morning notifications if enabled
         boolean morningEnabled = prefs.getBoolean("morning_notification_enabled", true);
         if (morningEnabled) {
-            Log.d(TAG, "Scheduling morning notification at 8:00 AM");
             scheduleFixedTimeNotification(context, 8, 0, MORNING_NOTIFICATION_ID);
         }
         
@@ -265,7 +344,7 @@ public class NotificationHelper {
         // Schedule milestone notifications if enabled
         boolean milestoneEnabled = prefs.getBoolean("milestone_notification_enabled", true);
         if (milestoneEnabled) {
-            scheduleMilestoneNotifications(context, sobrietyStartDate);
+            scheduleMilestoneNotifications(context, sobrietyTracker.getSobrietyStartDate());
         }
         
         // Schedule custom time notifications

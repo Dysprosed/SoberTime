@@ -159,6 +159,146 @@ public class SettingsActivity extends BaseActivity {
         }
     }
 
+    private void addIntrusiveNotificationSettings() {
+        LinearLayout notificationSettingsContainer = findViewById(R.id.notificationSettingsContainer);
+        
+        // Create section header
+        TextView intrusiveTitle = new TextView(this);
+        intrusiveTitle.setText("Intrusive Check-in Notifications");
+        intrusiveTitle.setTextSize(18);
+        intrusiveTitle.setTypeface(null, Typeface.BOLD);
+        intrusiveTitle.setPadding(0, 32, 0, 16);
+        notificationSettingsContainer.addView(intrusiveTitle);
+        
+        // Create intrusive notification switch
+        SwitchCompat intrusiveNotificationSwitch = new SwitchCompat(this);
+        intrusiveNotificationSwitch.setText("Enable Intrusive Notifications");
+        intrusiveNotificationSwitch.setPadding(0, 16, 0, 16);
+        
+        // Get saved preference or default to true
+        SharedPreferences prefs = getSharedPreferences("notification_settings", MODE_PRIVATE);
+        boolean intrusiveEnabled = prefs.getBoolean("intrusive_notifications_enabled", true);
+        intrusiveNotificationSwitch.setChecked(intrusiveEnabled);
+        
+        // Add listener
+        intrusiveNotificationSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putBoolean("intrusive_notifications_enabled", isChecked);
+                editor.apply();
+                
+                // Show or hide additional intrusive settings
+                intrusiveSettingsContainer.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+                
+                // Reschedule notifications based on new setting
+                NotificationHelper.scheduleNotifications(SettingsActivity.this);
+            }
+        });
+        
+        notificationSettingsContainer.addView(intrusiveNotificationSwitch);
+        
+        // Create container for additional intrusive settings
+        LinearLayout intrusiveSettingsContainer = new LinearLayout(this);
+        intrusiveSettingsContainer.setOrientation(LinearLayout.VERTICAL);
+        intrusiveSettingsContainer.setPadding(32, 0, 0, 16);
+        intrusiveSettingsContainer.setVisibility(intrusiveEnabled ? View.VISIBLE : View.GONE);
+        
+        // Volume setting
+        TextView volumeLabel = new TextView(this);
+        volumeLabel.setText("Alarm Volume");
+        volumeLabel.setPadding(0, 16, 0, 8);
+        intrusiveSettingsContainer.addView(volumeLabel);
+        
+        SeekBar volumeSeekBar = new SeekBar(this);
+        volumeSeekBar.setMax(100);
+        int savedVolume = prefs.getInt("alarm_volume", 100);
+        volumeSeekBar.setProgress(savedVolume);
+        
+        volumeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser) {
+                    prefs.edit().putInt("alarm_volume", progress).apply();
+                }
+            }
+            
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+            
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+        
+        intrusiveSettingsContainer.addView(volumeSeekBar);
+        
+        // Vibration setting
+        SwitchCompat vibrationSwitch = new SwitchCompat(this);
+        vibrationSwitch.setText("Enable Vibration");
+        vibrationSwitch.setPadding(0, 16, 0, 16);
+        vibrationSwitch.setChecked(prefs.getBoolean("use_vibration", true));
+        
+        vibrationSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                prefs.edit().putBoolean("use_vibration", isChecked).apply();
+            }
+        });
+        
+        intrusiveSettingsContainer.addView(vibrationSwitch);
+        
+        // Check-in time picker
+        TextView timePickerLabel = new TextView(this);
+        timePickerLabel.setText("Check-in Time");
+        timePickerLabel.setPadding(0, 16, 0, 8);
+        intrusiveSettingsContainer.addView(timePickerLabel);
+        
+        Button timePickerButton = new Button(this);
+        
+        // Get saved hour and minute or default to 9:00 PM
+        int savedHour = prefs.getInt("check_in_hour", 21);
+        int savedMinute = prefs.getInt("check_in_minute", 0);
+        
+        // Format time for button text
+        String formattedTime = String.format(Locale.getDefault(), "%02d:%02d", savedHour, savedMinute);
+        timePickerButton.setText(formattedTime);
+        
+        timePickerButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TimePickerDialog timePickerDialog = new TimePickerDialog(
+                        SettingsActivity.this,
+                        new TimePickerDialog.OnTimeSetListener() {
+                            @Override
+                            public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+                                // Save selected time
+                                prefs.edit()
+                                    .putInt("check_in_hour", hourOfDay)
+                                    .putInt("check_in_minute", minute)
+                                    .apply();
+                                
+                                // Update button text
+                                String time = String.format(Locale.getDefault(), "%02d:%02d", hourOfDay, minute);
+                                timePickerButton.setText(time);
+                                
+                                // Reschedule notifications
+                                NotificationHelper.scheduleNotifications(SettingsActivity.this);
+                            }
+                        },
+                        savedHour,
+                        savedMinute,
+                        false
+                );
+                timePickerDialog.show();
+            }
+        });
+        
+        intrusiveSettingsContainer.addView(timePickerButton);
+        
+        // Add the container to main layout
+        notificationSettingsContainer.addView(intrusiveSettingsContainer);
+    }
+
     private void loadSettings() {
         try {
             // Load notification settings

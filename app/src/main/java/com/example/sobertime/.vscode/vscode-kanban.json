@@ -1,6 +1,84 @@
 {
-  "todo": [],
-  "in-progress": [],
+  "todo": [
+    {
+      "assignedTo": {
+        "name": "Dysprosed"
+      },
+      "category": "Commentary",
+      "creation_time": "2025-04-16T01:45:31.346Z",
+      "description": {
+        "content": "Inspirational quotes feel trite, cliche, and repetitive. There is no option to add your own.",
+        "mime": "text/markdown"
+      },
+      "id": "3",
+      "prio": 4,
+      "references": [],
+      "title": "Expand Quote Section"
+    },
+    {
+      "assignedTo": {
+        "name": "Dysprosed"
+      },
+      "category": "Editorial",
+      "creation_time": "2025-04-16T01:43:37.749Z",
+      "description": {
+        "content": "Additional Resources relists the same support groups listed in the \"Popular Support Groups\" section. This is superflous. Furthermore, the trashcan icons are non-functional.",
+        "mime": "text/markdown"
+      },
+      "id": "2",
+      "prio": 3,
+      "references": [],
+      "title": "Remove Redudancies on Community Support Page",
+      "type": "bug"
+    },
+    {
+      "assignedTo": {
+        "name": "Dysprosed"
+      },
+      "category": "Visual",
+      "creation_time": "2025-04-16T01:40:00.671Z",
+      "description": {
+        "content": "Ensure that there are appropriate visual elements called to each screen where placemarkers currently exist.",
+        "mime": "text/markdown"
+      },
+      "id": "1",
+      "prio": 3,
+      "references": [],
+      "title": "Update / Add Icons"
+    },
+    {
+      "assignedTo": {
+        "name": "Dysprosed"
+      },
+      "category": "Feature",
+      "creation_time": "2025-04-17T15:24:00.507Z",
+      "description": {
+        "content": "New notifications should overwrite previous ones or add on top of.",
+        "mime": "text/markdown"
+      },
+      "id": "5",
+      "prio": 2,
+      "references": [],
+      "title": "Notification Overwrite"
+    }
+  ],
+  "in-progress": [
+    {
+      "assignedTo": {
+        "name": "Dysprosed"
+      },
+      "category": "Feature",
+      "creation_time": "2025-04-17T14:37:43.652Z",
+      "description": {
+        "content": "If user has not logged in after more than 24 hours hours, prompt check-in at startup.",
+        "mime": "text/markdown"
+      },
+      "id": "4",
+      "prio": 1,
+      "references": [],
+      "title": "Aggressive Check-in on Log-in"
+    }
+  ],
   "testing": [],
   "done": []
 }

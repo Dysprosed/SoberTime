@@ -163,6 +163,7 @@ public class SettingsActivity extends BaseActivity {
     }
 
     private void addIntrusiveNotificationSettings() {
+        // Get the container from layout
         LinearLayout notificationSettingsContainer = findViewById(R.id.notificationSettingsContainer);
         
         // Create section header
@@ -173,17 +174,29 @@ public class SettingsActivity extends BaseActivity {
         intrusiveTitle.setPadding(0, 32, 0, 16);
         notificationSettingsContainer.addView(intrusiveTitle);
         
-        // Create intrusive notification switch
-        SwitchCompat intrusiveNotificationSwitch = new SwitchCompat(this);
-        intrusiveNotificationSwitch.setText("Enable Intrusive Notifications");
-        intrusiveNotificationSwitch.setPadding(0, 16, 0, 16);
+        // IMPORTANT: Create the container for intrusive settings BEFORE using it
+        final LinearLayout intrusiveSettingsContainer = new LinearLayout(this);
+        intrusiveSettingsContainer.setOrientation(LinearLayout.VERTICAL);
+        intrusiveSettingsContainer.setPadding(32, 0, 0, 16);
         
         // Get saved preference or default to true
         SharedPreferences prefs = getSharedPreferences("notification_settings", MODE_PRIVATE);
         boolean intrusiveEnabled = prefs.getBoolean("intrusive_notifications_enabled", true);
+        
+        // Set initial visibility
+        intrusiveSettingsContainer.setVisibility(intrusiveEnabled ? View.VISIBLE : View.GONE);
+        
+        // Create intrusive notification switch
+        SwitchCompat intrusiveNotificationSwitch = new SwitchCompat(this);
+        intrusiveNotificationSwitch.setText("Enable Intrusive Notifications");
+        intrusiveNotificationSwitch.setPadding(0, 16, 0, 16);
         intrusiveNotificationSwitch.setChecked(intrusiveEnabled);
         
-        // Add listener
+        // Add the container to parent BEFORE setting up the listener that references it
+        notificationSettingsContainer.addView(intrusiveNotificationSwitch);
+        notificationSettingsContainer.addView(intrusiveSettingsContainer);
+        
+        // Add listener after the container is added to the view hierarchy
         intrusiveNotificationSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -191,21 +204,13 @@ public class SettingsActivity extends BaseActivity {
                 editor.putBoolean("intrusive_notifications_enabled", isChecked);
                 editor.apply();
                 
-                // Show or hide additional intrusive settings
+                // Now it's safe to access the container since it's properly initialized
                 intrusiveSettingsContainer.setVisibility(isChecked ? View.VISIBLE : View.GONE);
                 
                 // Reschedule notifications based on new setting
                 NotificationHelper.scheduleNotifications(SettingsActivity.this);
             }
         });
-        
-        notificationSettingsContainer.addView(intrusiveNotificationSwitch);
-        
-        // Create container for additional intrusive settings
-        LinearLayout intrusiveSettingsContainer = new LinearLayout(this);
-        intrusiveSettingsContainer.setOrientation(LinearLayout.VERTICAL);
-        intrusiveSettingsContainer.setPadding(32, 0, 0, 16);
-        intrusiveSettingsContainer.setVisibility(intrusiveEnabled ? View.VISIBLE : View.GONE);
         
         // Volume setting
         TextView volumeLabel = new TextView(this);

@@ -121,6 +121,8 @@ public class SettingsActivity extends BaseActivity {
             milestoneNotificationSwitch = findViewById(R.id.milestoneNotificationSwitch);
             addCustomTimeButton = findViewById(R.id.addCustomTimeButton);
             customTimesContainer = findViewById(R.id.customTimesContainer);
+            
+            addIntrusiveNotificationSettings();
 
             // Drink settings
             drinkCostText = findViewById(R.id.drinkCostText);

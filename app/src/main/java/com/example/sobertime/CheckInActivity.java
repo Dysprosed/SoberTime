@@ -2,6 +2,8 @@
 
 package com.example.sobertime;
 
+import android.content.Intent;
+import com.example.sobertime.BuildConfig;
 import android.content.DialogInterface;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -15,6 +17,7 @@ import android.content.Context;
 import android.util.Log;
 
 import androidx.appcompat.app.AlertDialog;
+import main.java.com.example.sobertime.IntrusiveCheckInActivity;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -29,6 +32,7 @@ public class CheckInActivity extends BaseActivity {
     private Button soberButton;
     private Button relapseButton;
     private Button skipButton;
+    private Button debugIntrusiveButton;
 
     private DatabaseHelper databaseHelper;
 
@@ -64,6 +68,15 @@ public class CheckInActivity extends BaseActivity {
         soberButton = findViewById(R.id.soberButton);
         relapseButton = findViewById(R.id.relapseButton);
         skipButton = findViewById(R.id.skipButton);
+        
+        // Initialize debug button
+        debugIntrusiveButton = findViewById(R.id.debugIntrusiveButton);
+        
+        // Check if app is in debug mode (you can modify this condition based on your needs)
+        boolean isDebugMode = BuildConfig.DEBUG;
+        if (isDebugMode) {
+            debugIntrusiveButton.setVisibility(View.VISIBLE);
+        }
     }
 
     private void updateDateTime() {
@@ -101,6 +114,26 @@ public class CheckInActivity extends BaseActivity {
                 finish();
             }
         });
+
+        // Add listener for debug button
+        debugIntrusiveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                launchIntrusiveCheckIn();
+            }
+        });
+    }
+
+    private void launchIntrusiveCheckIn() {
+        Intent intent = new Intent(this, IntrusiveCheckInActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.putExtra("automatic_prompt", true);
+        intent.putExtra("intrusive_prompt", true);
+        intent.putExtra("debug_mode", true);
+        startActivity(intent);
+        
+        Toast.makeText(this, "Launching intrusive check-in...", Toast.LENGTH_SHORT).show();
     }
 
     private void showRelapseConfirmationDialog() {

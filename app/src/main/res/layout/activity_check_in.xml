@@ -83,6 +83,16 @@
         android:text="Skip for Now"
         android:textColor="@color/colorTextLight" />
 
+    <Button
+        android:id="@+id/debugIntrusiveButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="DEBUG: Test Intrusive Check-In"
+        android:backgroundTint="#FF5722"
+        android:textColor="#FFFFFF"
+        android:layout_marginTop="16dp"
+        android:visibility="gone" />
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

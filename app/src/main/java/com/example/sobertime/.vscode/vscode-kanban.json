@@ -62,24 +62,7 @@
       "title": "Notification Overwrite"
     }
   ],
-  "in-progress": [
-    {
-      "assignedTo": {
-        "name": "dyspr"
-      },
-      "category": "Feature",
-      "creation_time": "2025-04-18T01:51:14.284Z",
-      "description": {
-        "content": "Days Sober and Sober Since Don't align",
-        "mime": "text/markdown"
-      },
-      "id": "7",
-      "prio": 1,
-      "references": [],
-      "title": "Days Sober and Sober Since Error",
-      "type": "bug"
-    }
-  ],
+  "in-progress": [],
   "testing": [
     {
       "assignedTo": {
@@ -114,6 +97,22 @@
       "prio": 1,
       "references": [],
       "title": "Pop-up Notifications"
+    },
+    {
+      "assignedTo": {
+        "name": "dyspr"
+      },
+      "category": "Feature",
+      "creation_time": "2025-04-18T01:51:14.284Z",
+      "description": {
+        "content": "Days Sober and Sober Since Don't align",
+        "mime": "text/markdown"
+      },
+      "id": "7",
+      "prio": 1,
+      "references": [],
+      "title": "Days Sober and Sober Since Error",
+      "type": "bug"
     }
   ],
   "done": []

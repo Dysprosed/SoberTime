@@ -121,7 +121,7 @@ public class SettingsActivity extends BaseActivity {
             milestoneNotificationSwitch = findViewById(R.id.milestoneNotificationSwitch);
             addCustomTimeButton = findViewById(R.id.addCustomTimeButton);
             customTimesContainer = findViewById(R.id.customTimesContainer);
-            
+
             addIntrusiveNotificationSettings();
 
             // Drink settings
@@ -304,9 +304,6 @@ public class SettingsActivity extends BaseActivity {
         });
         
         intrusiveSettingsContainer.addView(timePickerButton);
-        
-        // Add the container to main layout
-        notificationSettingsContainer.addView(intrusiveSettingsContainer);
     }
 
     private void loadSettings() {
@@ -346,6 +343,17 @@ public class SettingsActivity extends BaseActivity {
             drinksPerWeekText.setText(String.valueOf(drinksPerWeek));
             caloriesPerDrinkText.setText(String.valueOf(caloriesPerDrink));
     
+            // Add null checks for these views
+            if (drinkCostText != null) {
+                drinkCostText.setText(String.format(Locale.getDefault(), "$%.2f", drinkCost));
+            }
+            if (drinksPerWeekText != null) {
+                drinksPerWeekText.setText(String.valueOf(drinksPerWeek));
+            }
+            if (caloriesPerDrinkText != null) {
+                caloriesPerDrinkText.setText(String.valueOf(caloriesPerDrink));
+            }
+
             // Load sobriety date from SobrietyTracker instead of directly from SharedPreferences
             long sobrietyStartDate = sobrietyTracker.getSobrietyStartDate();
             sobrietyDateText.setText(new SimpleDateFormat("MMMM d, yyyy", Locale.getDefault()).format(new Date(sobrietyStartDate)));
@@ -359,74 +367,81 @@ public class SettingsActivity extends BaseActivity {
     private void setupListeners() {
         try {
             // Master notification switch listener
-            masterNotificationSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    SharedPreferences.Editor editor = preferences.edit();
-                    editor.putBoolean(NOTIFICATIONS_ENABLED_KEY, isChecked);
-                    editor.apply();
-
-                    // Update enabled state of other switches
-                    updateNotificationSwitchesState(isChecked);
-
-                    if (isChecked) {
-                        // Re-schedule notifications
-                        NotificationHelper.scheduleNotifications(SettingsActivity.this);
-                        Toast.makeText(SettingsActivity.this, "Notifications enabled", Toast.LENGTH_SHORT).show();
-                    } else {
-                        // Cancel all notifications
-                        NotificationHelper.cancelAllNotifications(SettingsActivity.this);
-                        Toast.makeText(SettingsActivity.this, "All notifications disabled", Toast.LENGTH_SHORT).show();
+            if (masterNotificationSwitch != null) {
+                masterNotificationSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        SharedPreferences.Editor editor = preferences.edit();
+                        editor.putBoolean(NOTIFICATIONS_ENABLED_KEY, isChecked);
+                        editor.apply();
+    
+                        // Update enabled state of other switches
+                        updateNotificationSwitchesState(isChecked);
+    
+                        if (isChecked) {
+                            // Re-schedule notifications
+                            NotificationHelper.scheduleNotifications(SettingsActivity.this);
+                            Toast.makeText(SettingsActivity.this, "Notifications enabled", Toast.LENGTH_SHORT).show();
+                        } else {
+                            // Cancel all notifications
+                            NotificationHelper.cancelAllNotifications(SettingsActivity.this);
+                            Toast.makeText(SettingsActivity.this, "All notifications disabled", Toast.LENGTH_SHORT).show();
+                        }
                     }
-                }
-            });
-
+                });
+            }
+    
             // Notification type switches
-            morningNotificationSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    if (!buttonView.isEnabled()) return;
-
-                    SharedPreferences.Editor editor = preferences.edit();
-                    editor.putBoolean(MORNING_ENABLED_KEY, isChecked);
-                    editor.apply();
-
-                    // Reschedule notifications
-                    NotificationHelper.scheduleNotifications(SettingsActivity.this);
-                }
-            });
-
-            eveningNotificationSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    if (!buttonView.isEnabled()) return;
-
-                    SharedPreferences.Editor editor = preferences.edit();
-                    editor.putBoolean(EVENING_ENABLED_KEY, isChecked);
-                    editor.apply();
-
-                    // Reschedule notifications
-                    NotificationHelper.scheduleNotifications(SettingsActivity.this);
-                }
-            });
-
-            milestoneNotificationSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    if (!buttonView.isEnabled()) return;
-
-                    SharedPreferences.Editor editor = preferences.edit();
-                    editor.putBoolean(MILESTONE_ENABLED_KEY, isChecked);
-                    editor.apply();
-
-                    // Reschedule notifications
-                    NotificationHelper.scheduleNotifications(SettingsActivity.this);
-                }
-            });
-
+            if (morningNotificationSwitch != null) {
+                morningNotificationSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        if (!buttonView.isEnabled()) return;
+    
+                        SharedPreferences.Editor editor = preferences.edit();
+                        editor.putBoolean(MORNING_ENABLED_KEY, isChecked);
+                        editor.apply();
+    
+                        // Reschedule notifications
+                        NotificationHelper.scheduleNotifications(SettingsActivity.this);
+                    }
+                });
+            }
+    
+            if (eveningNotificationSwitch != null) {
+                eveningNotificationSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        if (!buttonView.isEnabled()) return;
+    
+                        SharedPreferences.Editor editor = preferences.edit();
+                        editor.putBoolean(EVENING_ENABLED_KEY, isChecked);
+                        editor.apply();
+    
+                        // Reschedule notifications
+                        NotificationHelper.scheduleNotifications(SettingsActivity.this);
+                    }
+                });
+            }
+    
+            if (milestoneNotificationSwitch != null) {
+                milestoneNotificationSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        if (!buttonView.isEnabled()) return;
+    
+                        SharedPreferences.Editor editor = preferences.edit();
+                        editor.putBoolean(MILESTONE_ENABLED_KEY, isChecked);
+                        editor.apply();
+    
+                        // Reschedule notifications
+                        NotificationHelper.scheduleNotifications(SettingsActivity.this);
+                    }
+                });
+            }
+    
             // Theme toggle switch listener - only if it exists
             if (themeToggleSwitch != null) {
-                // In SettingsActivity.java, within the theme toggle switch listener
                 themeToggleSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -435,75 +450,89 @@ public class SettingsActivity extends BaseActivity {
                         SharedPreferences.Editor editor = prefs.edit();
                         editor.putBoolean("night_mode_enabled", isChecked);
                         editor.apply();
-
+    
                         // Apply theme change
                         if (isChecked) {
                             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
                         } else {
                             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
                         }
-
+    
                         // Recreate activity to apply theme
                         recreate();
                     }
                 });
             }
-
+    
             // Add custom time button
-            addCustomTimeButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    showTimePickerDialog();
-                }
-            });
-
+            if (addCustomTimeButton != null) {
+                addCustomTimeButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        showTimePickerDialog();
+                    }
+                });
+            }
+    
             // Drink setting cards
-            drinkCostCard.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    showDrinkCostDialog();
-                }
-            });
-
-            drinksPerWeekCard.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    showDrinksPerWeekDialog();
-                }
-            });
-
-            caloriesPerDrinkCard.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    showCaloriesPerDrinkDialog();
-                }
-            });
-
+            if (drinkCostCard != null) {
+                drinkCostCard.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        showDrinkCostDialog();
+                    }
+                });
+            }
+    
+            if (drinksPerWeekCard != null) {
+                drinksPerWeekCard.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        showDrinksPerWeekDialog();
+                    }
+                });
+            }
+    
+            if (caloriesPerDrinkCard != null) {
+                caloriesPerDrinkCard.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        showCaloriesPerDrinkDialog();
+                    }
+                });
+            }
+    
             // Sobriety date card
-            sobrietyDateCard.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    showDatePickerDialog();
-                }
-            });
-
+            if (sobrietyDateCard != null) {
+                sobrietyDateCard.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        showDatePickerDialog();
+                    }
+                });
+            }
+    
             // Backup/Restore button
-            backupRestoreButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent = new Intent(SettingsActivity.this, BackupRestoreActivity.class);
-                    startActivity(intent);
-                }
-            });
-
+            if (backupRestoreButton != null) {
+                backupRestoreButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(SettingsActivity.this, BackupRestoreActivity.class);
+                        startActivity(intent);
+                    }
+                });
+            }
+    
             // Reset App button
-            resetAppButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    showResetConfirmationDialog();
-                }
-            });
-
+            if (resetAppButton != null) {
+                resetAppButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        showResetConfirmationDialog();
+                    }
+                });
+            }
+    
         } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(this, "Error setting up listeners: " + e.getMessage(), Toast.LENGTH_SHORT).show();

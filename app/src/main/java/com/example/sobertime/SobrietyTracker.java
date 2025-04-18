@@ -1,6 +1,7 @@
 package com.example.sobertime;
 
 import java.util.Calendar;
+import java.util.concurrent.TimeUnit;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -86,10 +87,41 @@ public class SobrietyTracker {
         editor.apply();
     }
 
-    // Get confirmed days rather than calculated days
+    /**
+     * Gets the confirmed days of sobriety
+     * If no check-ins have been made, calculates based on start date
+     * @return Number of confirmed days sober
+     */
     public int getConfirmedDaysSober() {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        return prefs.getInt(CONFIRMED_DAYS_KEY, 0);
+        int confirmedDays = prefs.getInt(CONFIRMED_DAYS_KEY, 0);
+        
+        // If we have no confirmed days but we have a start date, calculate based on start date
+        if (confirmedDays == 0) {
+            long startDate = prefs.getLong(START_DATE_KEY, System.currentTimeMillis());
+            long currentTime = System.currentTimeMillis();
+            
+            Calendar startCalendar = Calendar.getInstance();
+            startCalendar.setTimeInMillis(startDate);
+            startCalendar.set(Calendar.HOUR_OF_DAY, 0);
+            startCalendar.set(Calendar.MINUTE, 0);
+            startCalendar.set(Calendar.SECOND, 0);
+            startCalendar.set(Calendar.MILLISECOND, 0);
+            
+            Calendar currentCalendar = Calendar.getInstance();
+            currentCalendar.set(Calendar.HOUR_OF_DAY, 0);
+            currentCalendar.set(Calendar.MINUTE, 0);
+            currentCalendar.set(Calendar.SECOND, 0);
+            currentCalendar.set(Calendar.MILLISECOND, 0);
+            
+            long diffInMillis = currentCalendar.getTimeInMillis() - startCalendar.getTimeInMillis();
+            confirmedDays = (int) TimeUnit.MILLISECONDS.toDays(diffInMillis) + 1; // +1 to include today
+            
+            // Save this calculation
+            prefs.edit().putInt(CONFIRMED_DAYS_KEY, confirmedDays).apply();
+        }
+        
+        return confirmedDays;
     }
 
     // Confirm today's sobriety
@@ -119,13 +151,25 @@ public class SobrietyTracker {
             return;
         }
         
-        // Get current count and increment
+        // Calculate days difference - how many days to add to count
+        long diffInMillis = today.getTimeInMillis() - lastConfirmed.getTimeInMillis();
+        int daysToAdd = (int) TimeUnit.MILLISECONDS.toDays(diffInMillis);
+        
+        // If this is the first check-in, add 1 for today
+        if (lastConfirmedMillis == 0) {
+            daysToAdd = 1;
+        }
+        
+        // Get current count
         int currentCount = prefs.getInt(CONFIRMED_DAYS_KEY, 0);
         
-        // Update values
+        // Update values - add days difference (usually 1) to count
         editor.putLong(LAST_CONFIRMED_DATE_KEY, today.getTimeInMillis());
-        editor.putInt(CONFIRMED_DAYS_KEY, currentCount + 1);
+        editor.putInt(CONFIRMED_DAYS_KEY, currentCount + daysToAdd);
         editor.apply();
+        
+        // Update streak if we're using that feature
+        updateStreak();
     }
     
     // Reset sobriety counter but maintain the start date for reference
@@ -133,14 +177,11 @@ public class SobrietyTracker {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         
-        // Keep the original start date for historical reference
-        long originalStartDate = prefs.getLong(START_DATE_KEY, System.currentTimeMillis());
-        
         // Update start date to today
         editor.putLong(START_DATE_KEY, System.currentTimeMillis());
         
         // Reset confirmed count
-        editor.putInt(CONFIRMED_DAYS_KEY, 0);
+        editor.putInt(CONFIRMED_DAYS_KEY, 1);  // Start with 1 for today
         
         // Set last confirmed to today
         Calendar today = Calendar.getInstance();
@@ -150,6 +191,39 @@ public class SobrietyTracker {
         today.set(Calendar.MILLISECOND, 0);
         editor.putLong(LAST_CONFIRMED_DATE_KEY, today.getTimeInMillis());
         
+        editor.apply();
+    }
+
+    /**
+     * Sets a new sobriety start date and initializes the confirmed days count
+     * @param startDate New sobriety start date in milliseconds
+     */
+    public void setSobrietyStartDateAndInitDays(long startDate) {
+        this.setSobrietyStartDate(startDate);
+        
+        // Calculate days between start date and today
+        Calendar startCalendar = Calendar.getInstance();
+        startCalendar.setTimeInMillis(startDate);
+        startCalendar.set(Calendar.HOUR_OF_DAY, 0);
+        startCalendar.set(Calendar.MINUTE, 0);
+        startCalendar.set(Calendar.SECOND, 0);
+        startCalendar.set(Calendar.MILLISECOND, 0);
+        
+        Calendar todayCalendar = Calendar.getInstance();
+        todayCalendar.set(Calendar.HOUR_OF_DAY, 0);
+        todayCalendar.set(Calendar.MINUTE, 0);
+        todayCalendar.set(Calendar.SECOND, 0);
+        todayCalendar.set(Calendar.MILLISECOND, 0);
+        
+        long diffInMillis = todayCalendar.getTimeInMillis() - startCalendar.getTimeInMillis();
+        int daysDifference = (int) TimeUnit.MILLISECONDS.toDays(diffInMillis) + 1; // +1 to include today
+        
+        // Update confirmed days count
+        SharedPreferences.Editor editor = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit();
+        editor.putInt(CONFIRMED_DAYS_KEY, daysDifference);
+        
+        // Set last confirmed date to today
+        editor.putLong(LAST_CONFIRMED_DATE_KEY, todayCalendar.getTimeInMillis());
         editor.apply();
     }
 

@@ -581,8 +581,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         Calendar selectedDate = Calendar.getInstance();
                         selectedDate.set(year, month, dayOfMonth);
     
-                        // Save the new date using SobrietyTracker
-                        sobrietyTracker.setSobrietyStartDate(selectedDate.getTimeInMillis());
+                        // Save the new date using SobrietyTracker and initialize sobriety days
+                        sobrietyTracker.setSobrietyStartDateAndInitDays(selectedDate.getTimeInMillis());
     
                         // Update milestone dates
                         achievementManager.updateMilestoneDates(sobrietyTracker.getSobrietyStartDate());

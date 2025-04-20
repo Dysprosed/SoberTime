@@ -319,15 +319,18 @@ public class NotificationHelper {
         SharedPreferences notifSettings = context.getSharedPreferences("notification_settings", Context.MODE_PRIVATE);
         boolean intrusiveEnabled = notifSettings.getBoolean("intrusive_notifications_enabled", true);
         
+        // Cancel existing regular notifications before creating new ones
+        // But don't cancel the intrusive notification which we'll schedule separately
+        cancelRegularNotifications(context);
+        
         // Schedule appropriate check-in notification
         if (intrusiveEnabled) {
+            Log.d(TAG, "Scheduling intrusive check-in notification");
             scheduleIntrusiveCheckInNotification(context);
         } else {
+            Log.d(TAG, "Scheduling regular check-in notification");
             scheduleCheckInNotification(context);
         }
-        
-        // Cancel existing notifications before creating new ones
-        cancelAllNotifications(context);
         
         // Schedule morning notifications if enabled
         boolean morningEnabled = prefs.getBoolean("morning_notification_enabled", true);
@@ -580,6 +583,31 @@ public class NotificationHelper {
     public static void cancelAllNotifications(Context context) {
         cancelNotification(context, MORNING_NOTIFICATION_REQUEST_CODE);
         cancelNotification(context, EVENING_NOTIFICATION_REQUEST_CODE);
+
+        // Cancel milestone notifications
+        int[] milestones = {1, 7, 14, 30, 60, 90, 180, 365, 730, 1095, 1460, 1825};
+        for (int milestone : milestones) {
+            cancelNotification(context, MILESTONE_NOTIFICATION_REQUEST_CODE + milestone);
+        }
+
+        // Cancel custom notifications
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        String customTimesString = prefs.getString(CUSTOM_TIMES_KEY, "");
+        if (!customTimesString.isEmpty()) {
+            String[] customTimes = customTimesString.split(",");
+            for (int i = 0; i < customTimes.length; i++) {
+                cancelNotification(context, CUSTOM_NOTIFICATION_BASE_REQUEST_CODE + i);
+            }
+        }
+    }
+
+    /**
+     * Cancel all regular scheduled notifications, but preserve intrusive check-in
+     */
+    public static void cancelRegularNotifications(Context context) {
+        cancelNotification(context, MORNING_NOTIFICATION_REQUEST_CODE);
+        cancelNotification(context, EVENING_NOTIFICATION_REQUEST_CODE);
+        cancelNotification(context, CHECK_IN_NOTIFICATION_REQUEST_CODE);
 
         // Cancel milestone notifications
         int[] milestones = {1, 7, 14, 30, 60, 90, 180, 365, 730, 1095, 1460, 1825};

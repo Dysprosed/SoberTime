@@ -123,15 +123,16 @@ public class IntrusiveNotificationReceiver extends BroadcastReceiver {
             channel.enableLights(true);
             channel.enableVibration(true);
             
-            // Configure sound
+            // Configure sound to use alarm audio attributes (bypasses silent mode)
             Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
             if (alarmSound == null) {
                 alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
             }
             
             AudioAttributes audioAttributes = new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setUsage(AudioAttributes.USAGE_ALARM) // This is key for bypassing mute
                     .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .setFlags(AudioAttributes.FLAG_AUDIBILITY_ENFORCED) // Force audio to play
                     .build();
                     
             channel.setSound(alarmSound, audioAttributes);

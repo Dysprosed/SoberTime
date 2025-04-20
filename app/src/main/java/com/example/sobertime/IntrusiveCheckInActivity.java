@@ -157,9 +157,11 @@ public class IntrusiveCheckInActivity extends BaseActivity {
             mediaPlayer = new MediaPlayer();
             mediaPlayer.setDataSource(this, alarmSound);
             
+            // Use USAGE_ALARM to bypass mute/silent mode
             AudioAttributes attributes = new AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_ALARM)
                     .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .setFlags(AudioAttributes.FLAG_AUDIBILITY_ENFORCED) // Force audio to play
                     .build();
             
             mediaPlayer.setAudioAttributes(attributes);
@@ -184,16 +186,17 @@ public class IntrusiveCheckInActivity extends BaseActivity {
                     }
                 } catch (SecurityException e) {
                     // No VIBRATE permission - log error and continue without vibration
-                    Log.e("IntrusiveCheckIn", "No vibration permission: " + e.getMessage());
+                    Log.e(TAG, "No vibration permission: " + e.getMessage());
                     vibrator = null;
                 } catch (Exception e) {
                     // Other error with vibrator
-                    Log.e("IntrusiveCheckIn", "Vibration error: " + e.getMessage());
+                    Log.e(TAG, "Vibration error: " + e.getMessage());
                     vibrator = null;
                 }
             }
             
         } catch (Exception e) {
+            Log.e(TAG, "Error starting alarm sound: " + e.getMessage());
             e.printStackTrace();
         }
     }

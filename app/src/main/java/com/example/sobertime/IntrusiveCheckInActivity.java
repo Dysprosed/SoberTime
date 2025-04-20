@@ -53,11 +53,23 @@ public class IntrusiveCheckInActivity extends BaseActivity {
                 
         setContentView(R.layout.activity_intrusive_check_in);
         
-        // Wake up the device
-        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
-        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, 
-                "SoberTime:IntrusiveCheckInWakeLock");
-        wakeLock.acquire(10*60*1000L); // 10 minutes max
+        // Try to wake up the device, but handle permission issues gracefully
+        try {
+            PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+            wakeLock = powerManager.newWakeLock(
+                    PowerManager.PARTIAL_WAKE_LOCK, 
+                    "SoberTime:IntrusiveCheckInWakeLock");
+            wakeLock.acquire(10*60*1000L); // 10 minutes max
+            Log.d("IntrusiveCheckIn", "WakeLock acquired successfully");
+        } catch (SecurityException e) {
+            // Permission issue - continue without wakelock
+            Log.e("IntrusiveCheckIn", "Failed to acquire wakelock: " + e.getMessage());
+            wakeLock = null;
+        } catch (Exception e) {
+            // Other issue - continue without wakelock
+            Log.e("IntrusiveCheckIn", "Error with wakelock: " + e.getMessage());
+            wakeLock = null;
+        }
         
         // Initialize views
         initializeViews();

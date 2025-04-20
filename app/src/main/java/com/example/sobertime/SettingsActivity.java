@@ -304,6 +304,31 @@ public class SettingsActivity extends BaseActivity {
         });
         
         intrusiveSettingsContainer.addView(timePickerButton);
+        
+        // Add setting to control daily check-in enforcement
+        SwitchCompat enforceDailyCheckinSwitch = new SwitchCompat(this);
+        enforceDailyCheckinSwitch.setText("Enforce Daily Check-ins");
+        enforceDailyCheckinSwitch.setPadding(0, 24, 0, 8);
+        enforceDailyCheckinSwitch.setChecked(prefs.getBoolean("enforce_daily_checkins", true));
+        
+        // Description text for the setting
+        TextView enforceDailyCheckinDescription = new TextView(this);
+        enforceDailyCheckinDescription.setText("When enabled, intrusive check-ins will only happen once per day. When disabled, they will happen each time at the set check-in time regardless of previous check-ins.");
+        enforceDailyCheckinDescription.setTextSize(12);
+        enforceDailyCheckinDescription.setPadding(16, 0, 16, 16);
+        
+        enforceDailyCheckinSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                prefs.edit().putBoolean("enforce_daily_checkins", isChecked).apply();
+                
+                // Reschedule notifications to reflect new setting
+                NotificationHelper.scheduleIntrusiveCheckInNotification(SettingsActivity.this);
+            }
+        });
+        
+        intrusiveSettingsContainer.addView(enforceDailyCheckinSwitch);
+        intrusiveSettingsContainer.addView(enforceDailyCheckinDescription);
     }
 
     private void loadSettings() {

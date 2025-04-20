@@ -1,5 +1,6 @@
 package com.example.sobertime;
 
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
@@ -40,6 +41,8 @@ public class IntrusiveCheckInActivity extends BaseActivity {
     private TextView timeTextView;
     private TextView messageTextView;
     private DatabaseHelper databaseHelper;
+    private static final int NOTIFICATION_ID = 3001;
+    private static final String TAG = "IntrusiveCheckIn";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +56,9 @@ public class IntrusiveCheckInActivity extends BaseActivity {
                 
         setContentView(R.layout.activity_intrusive_check_in);
         
+        // Cancel the notification that launched this activity
+        cancelNotification();
+        
         // Try to wake up the device, but handle permission issues gracefully
         try {
             PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
@@ -60,14 +66,14 @@ public class IntrusiveCheckInActivity extends BaseActivity {
                     PowerManager.PARTIAL_WAKE_LOCK, 
                     "SoberTime:IntrusiveCheckInWakeLock");
             wakeLock.acquire(10*60*1000L); // 10 minutes max
-            Log.d("IntrusiveCheckIn", "WakeLock acquired successfully");
+            Log.d(TAG, "WakeLock acquired successfully");
         } catch (SecurityException e) {
             // Permission issue - continue without wakelock
-            Log.e("IntrusiveCheckIn", "Failed to acquire wakelock: " + e.getMessage());
+            Log.e(TAG, "Failed to acquire wakelock: " + e.getMessage());
             wakeLock = null;
         } catch (Exception e) {
             // Other issue - continue without wakelock
-            Log.e("IntrusiveCheckIn", "Error with wakelock: " + e.getMessage());
+            Log.e(TAG, "Error with wakelock: " + e.getMessage());
             wakeLock = null;
         }
         
@@ -87,6 +93,17 @@ public class IntrusiveCheckInActivity extends BaseActivity {
         setupListeners();
     }
     
+    private void cancelNotification() {
+        try {
+            NotificationManager notificationManager = 
+                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.cancel(NOTIFICATION_ID);
+            Log.d(TAG, "Cancelled notification");
+        } catch (Exception e) {
+            Log.e(TAG, "Error canceling notification: " + e.getMessage());
+        }
+    }
+
     private void initializeViews() {
         dateTextView = findViewById(R.id.intrusiveDateTextView);
         timeTextView = findViewById(R.id.intrusiveTimeTextView);

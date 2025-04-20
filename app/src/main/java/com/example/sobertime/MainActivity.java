@@ -127,6 +127,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // Check achievements for current day count
         updateAchievements();
+        
+        // Schedule notifications including intrusive check-ins
+        scheduleAllNotifications();
     }
     
     private void setupToolbarAndDrawer() {
@@ -748,6 +751,41 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         float moneySaved = sobrietyTracker.calculateMoneySaved(drinkCost, drinksPerWeek);
     
         achievementManager.checkFinancialAchievements(moneySaved);
+    }
+    
+    /**
+     * Schedule all notifications including intrusive check-ins
+     */
+    private void scheduleAllNotifications() {
+        try {
+            Log.d(TAG, "Scheduling all notifications, including intrusive check-ins");
+            
+            // Create notification channels
+            NotificationHelper.createNotificationChannel(this);
+            
+            // Schedule regular notifications
+            NotificationHelper.scheduleNotifications(this);
+            
+            // Specifically schedule intrusive check-in (with logging)
+            SharedPreferences notifSettings = getSharedPreferences("notification_settings", MODE_PRIVATE);
+            boolean intrusiveEnabled = notifSettings.getBoolean("intrusive_notifications_enabled", true);
+            
+            if (intrusiveEnabled) {
+                Log.d(TAG, "Intrusive notifications are enabled, scheduling...");
+                NotificationHelper.scheduleIntrusiveCheckInNotification(this);
+                
+                // For debugging purposes, schedule a test intrusive notification in 10 seconds
+                // Comment this out for production
+                if (BuildConfig.DEBUG) {
+                    Log.d(TAG, "Debug mode detected - scheduling test intrusive notification");
+                    IntrusiveNotificationReceiver.scheduleTestAlarm(this);
+                }
+            } else {
+                Log.d(TAG, "Intrusive notifications are disabled");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error scheduling notifications: " + e.getMessage(), e);
+        }
     }
     
     @Override

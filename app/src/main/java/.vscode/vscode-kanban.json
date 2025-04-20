@@ -62,7 +62,24 @@
       "title": "Notification Overwrite"
     }
   ],
-  "in-progress": [
+  "in-progress": [],
+  "testing": [
+    {
+      "assignedTo": {
+        "name": "dyspr"
+      },
+      "category": "Feature",
+      "creation_time": "2025-04-18T01:51:14.284Z",
+      "description": {
+        "content": "Days Sober and Sober Since Don't align",
+        "mime": "text/markdown"
+      },
+      "id": "7",
+      "prio": 1,
+      "references": [],
+      "title": "Days Sober and Sober Since Error",
+      "type": "bug"
+    },
     {
       "assignedTo": {
         "name": "Dysprosed"
@@ -77,8 +94,26 @@
       "prio": 1,
       "references": [],
       "title": "Aggressive Check-in on Log-in"
+    },
+    {
+      "assignedTo": {
+        "name": "dyspr"
+      },
+      "category": "Feature",
+      "creation_time": "2025-04-17T20:25:08.058Z",
+      "description": {
+        "content": "Implement an on-screen, pop-up notification",
+        "mime": "text/markdown"
+      },
+      "details": {
+        "content": "Overlays any existing visual element. If the phone is off, or locked, an alarm goes off similar to how the phone's alarm or timer would go off. User must turn it off by completing their check-in. The extent to which this check-in and related notifications are intentionally annoying can be configured by the user in the settings, but by default, they are set to the most obnoxious settings. ",
+        "mime": "text/markdown"
+      },
+      "id": "6",
+      "prio": 1,
+      "references": [],
+      "title": "Pop-up Notifications"
     }
   ],
-  "testing": [],
   "done": []
 }

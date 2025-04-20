@@ -10,6 +10,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.os.Vibrator;
+import android.telephony.SmsManager;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -18,14 +20,8 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 
-
 import com.example.sobertime.SobrietyTracker;
 
-import com.example.sobertime.SobrietyTracker;
-
-import com.example.sobertime.SobrietyTracker;
-
-import com.example.sobertime.SobrietyTracker;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -219,8 +215,52 @@ public class IntrusiveCheckInActivity extends BaseActivity {
     }
     
     private void notifyBuddyIfNeeded(boolean maintainedSobriety) {
-        // Reuse existing buddy notification code from CheckInActivity
-        // This method would be identical to the one in CheckInActivity
+        SQLiteDatabase db = databaseHelper.getReadableDatabase();
+        Cursor cursor = db.query(
+                "accountability_buddy",
+                null,
+                "enabled = 1",  // Only get enabled buddies
+                null,
+                null,
+                null,
+                null
+        );
+    
+        while (cursor.moveToNext()) {
+            String buddyName = cursor.getString(cursor.getColumnIndex("name"));
+            String buddyPhone = cursor.getString(cursor.getColumnIndex("phone"));
+            boolean notifyOnCheckin = cursor.getInt(cursor.getColumnIndex("notify_on_checkin")) == 1;
+            boolean notifyOnRelapse = cursor.getInt(cursor.getColumnIndex("notify_on_relapse")) == 1;
+    
+            // Determine if we should send a message
+            boolean shouldNotify = (maintainedSobriety && notifyOnCheckin) || 
+                                (!maintainedSobriety && notifyOnRelapse);
+    
+            if (shouldNotify && buddyPhone != null && !buddyPhone.isEmpty()) {
+                // Build message
+                String message;
+                if (maintainedSobriety) {
+                    message = "Hi " + buddyName + ", this is a notification from New Dawn. " +
+                            "Your buddy has completed their daily check-in and is still " +
+                            "maintaining their sobriety. No action needed.";
+                } else {
+                    message = "Hi " + buddyName + ", this is a notification from New Dawn. " +
+                            "Your buddy has had a lapse and could use your support right now. " +
+                            "Please consider reaching out to them when you have a moment.";
+                }
+    
+                // Send SMS
+                try {
+                    SmsManager smsManager = SmsManager.getDefault();
+                    smsManager.sendTextMessage(buddyPhone, null, message, null, null);
+                    Log.d("IntrusiveCheckInActivity", "Sent notification message to buddy: " + buddyName);
+                } catch (Exception e) {
+                    Log.e("IntrusiveCheckInActivity", "Failed to send message to buddy: " + e.getMessage());
+                }
+            }
+        }
+        
+        cursor.close();
     }
     
     @Override

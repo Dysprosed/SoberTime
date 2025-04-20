@@ -1,8 +1,6 @@
 package com.example.sobertime;
 
 import android.content.Intent;
-// Remove this incorrect import
-// import com.example.sobertime.BuildConfig;  
 import android.content.DialogInterface;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -16,8 +14,6 @@ import android.content.Context;
 import android.util.Log;
 
 import androidx.appcompat.app.AlertDialog;
-// Fix the incorrect import path
-// import main.java.com.example.sobertime.IntrusiveCheckInActivity;
 import com.example.sobertime.IntrusiveCheckInActivity;
 
 import java.text.SimpleDateFormat;
@@ -73,11 +69,8 @@ public class CheckInActivity extends BaseActivity {
         // Initialize debug button
         debugIntrusiveButton = findViewById(R.id.debugIntrusiveButton);
         
-        // Check if app is in debug mode (you can modify this condition based on your needs)
-        boolean isDebugMode = BuildConfig.DEBUG;  // BuildConfig is available without explicit import
-        if (isDebugMode) {
-            debugIntrusiveButton.setVisibility(View.VISIBLE);
-        }
+        // Always make debug button visible - remove conditional for testing purposes
+        debugIntrusiveButton.setVisibility(View.VISIBLE);
     }
 
     private void updateDateTime() {
@@ -143,7 +136,7 @@ public class CheckInActivity extends BaseActivity {
                 .setMessage("Are you sure you want to reset your sobriety counter? This will record a relapse but remember: a lapse is not a collapse. Every new start is progress.")
                 .setPositiveButton("Yes, Reset", new DialogInterface.OnClickListener() {
                     @Override
-                    public void onClick(DialogInterface dialog, int which) {
+                    public void onClick(View dialog, int which) {
                         resetSobrietyCounter();
                         recordCheckIn(false);
                         finish();
@@ -176,6 +169,9 @@ public class CheckInActivity extends BaseActivity {
         
         // Notify accountability buddy if needed
         notifyBuddyIfNeeded(maintainedSobriety);
+        
+        // Schedule the next notification
+        NotificationHelper.scheduleNotifications(this);
     }
 
     private void resetSobrietyCounter() {
@@ -229,7 +225,7 @@ public class CheckInActivity extends BaseActivity {
             }
         }
         
-            cursor.close();
-        }
+        cursor.close();
     }
+}
 

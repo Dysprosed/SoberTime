@@ -54,8 +54,8 @@ public class IntrusiveNotificationReceiver extends BroadcastReceiver {
     }
     
     private boolean hasCheckedInToday(SobrietyTracker tracker, Context context) {
-        SharedPreferences prefs = tracker.getSharedPreferences();
-        long lastConfirmed = prefs.getLong(SobrietyTracker.LAST_CONFIRMED_DATE_KEY, 0);
+        SharedPreferences prefs = context.getSharedPreferences(SobrietyTracker.PREFS_NAME, Context.MODE_PRIVATE);
+        long lastConfirmed = prefs.getLong("last_confirmed_date", 0);
         
         if (lastConfirmed == 0) {
             Log.d(TAG, "No previous check-in found");

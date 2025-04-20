@@ -776,7 +776,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 
                 // For debugging purposes, schedule a test intrusive notification in 10 seconds
                 // Comment this out for production
-                if (BuildConfig.DEBUG) {
+                if (getPackageName().contains(".debug")) {
                     Log.d(TAG, "Debug mode detected - scheduling test intrusive notification");
                     IntrusiveNotificationReceiver.scheduleTestAlarm(this);
                 }

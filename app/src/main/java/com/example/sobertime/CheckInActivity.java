@@ -136,7 +136,7 @@ public class CheckInActivity extends BaseActivity {
                 .setMessage("Are you sure you want to reset your sobriety counter? This will record a relapse but remember: a lapse is not a collapse. Every new start is progress.")
                 .setPositiveButton("Yes, Reset", new DialogInterface.OnClickListener() {
                     @Override
-                    public void onClick(View dialog, int which) {
+                    public void onClick(DialogInterface dialog, int which) {
                         resetSobrietyCounter();
                         recordCheckIn(false);
                         finish();

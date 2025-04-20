@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioAttributes;
+import android.media.AudioManager;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
@@ -53,7 +54,9 @@ public class IntrusiveNotificationReceiver extends BroadcastReceiver {
         
         // Prepare the intent for the notification
         Intent launchIntent = new Intent(context, IntrusiveCheckInActivity.class);
-        launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | 
+                             Intent.FLAG_ACTIVITY_CLEAR_TOP |
+                             Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
         launchIntent.putExtra("automatic_prompt", true);
         launchIntent.putExtra("intrusive_prompt", true);
         launchIntent.putExtra("from_notification", true);
@@ -75,39 +78,105 @@ public class IntrusiveNotificationReceiver extends BroadcastReceiver {
         // Get alarm sound
         Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
         if (alarmSound == null) {
-            alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+            if (alarmSound == null) {
+                alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            }
         }
         
-        // Build the notification
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
+        // Build the notification with highest possible priority
+        Notification.Builder notificationBuilder;
+        NotificationCompat.Builder compatBuilder;
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // Use the Notification.Builder for Oreo and above
+            notificationBuilder = new Notification.Builder(context, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_notification)
+                .setContentTitle("Sobriety Check-In Required")
+                .setContentText("It's time for your daily sobriety check-in")
+                .setCategory(Notification.CATEGORY_ALARM)
+                .setVisibility(Notification.VISIBILITY_PUBLIC)
+                .setSound(alarmSound, new AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_ALARM)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .setFlags(AudioAttributes.FLAG_AUDIBILITY_ENFORCED)
+                        .build())
+                .setOngoing(true)
+                .setAutoCancel(false)
+                .setFullScreenIntent(fullScreenIntent, true)
+                .setContentIntent(contentIntent);
+            
+            // Get notification manager and show notification
+            NotificationManager notificationManager = 
+                    (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            
+            // Add vibration pattern if enabled
+            SharedPreferences prefs = context.getSharedPreferences("notification_settings", Context.MODE_PRIVATE);
+            boolean useVibration = prefs.getBoolean("use_vibration", true);
+            
+            if (useVibration) {
+                // Vibration pattern: wait 0ms, vibrate 500ms, wait 500ms, repeat
+                long[] vibrationPattern = {0, 500, 500};
+                notificationBuilder.setVibrate(vibrationPattern);
+            }
+            
+            Notification notification = notificationBuilder.build();
+            notification.flags |= Notification.FLAG_INSISTENT; // Makes sound repeat until notification is canceled
+            
+            // Display notification
+            notificationManager.notify(NOTIFICATION_ID, notification);
+        }
+        else {
+            // Use NotificationCompat.Builder for older Android versions
+            compatBuilder = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle("Sobriety Check-In Required")
                 .setContentText("It's time for your daily sobriety check-in")
                 .setPriority(NotificationCompat.PRIORITY_MAX) // Highest priority
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .setSound(alarmSound)
+                .setSound(alarmSound, AudioManager.STREAM_ALARM) // Use alarm stream
                 .setAutoCancel(false)
                 .setOngoing(true) // Make notification persistent
                 .setFullScreenIntent(fullScreenIntent, true) // Use full screen intent
                 .setContentIntent(contentIntent);
-        
-        // Add vibration pattern if enabled
-        SharedPreferences prefs = context.getSharedPreferences("notification_settings", Context.MODE_PRIVATE);
-        boolean useVibration = prefs.getBoolean("use_vibration", true);
-        
-        if (useVibration) {
-            // Vibration pattern: wait 0ms, vibrate 500ms, wait 500ms, repeat
-            long[] vibrationPattern = {0, 500, 500};
-            builder.setVibrate(vibrationPattern);
+                
+            // Add vibration pattern if enabled
+            SharedPreferences prefs = context.getSharedPreferences("notification_settings", Context.MODE_PRIVATE);
+            boolean useVibration = prefs.getBoolean("use_vibration", true);
+            
+            if (useVibration) {
+                // Vibration pattern: wait 0ms, vibrate 500ms, wait 500ms, repeat
+                long[] vibrationPattern = {0, 500, 500};
+                compatBuilder.setVibrate(vibrationPattern);
+            }
+            
+            Notification notification = compatBuilder.build();
+            notification.flags |= Notification.FLAG_INSISTENT; // Makes sound repeat until notification is canceled
+            
+            // Get notification manager and show notification
+            NotificationManager notificationManager = 
+                    (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            
+            notificationManager.notify(NOTIFICATION_ID, notification);
         }
         
-        // Get notification manager and show notification
-        NotificationManager notificationManager = 
-                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-                
-        notificationManager.notify(NOTIFICATION_ID, builder.build());
-        Log.d(TAG, "Intrusive check-in notification displayed");
+        Log.d(TAG, "Intrusive check-in notification displayed with alarm sound and full-screen intent");
+        
+        // Immediately try to launch the activity directly as a backup method for some devices
+        try {
+            Intent directLaunchIntent = new Intent(context, IntrusiveCheckInActivity.class);
+            directLaunchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | 
+                                       Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            directLaunchIntent.putExtra("automatic_prompt", true);
+            directLaunchIntent.putExtra("intrusive_prompt", true);
+            directLaunchIntent.putExtra("direct_launch", true);
+            directLaunchIntent.putExtra("from_notification", true);
+            context.startActivity(directLaunchIntent);
+            Log.d(TAG, "Attempted direct activity launch as backup");
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to directly launch activity: " + e.getMessage());
+        }
     }
     
     private void createIntrusiveNotificationChannel(Context context) {
@@ -122,6 +191,7 @@ public class IntrusiveNotificationReceiver extends BroadcastReceiver {
             channel.setBypassDnd(true); // Bypass Do Not Disturb mode
             channel.enableLights(true);
             channel.enableVibration(true);
+            channel.setImportance(NotificationManager.IMPORTANCE_HIGH);
             
             // Configure sound to use alarm audio attributes (bypasses silent mode)
             Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
@@ -138,7 +208,21 @@ public class IntrusiveNotificationReceiver extends BroadcastReceiver {
             channel.setSound(alarmSound, audioAttributes);
             
             NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
+            
+            // Delete the channel if it exists to update its properties
+            if (notificationManager.getNotificationChannel(CHANNEL_ID) != null) {
+                notificationManager.deleteNotificationChannel(CHANNEL_ID);
+            }
+            
             notificationManager.createNotificationChannel(channel);
+            
+            // On Samsung devices, we need to check Do Not Disturb exceptions
+            if (Build.MANUFACTURER.equalsIgnoreCase("samsung")) {
+                Log.d(TAG, "Samsung device detected, checking DND permissions");
+                if (!notificationManager.areNotificationsEnabled()) {
+                    Log.d(TAG, "Notifications are disabled for this app. User needs to enable in settings");
+                }
+            }
         }
     }
     

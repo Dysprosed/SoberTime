@@ -7,11 +7,15 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.media.AudioAttributes;
+import android.media.AudioFocusRequest;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
+import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.telephony.SmsManager;
 import android.util.Log;
@@ -148,10 +152,57 @@ public class IntrusiveCheckInActivity extends BaseActivity {
         boolean useVibration = prefs.getBoolean("use_vibration", true);
         
         try {
+            // Request audio focus first - critical for bypassing mute on some devices
+            AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+            
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                AudioAttributes playbackAttributes = new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build();
+                
+                AudioFocusRequest focusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE)
+                    .setAudioAttributes(playbackAttributes)
+                    .setAcceptsDelayedFocusGain(false)
+                    .setWillPauseWhenDucked(false)
+                    .build();
+                
+                // Request audio focus - this helps bypass mute on some devices by establishing priority
+                int res = audioManager.requestAudioFocus(focusRequest);
+                Log.d(TAG, "Audio focus request result: " + res);
+                
+                // Force ringer mode to normal if it's silent/vibrate (this may work on some devices)
+                try {
+                    int currentMode = audioManager.getRingerMode();
+                    if (currentMode != AudioManager.RINGER_MODE_NORMAL) {
+                        Log.d(TAG, "Device is in silent/vibrate mode, attempting to temporarily override");
+                        audioManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
+                    }
+                } catch (SecurityException se) {
+                    Log.e(TAG, "Cannot change ringer mode: " + se.getMessage());
+                }
+            } else {
+                // For older Android versions
+                audioManager.requestAudioFocus(null, AudioManager.STREAM_ALARM,
+                        AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE);
+            }
+            
             // Get alarm sound
             Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
             if (alarmSound == null) {
-                alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+                if (alarmSound == null) {
+                    alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                }
+            }
+            
+            // Force the volume to maximum for alarm stream
+            try {
+                int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM);
+                audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxVolume, 0);
+                Log.d(TAG, "Set alarm stream to maximum volume: " + maxVolume);
+            } catch (SecurityException se) {
+                Log.e(TAG, "Cannot adjust volume: " + se.getMessage());
             }
             
             mediaPlayer = new MediaPlayer();
@@ -182,7 +233,14 @@ public class IntrusiveCheckInActivity extends BaseActivity {
                     if (vibrator != null && vibrator.hasVibrator()) {
                         // Pattern: wait 0ms, vibrate 500ms, wait 500ms, repeat
                         long[] pattern = {0, 500, 500};
-                        vibrator.vibrate(pattern, 0); // 0 means repeat indefinitely
+                        
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            VibrationEffect vibrationEffect = VibrationEffect.createWaveform(pattern, 0);
+                            vibrator.vibrate(vibrationEffect);
+                        } else {
+                            vibrator.vibrate(pattern, 0); // 0 means repeat indefinitely
+                        }
+                        Log.d(TAG, "Vibration started");
                     }
                 } catch (SecurityException e) {
                     // No VIBRATE permission - log error and continue without vibration

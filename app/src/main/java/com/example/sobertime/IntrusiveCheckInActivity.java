@@ -156,13 +156,23 @@ public class IntrusiveCheckInActivity extends BaseActivity {
             mediaPlayer.start();
             isPlaying = true;
             
-            // Start vibration if enabled
+            // Start vibration if enabled and permission is granted
             if (useVibration) {
-                vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-                if (vibrator != null && vibrator.hasVibrator()) {
-                    // Pattern: wait 0ms, vibrate 500ms, wait 500ms, repeat
-                    long[] pattern = {0, 500, 500};
-                    vibrator.vibrate(pattern, 0); // 0 means repeat indefinitely
+                try {
+                    vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+                    if (vibrator != null && vibrator.hasVibrator()) {
+                        // Pattern: wait 0ms, vibrate 500ms, wait 500ms, repeat
+                        long[] pattern = {0, 500, 500};
+                        vibrator.vibrate(pattern, 0); // 0 means repeat indefinitely
+                    }
+                } catch (SecurityException e) {
+                    // No VIBRATE permission - log error and continue without vibration
+                    Log.e("IntrusiveCheckIn", "No vibration permission: " + e.getMessage());
+                    vibrator = null;
+                } catch (Exception e) {
+                    // Other error with vibrator
+                    Log.e("IntrusiveCheckIn", "Vibration error: " + e.getMessage());
+                    vibrator = null;
                 }
             }
             
@@ -180,8 +190,16 @@ public class IntrusiveCheckInActivity extends BaseActivity {
         }
         
         if (vibrator != null) {
-            vibrator.cancel();
-            vibrator = null;
+            try {
+                vibrator.cancel();
+            } catch (SecurityException e) {
+                // Ignore security exceptions when trying to cancel vibration
+                Log.e("IntrusiveCheckIn", "No permission to cancel vibration: " + e.getMessage());
+            } catch (Exception e) {
+                Log.e("IntrusiveCheckIn", "Error canceling vibration: " + e.getMessage());
+            } finally {
+                vibrator = null;
+            }
         }
     }
     

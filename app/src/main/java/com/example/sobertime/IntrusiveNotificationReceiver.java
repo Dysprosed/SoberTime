@@ -26,7 +26,7 @@ public class IntrusiveNotificationReceiver extends BroadcastReceiver {
         if (!hasCheckedInToday(tracker, context)) {
             Log.d(TAG, "User hasn't checked in today, launching intrusive check-in");
             
-            // Launch intrusive check-in activity
+            // Launch intrusive check-in activity - match the exact approach used by the debug button
             Intent launchIntent = new Intent(context, IntrusiveCheckInActivity.class);
             launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             launchIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -36,9 +36,11 @@ public class IntrusiveNotificationReceiver extends BroadcastReceiver {
                 launchIntent.addFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT);
             }
             
-            // Add flag to indicate this is an automatic prompt
+            // Add the same exact flags as the debug button uses
             launchIntent.putExtra("automatic_prompt", true);
             launchIntent.putExtra("intrusive_prompt", true);
+            // Adding the debug flag which might be needed for full functionality
+            launchIntent.putExtra("debug_mode", true);
             
             try {
                 context.startActivity(launchIntent);

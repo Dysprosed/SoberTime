@@ -175,10 +175,14 @@ public class NotificationHelper {
         boolean intrusiveEnabled = prefs.getBoolean("intrusive_notifications_enabled", true); // Default to enabled
         
         if (!intrusiveEnabled) {
+            Log.d(TAG, "Intrusive notifications disabled, falling back to regular check-in");
             // Fall back to regular check-in notification if intrusive is disabled
             scheduleCheckInNotification(context);
             return;
         }
+        
+        // Cancel any existing intrusive notification before scheduling a new one
+        cancelIntrusiveCheckInNotification(context);
         
         Calendar calendar = Calendar.getInstance();
         
@@ -194,6 +198,10 @@ public class NotificationHelper {
         if (calendar.getTimeInMillis() < System.currentTimeMillis()) {
             calendar.add(Calendar.DAY_OF_YEAR, 1);
         }
+        
+        String scheduledTime = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                .format(calendar.getTime());
+        Log.d(TAG, "Scheduling intrusive check-in notification for " + scheduledTime);
         
         Intent intent = new Intent(context, IntrusiveNotificationReceiver.class);
         
@@ -215,6 +223,7 @@ public class NotificationHelper {
                             calendar.getTimeInMillis(),
                             pendingIntent
                     );
+                    Log.d(TAG, "Scheduled exact and allow-while-idle intrusive check-in alarm for Android 12+");
                 } else {
                     // Fall back to inexact alarm
                     alarmManager.setRepeating(
@@ -223,6 +232,7 @@ public class NotificationHelper {
                             AlarmManager.INTERVAL_DAY,
                             pendingIntent
                     );
+                    Log.d(TAG, "Scheduled repeating (inexact) intrusive check-in alarm for Android 12+ (no exact alarm permission)");
                 }
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 alarmManager.setExactAndAllowWhileIdle(
@@ -230,21 +240,38 @@ public class NotificationHelper {
                         calendar.getTimeInMillis(),
                         pendingIntent
                 );
+                Log.d(TAG, "Scheduled exact and allow-while-idle intrusive check-in alarm for Android 6-11");
             } else {
                 alarmManager.setExact(
                         AlarmManager.RTC_WAKEUP,
                         calendar.getTimeInMillis(),
                         pendingIntent
                 );
+                Log.d(TAG, "Scheduled exact intrusive check-in alarm for Android <6");
             }
         } catch (SecurityException e) {
             // Fall back to inexact alarm if permission is denied
+            Log.e(TAG, "Security exception when scheduling exact alarm: " + e.getMessage());
             alarmManager.setRepeating(
                     AlarmManager.RTC_WAKEUP,
                     calendar.getTimeInMillis(),
                     AlarmManager.INTERVAL_DAY,
                     pendingIntent
             );
+            Log.d(TAG, "Falling back to repeating (inexact) intrusive check-in alarm");
+        } catch (Exception e) {
+            Log.e(TAG, "Unexpected error scheduling intrusive check-in: " + e.getMessage());
+            // Try one more approach with a basic alarm
+            try {
+                alarmManager.set(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.getTimeInMillis(),
+                        pendingIntent
+                );
+                Log.d(TAG, "Last resort: Scheduled basic alarm for intrusive check-in");
+            } catch (Exception e2) {
+                Log.e(TAG, "Failed to schedule any kind of alarm: " + e2.getMessage());
+            }
         }
     }
 
@@ -634,6 +661,23 @@ public class NotificationHelper {
         PendingIntent pendingIntent = PendingIntent.getBroadcast(
                 context,
                 requestCode,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        alarmManager.cancel(pendingIntent);
+    }
+
+    /**
+     * Cancel the intrusive check-in notification
+     */
+    private static void cancelIntrusiveCheckInNotification(Context context) {
+        Log.d(TAG, "Cancelling existing intrusive check-in notification");
+        Intent intent = new Intent(context, IntrusiveNotificationReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                context,
+                INTRUSIVE_NOTIFICATION_REQUEST_CODE,
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );

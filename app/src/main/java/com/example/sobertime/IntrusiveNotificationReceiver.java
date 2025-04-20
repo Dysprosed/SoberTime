@@ -13,6 +13,8 @@ import com.example.sobertime.model.SobrietyTracker;
 
 public class IntrusiveNotificationReceiver extends BroadcastReceiver {
     private static final String TAG = "IntrusiveNotifReceiver";
+    private static final String SOBRIETY_PREFS_NAME = "SobrietyTrackerPrefs";
+    private static final String LAST_CONFIRMED_DATE_KEY = "last_confirmed_date";
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -54,8 +56,8 @@ public class IntrusiveNotificationReceiver extends BroadcastReceiver {
     }
     
     private boolean hasCheckedInToday(SobrietyTracker tracker, Context context) {
-        SharedPreferences prefs = context.getSharedPreferences(SobrietyTracker.PREFS_NAME, Context.MODE_PRIVATE);
-        long lastConfirmed = prefs.getLong("last_confirmed_date", 0);
+        SharedPreferences prefs = context.getSharedPreferences(SOBRIETY_PREFS_NAME, Context.MODE_PRIVATE);
+        long lastConfirmed = prefs.getLong(LAST_CONFIRMED_DATE_KEY, 0);
         
         if (lastConfirmed == 0) {
             Log.d(TAG, "No previous check-in found");

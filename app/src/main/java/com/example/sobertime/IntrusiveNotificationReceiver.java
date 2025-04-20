@@ -10,10 +10,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioAttributes;
+import android.media.AudioFocusRequest;
 import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
@@ -26,10 +30,14 @@ public class IntrusiveNotificationReceiver extends BroadcastReceiver {
     private static final String LAST_CONFIRMED_DATE_KEY = "last_confirmed_date";
     private static final String CHANNEL_ID = "intrusive_check_in_channel";
     private static final int NOTIFICATION_ID = 3001;
+    private MediaPlayer mediaPlayer;
 
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.d(TAG, "Received intrusive notification alarm");
+        
+        // Try to start playing sound immediately in background
+        playAlarmSound(context);
         
         // Check if the user has already checked in today
         SobrietyTracker tracker = SobrietyTracker.getInstance(context);
@@ -41,11 +49,125 @@ public class IntrusiveNotificationReceiver extends BroadcastReceiver {
             showIntrusiveNotification(context);
         } else {
             Log.d(TAG, "User has already checked in today, no need for intrusive check-in");
+            stopAlarmSound();
         }
         
         // Always reschedule next alarm to ensure we don't miss future check-ins
         Log.d(TAG, "Rescheduling next intrusive check-in alarm");
         NotificationHelper.scheduleIntrusiveCheckInNotification(context);
+    }
+    
+    /**
+     * Attempt to play alarm sound directly from the BroadcastReceiver
+     * This improves chances of sound playing on muted devices
+     */
+    private void playAlarmSound(Context context) {
+        try {
+            // Try to force normal ringer mode
+            AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            
+            // Save original state to log
+            int originalRingerMode = audioManager.getRingerMode();
+            Log.d(TAG, "Current ringer mode before sound attempt: " + originalRingerMode);
+            
+            // Try to set maximum volume on alarm stream and force normal mode
+            try {
+                int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM);
+                audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxVolume, 0);
+                
+                // Attempt to change ringer mode (may fail due to permissions)
+                if (originalRingerMode != AudioManager.RINGER_MODE_NORMAL) {
+                    audioManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
+                    Log.d(TAG, "Changed ringer mode to normal: " + audioManager.getRingerMode());
+                }
+            } catch (SecurityException se) {
+                Log.e(TAG, "No permission to change audio settings: " + se.getMessage());
+            }
+            
+            // Request audio focus first
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                AudioAttributes playbackAttributes = new AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_ALARM)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build();
+                
+                AudioFocusRequest focusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE)
+                        .setAudioAttributes(playbackAttributes)
+                        .setAcceptsDelayedFocusGain(false)
+                        .setWillPauseWhenDucked(false)
+                        .build();
+                
+                audioManager.requestAudioFocus(focusRequest);
+            } else {
+                // For older Android versions
+                audioManager.requestAudioFocus(null, AudioManager.STREAM_ALARM, 
+                        AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE);
+            }
+            
+            // Get system alarm sound
+            Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+            if (alarmSound == null) {
+                alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+                if (alarmSound == null) {
+                    alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                }
+            }
+            
+            // Create and configure MediaPlayer
+            mediaPlayer = new MediaPlayer();
+            
+            if (Build.VERSION.SDK_INT >= 21) {
+                AudioAttributes attributes = new AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_ALARM)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .setFlags(AudioAttributes.FLAG_AUDIBILITY_ENFORCED)
+                        .build();
+                
+                mediaPlayer.setAudioAttributes(attributes);
+            } else {
+                // For older devices
+                mediaPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
+            }
+            
+            // Use maximum volume
+            mediaPlayer.setVolume(1.0f, 1.0f);
+            
+            // Configure for repeated playback
+            mediaPlayer.setLooping(true);
+            
+            // Set data source and prepare
+            mediaPlayer.setDataSource(context, alarmSound);
+            mediaPlayer.prepare();
+            mediaPlayer.start();
+            
+            Log.d(TAG, "Started playing alarm sound directly from BroadcastReceiver");
+            
+            // Ensure MediaPlayer stops after max 15 seconds if not already stopped
+            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    stopAlarmSound();
+                }
+            }, 15000); // 15 seconds maximum
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to play alarm sound from receiver: " + e.getMessage());
+        }
+    }
+    
+    private void stopAlarmSound() {
+        if (mediaPlayer != null) {
+            try {
+                if (mediaPlayer.isPlaying()) {
+                    mediaPlayer.stop();
+                }
+                mediaPlayer.release();
+                Log.d(TAG, "Stopped alarm sound from receiver");
+            } catch (Exception e) {
+                Log.e(TAG, "Error stopping alarm sound: " + e.getMessage());
+            }
+            mediaPlayer = null;
+        }
     }
     
     private void showIntrusiveNotification(Context context) {

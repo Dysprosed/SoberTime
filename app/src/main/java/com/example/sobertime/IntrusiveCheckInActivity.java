@@ -10,6 +10,7 @@ import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
@@ -152,9 +153,34 @@ public class IntrusiveCheckInActivity extends BaseActivity {
         boolean useVibration = prefs.getBoolean("use_vibration", true);
         
         try {
-            // Request audio focus first - critical for bypassing mute on some devices
+            // First ensure audio routing is properly set up
             AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
             
+            // Force the volume to maximum for alarm stream FIRST - this is critical
+            try {
+                int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM);
+                audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxVolume, 0);
+                Log.d(TAG, "Set alarm stream to maximum volume: " + maxVolume);
+                
+                // Save current ringer mode for restoring later if desired
+                int originalRingerMode = audioManager.getRingerMode();
+                
+                // Force ringer mode to normal - this is key for sound playback
+                if (originalRingerMode != AudioManager.RINGER_MODE_NORMAL) {
+                    try {
+                        Log.d(TAG, "Attempting to override ringer mode from " + originalRingerMode + " to NORMAL");
+                        // This may fail on some devices due to DND permissions
+                        audioManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
+                        Log.d(TAG, "Successfully switched ringer mode to: " + audioManager.getRingerMode());
+                    } catch (SecurityException se) {
+                        Log.e(TAG, "Security exception setting ringer mode: " + se.getMessage());
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error setting volume: " + e.getMessage());
+            }
+            
+            // Then request audio focus
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 AudioAttributes playbackAttributes = new AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_ALARM)
@@ -167,27 +193,17 @@ public class IntrusiveCheckInActivity extends BaseActivity {
                     .setWillPauseWhenDucked(false)
                     .build();
                 
-                // Request audio focus - this helps bypass mute on some devices by establishing priority
+                Log.d(TAG, "Requesting audio focus with exclusive gain");
                 int res = audioManager.requestAudioFocus(focusRequest);
                 Log.d(TAG, "Audio focus request result: " + res);
-                
-                // Force ringer mode to normal if it's silent/vibrate (this may work on some devices)
-                try {
-                    int currentMode = audioManager.getRingerMode();
-                    if (currentMode != AudioManager.RINGER_MODE_NORMAL) {
-                        Log.d(TAG, "Device is in silent/vibrate mode, attempting to temporarily override");
-                        audioManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
-                    }
-                } catch (SecurityException se) {
-                    Log.e(TAG, "Cannot change ringer mode: " + se.getMessage());
-                }
             } else {
                 // For older Android versions
-                audioManager.requestAudioFocus(null, AudioManager.STREAM_ALARM,
+                int res = audioManager.requestAudioFocus(null, AudioManager.STREAM_ALARM,
                         AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE);
+                Log.d(TAG, "Legacy audio focus request result: " + res);
             }
             
-            // Get alarm sound
+            // Set up MediaPlayer with proper alarm audio path
             Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
             if (alarmSound == null) {
                 alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
@@ -196,65 +212,90 @@ public class IntrusiveCheckInActivity extends BaseActivity {
                 }
             }
             
-            // Force the volume to maximum for alarm stream
             try {
-                int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM);
-                audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxVolume, 0);
-                Log.d(TAG, "Set alarm stream to maximum volume: " + maxVolume);
-            } catch (SecurityException se) {
-                Log.e(TAG, "Cannot adjust volume: " + se.getMessage());
+                // Use a different approach - creating and starting the MediaPlayer immediately
+                mediaPlayer = new MediaPlayer();
+                
+                // Configure flags and routing before setting data source
+                if (Build.VERSION.SDK_INT >= 21) {
+                    AudioAttributes attributes = new AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_ALARM)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                            .setFlags(AudioAttributes.FLAG_AUDIBILITY_ENFORCED)
+                            .build();
+                    
+                    mediaPlayer.setAudioAttributes(attributes);
+                } else {
+                    // For older devices
+                    mediaPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
+                }
+                
+                // Set data source and prepare synchronously
+                mediaPlayer.setDataSource(this, alarmSound);
+                mediaPlayer.setLooping(true);
+                
+                // Set volume based on settings (use maximum volume)
+                float volume = 1.0f; // Force maximum volume
+                mediaPlayer.setVolume(volume, volume);
+                
+                // Prepare synchronously and start immediately
+                mediaPlayer.prepare();
+                mediaPlayer.start();
+                isPlaying = true;
+                
+                Log.d(TAG, "Started MediaPlayer for alarm sound with maximum volume");
+            } catch (Exception e) {
+                Log.e(TAG, "Error with MediaPlayer: " + e.getMessage());
+                try {
+                    // Alternative method using Ringtone API
+                    Ringtone ringtone = RingtoneManager.getRingtone(this, alarmSound);
+                    if (Build.VERSION.SDK_INT >= 21) {
+                        ringtone.setAudioAttributes(new AudioAttributes.Builder()
+                                .setUsage(AudioAttributes.USAGE_ALARM)
+                                .setFlags(AudioAttributes.FLAG_AUDIBILITY_ENFORCED)
+                                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                                .build());
+                    }
+                    ringtone.play();
+                    Log.d(TAG, "Started Ringtone as fallback");
+                } catch (Exception e2) {
+                    Log.e(TAG, "Failed to play sound with Ringtone API: " + e2.getMessage());
+                }
             }
             
-            mediaPlayer = new MediaPlayer();
-            mediaPlayer.setDataSource(this, alarmSound);
-            
-            // Use USAGE_ALARM to bypass mute/silent mode
-            AudioAttributes attributes = new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_ALARM)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .setFlags(AudioAttributes.FLAG_AUDIBILITY_ENFORCED) // Force audio to play
-                    .build();
-            
-            mediaPlayer.setAudioAttributes(attributes);
-            mediaPlayer.setLooping(true);
-            
-            // Set volume based on settings
-            float volume = alarmVolume / 100f;
-            mediaPlayer.setVolume(volume, volume);
-            
-            mediaPlayer.prepare();
-            mediaPlayer.start();
-            isPlaying = true;
-            
-            // Start vibration if enabled and permission is granted
+            // Start vibration if enabled and permission is granted - using a separate thread that continuously vibrates
             if (useVibration) {
                 try {
                     vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
                     if (vibrator != null && vibrator.hasVibrator()) {
-                        // Pattern: wait 0ms, vibrate 500ms, wait 500ms, repeat
-                        long[] pattern = {0, 500, 500};
+                        // Start vibration in a more aggressive pattern
+                        // Pattern: wait 0ms, vibrate 800ms, wait 400ms, vibrate 800ms, wait 400ms...
+                        long[] pattern = {0, 800, 400, 800, 400};
                         
+                        // Force stronger vibration on newer devices
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            VibrationEffect vibrationEffect = VibrationEffect.createWaveform(pattern, 0);
+                            // Use maximum amplitude (255) for stronger vibration
+                            VibrationEffect vibrationEffect = VibrationEffect.createWaveform(pattern, new int[]{0, 255, 0, 255, 0}, 0);
                             vibrator.vibrate(vibrationEffect);
+                            Log.d(TAG, "Started high-amplitude vibration on Android O+");
                         } else {
                             vibrator.vibrate(pattern, 0); // 0 means repeat indefinitely
+                            Log.d(TAG, "Started standard vibration on pre-O device");
                         }
-                        Log.d(TAG, "Vibration started");
+                    } else {
+                        Log.d(TAG, "Device does not support vibration");
                     }
                 } catch (SecurityException e) {
-                    // No VIBRATE permission - log error and continue without vibration
                     Log.e(TAG, "No vibration permission: " + e.getMessage());
                     vibrator = null;
                 } catch (Exception e) {
-                    // Other error with vibrator
                     Log.e(TAG, "Vibration error: " + e.getMessage());
                     vibrator = null;
                 }
             }
             
         } catch (Exception e) {
-            Log.e(TAG, "Error starting alarm sound: " + e.getMessage());
+            Log.e(TAG, "Critical error starting alarm sound: " + e.getMessage());
             e.printStackTrace();
         }
     }

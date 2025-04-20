@@ -204,6 +204,8 @@ public class NotificationHelper {
         Log.d(TAG, "Scheduling intrusive check-in notification for " + scheduledTime);
         
         Intent intent = new Intent(context, IntrusiveNotificationReceiver.class);
+        // Add flags to ensure delivery regardless of device state
+        intent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
         
         PendingIntent pendingIntent = PendingIntent.getBroadcast(
                 context,
@@ -218,11 +220,21 @@ public class NotificationHelper {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 if (alarmManager.canScheduleExactAlarms()) {
-                    alarmManager.setExactAndAllowWhileIdle(
-                            AlarmManager.RTC_WAKEUP,
-                            calendar.getTimeInMillis(),
-                            pendingIntent
-                    );
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        // For Android 13+ use setExactAndAllowWhileIdle with AlarmManager.WINDOW_EXACT
+                        alarmManager.setExactAndAllowWhileIdle(
+                                AlarmManager.RTC_WAKEUP,
+                                calendar.getTimeInMillis(),
+                                pendingIntent
+                        );
+                    } else {
+                        // For Android 12 use setExactAndAllowWhileIdle
+                        alarmManager.setExactAndAllowWhileIdle(
+                                AlarmManager.RTC_WAKEUP,
+                                calendar.getTimeInMillis(),
+                                pendingIntent
+                        );
+                    }
                     Log.d(TAG, "Scheduled exact and allow-while-idle intrusive check-in alarm for Android 12+");
                 } else {
                     // Fall back to inexact alarm

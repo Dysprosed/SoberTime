@@ -811,6 +811,20 @@ public class BackupRestoreActivity extends BaseActivity {
         JSONArray achievementsArray = new JSONArray();
         
         SQLiteDatabase db = databaseHelper.getReadableDatabase();
+        
+        // Check if the achievements table exists
+        Cursor tableCheck = db.rawQuery(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='achievements'", 
+                null);
+        boolean tableExists = tableCheck.getCount() > 0;
+        tableCheck.close();
+        
+        if (!tableExists) {
+            // If table doesn't exist yet, return empty array
+            return achievementsArray;
+        }
+        
+        // If table exists, proceed with query
         Cursor cursor = db.query("achievements", null, null, null, null, null, null);
         
         if (cursor.moveToFirst()) {

@@ -13,13 +13,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     
     // Database Information
     private static final String DATABASE_NAME = "sobriety_tracker.db";
-    private static final int DATABASE_VERSION = 3; // Increased from 2 to 3 for support_resources
+    private static final int DATABASE_VERSION = 4; // Increased from 3 to 4 for achievements table
     
     // Table Names
     private static final String TABLE_JOURNAL = "journal";
     private static final String TABLE_SETTINGS = "settings";
     private static final String TABLE_ACCOUNTABILITY_BUDDY = "accountability_buddy";
     private static final String TABLE_SUPPORT_RESOURCES = "support_resources";
+    private static final String TABLE_ACHIEVEMENTS = "achievements";
     
     // Journal Table Columns
     private static final String JOURNAL_ID = "id";
@@ -53,6 +54,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String RESOURCE_WEBSITE = "website";
     private static final String RESOURCE_CATEGORY = "category";
     private static final String RESOURCE_IS_CUSTOM = "is_custom";
+    
+    // Achievements Table Columns
+    private static final String ACHIEVEMENT_ID = "id";
+    private static final String ACHIEVEMENT_NAME = "name";
+    private static final String ACHIEVEMENT_DESCRIPTION = "description";
+    private static final String ACHIEVEMENT_UNLOCK_DATE = "unlock_date";
+    private static final String ACHIEVEMENT_TYPE = "achievement_type";
+    private static final String ACHIEVEMENT_UNLOCKED = "unlocked";
     
     // Create Table Statements
     private static final String CREATE_TABLE_JOURNAL = 
@@ -92,6 +101,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     + RESOURCE_CATEGORY + " TEXT, "
                     + RESOURCE_IS_CUSTOM + " INTEGER DEFAULT 0);";
     
+    private static final String CREATE_TABLE_ACHIEVEMENTS = 
+            "CREATE TABLE " + TABLE_ACHIEVEMENTS + "("
+                    + ACHIEVEMENT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + ACHIEVEMENT_NAME + " TEXT NOT NULL, "
+                    + ACHIEVEMENT_DESCRIPTION + " TEXT, "
+                    + ACHIEVEMENT_UNLOCK_DATE + " INTEGER, "
+                    + ACHIEVEMENT_TYPE + " TEXT, "
+                    + ACHIEVEMENT_UNLOCKED + " INTEGER DEFAULT 0);";
+    
     private static DatabaseHelper instance;
     
     // Get singleton instance
@@ -112,6 +130,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_TABLE_SETTINGS);
         db.execSQL(CREATE_TABLE_ACCOUNTABILITY_BUDDY);
         db.execSQL(CREATE_TABLE_SUPPORT_RESOURCES);
+        db.execSQL(CREATE_TABLE_ACHIEVEMENTS);
         
         // Initialize default settings
         ContentValues defaultSettings = new ContentValues();
@@ -153,8 +172,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             // Create the support_resources table for existing users
             db.execSQL(CREATE_TABLE_SUPPORT_RESOURCES);
         }
+        if (oldVersion < 4) {
+            // Create the achievements table for existing users
+            db.execSQL(CREATE_TABLE_ACHIEVEMENTS);
+        }
         // Add further upgrade paths for future versions
-        // if (oldVersion < 4) { ... }
+        // if (oldVersion < 5) { ... }
     }
     
     // Journal CRUD Operations

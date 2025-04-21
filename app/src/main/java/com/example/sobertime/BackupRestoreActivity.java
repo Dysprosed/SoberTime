@@ -340,44 +340,73 @@ public class BackupRestoreActivity extends BaseActivity {
             
             // Try to delete any existing backup file first
             boolean existingFileDeleted = false;
+            Uri existingUri = null;
             try (Cursor cursor = resolver.query(queryUri, projection, selection, selectionArgs, null)) {
                 if (cursor != null && cursor.moveToFirst()) {
                     int idColumn = cursor.getColumnIndexOrThrow(MediaStore.Downloads._ID);
                     long id = cursor.getLong(idColumn);
-                    Uri deleteUri = ContentUris.withAppendedId(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id);
+                    existingUri = ContentUris.withAppendedId(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id);
                     
-                    try {
-                        int rowsDeleted = resolver.delete(deleteUri, null, null);
-                        existingFileDeleted = (rowsDeleted > 0);
-                        Log.d("BackupRestore", "Deleted existing backup file, result: " + rowsDeleted);
-                    } catch (Exception e) {
-                        Log.e("BackupRestore", "Failed to delete existing backup file", e);
-                    }
+                    // Instead of deleting, we'll try to reuse this URI
+                    Log.d("BackupRestore", "Found existing backup file at URI: " + existingUri);
                 }
             } catch (Exception e) {
                 Log.e("BackupRestore", "Error while trying to find existing backup file", e);
             }
 
-            // Now create a new file
-            ContentValues contentValues = new ContentValues();
-            contentValues.put(MediaStore.Downloads.DISPLAY_NAME, BACKUP_FILENAME);
-            contentValues.put(MediaStore.Downloads.MIME_TYPE, "application/json");
-            contentValues.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/" + BACKUP_DIRECTORY);
-            
-            // Use the appropriate creation mode based on Android version
             Uri uri = null;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                // Use CONFLICT_REPLACE flag on Android 11+ to ensure overwrite
-                uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues, 
-                        existingFileDeleted ? null : Bundle.EMPTY);
-            } else {
-                uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues);
+            if (existingUri != null) {
+                // If we found an existing file, try to write to it directly
+                uri = existingUri;
+                try {
+                    // Try to truncate the file first
+                    try (OutputStream outputStream = resolver.openOutputStream(uri)) {
+                        // Just opening it with default mode will truncate it
+                    }
+                    Log.d("BackupRestore", "Successfully truncated existing file");
+                } catch (Exception e) {
+                    Log.e("BackupRestore", "Failed to truncate existing file, will try to delete and recreate", e);
+                    
+                    // If truncation fails, try to delete it
+                    try {
+                        int rowsDeleted = resolver.delete(existingUri, null, null);
+                        existingFileDeleted = (rowsDeleted > 0);
+                        Log.d("BackupRestore", "Deleted existing backup file, result: " + rowsDeleted);
+                        uri = null; // Force recreation
+                    } catch (Exception ex) {
+                        Log.e("BackupRestore", "Failed to delete existing backup file", ex);
+                        // We'll try to create a new one with a different name
+                        uri = null;
+                    }
+                }
+            }
+            
+            // If we don't have a URI yet (file not found or deletion failed), create a new file
+            if (uri == null) {
+                ContentValues contentValues = new ContentValues();
+                contentValues.put(MediaStore.Downloads.DISPLAY_NAME, BACKUP_FILENAME);
+                contentValues.put(MediaStore.Downloads.MIME_TYPE, "application/json");
+                contentValues.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/" + BACKUP_DIRECTORY);
+                
+                // Create a new file, with conflict handling based on Android version
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    // On Android 11+, use the CONFLICT_REPLACE flag explicitly
+                    Bundle extras = new Bundle();
+                    extras.putInt(MediaStore.EXTRA_MEDIA_CONFLICT_RESOLUTION, MediaStore.CONFLICT_REPLACE);
+                    uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues, extras);
+                    Log.d("BackupRestore", "Created new file with Android 11+ conflict resolution");
+                } else {
+                    // On Android 10, just try to create it (system should handle conflicts)
+                    uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues);
+                    Log.d("BackupRestore", "Created new file with Android 10 default handling");
+                }
             }
             
             if (uri != null) {
                 try (OutputStream outputStream = resolver.openOutputStream(uri, "wt")) {
                     if (outputStream != null) {
-                        outputStream.write(data.getBytes());
+                        byte[] bytes = data.getBytes();
+                        outputStream.write(bytes, 0, bytes.length);
                         outputStream.flush();
                         
                         // Store the URI for future reference
@@ -387,13 +416,13 @@ public class BackupRestoreActivity extends BaseActivity {
                              .putLong("backup_timestamp", System.currentTimeMillis())
                              .apply();
                              
-                        Log.i("BackupRestore", "Successfully wrote backup to: " + uri);
+                        Log.i("BackupRestore", "Successfully wrote " + bytes.length + " bytes to backup file at: " + uri);
                     } else {
                         throw new IOException("Could not open output stream for URI: " + uri);
                     }
                 }
             } else {
-                throw new IOException("Failed to create new file in MediaStore");
+                throw new IOException("Failed to create or access backup file in MediaStore");
             }
         } else {
             // For pre-Android 10, use direct file access
@@ -412,6 +441,8 @@ public class BackupRestoreActivity extends BaseActivity {
             if (backupFile.exists()) {
                 if (!backupFile.delete()) {
                     Log.w("BackupRestore", "Failed to delete existing backup file, will try to overwrite");
+                } else {
+                    Log.d("BackupRestore", "Successfully deleted existing backup file");
                 }
             }
             

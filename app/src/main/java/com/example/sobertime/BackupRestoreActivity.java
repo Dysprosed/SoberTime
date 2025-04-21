@@ -390,11 +390,9 @@ public class BackupRestoreActivity extends BaseActivity {
                 
                 // Create a new file, with conflict handling based on Android version
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    // On Android 11+, use the CONFLICT_REPLACE flag explicitly
-                    Bundle extras = new Bundle();
-                    extras.putInt(MediaStore.EXTRA_MEDIA_CONFLICT_RESOLUTION, MediaStore.CONFLICT_REPLACE);
-                    uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues, extras);
-                    Log.d("BackupRestore", "Created new file with Android 11+ conflict resolution");
+                    // On Android 11+, we'll use a more direct approach instead of undefined constants
+                    uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues);
+                    Log.d("BackupRestore", "Created new file on Android 11+");
                 } else {
                     // On Android 10, just try to create it (system should handle conflicts)
                     uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues);

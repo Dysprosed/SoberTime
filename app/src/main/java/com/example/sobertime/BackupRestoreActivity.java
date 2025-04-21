@@ -28,6 +28,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
@@ -40,6 +42,7 @@ import android.content.ContentValues;
 import android.content.ContentResolver;
 import android.provider.MediaStore;
 import android.net.Uri;
+import android.content.ContentUris;
 
 // Add this import
 import android.Manifest;

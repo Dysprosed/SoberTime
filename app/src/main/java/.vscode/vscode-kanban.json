@@ -60,19 +60,6 @@
       "prio": 2,
       "references": [],
       "title": "Notification Overwrite"
-    },
-    {
-      "assignedTo": {
-        "name": "dyspr"
-      },
-      "creation_time": "2025-04-21T00:06:18.492Z",
-      "details": {
-        "content": "When data is backed up, that data backup should persist regardless of whether the app is uninstalled or not.",
-        "mime": "text/markdown"
-      },
-      "id": "8",
-      "references": [],
-      "title": "Persistent Data Backup Across Installations"
     }
   ],
   "in-progress": [],
@@ -126,6 +113,19 @@
       "prio": 1,
       "references": [],
       "title": "Pop-up Notifications"
+    },
+    {
+      "assignedTo": {
+        "name": "dyspr"
+      },
+      "creation_time": "2025-04-21T00:06:18.492Z",
+      "details": {
+        "content": "When data is backed up, that data backup should persist regardless of whether the app is uninstalled or not.",
+        "mime": "text/markdown"
+      },
+      "id": "8",
+      "references": [],
+      "title": "Persistent Data Backup Across Installations"
     }
   ],
   "done": []

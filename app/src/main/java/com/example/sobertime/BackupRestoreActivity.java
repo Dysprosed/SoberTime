@@ -26,6 +26,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -681,101 +682,326 @@ public class BackupRestoreActivity extends BaseActivity {
     private String readBackupFromFile() throws IOException {
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         StringBuilder stringBuilder = new StringBuilder();
+        boolean fileFound = false;
+        String errorMessage = "";
+        
+        // Log start of backup read attempt
+        Log.d("BackupRestore", "Starting to read backup file");
         
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             // For Android 10+ try to use saved URI first
             String savedUri = prefs.getString("backup_uri", "");
             if (!savedUri.isEmpty()) {
+                Log.d("BackupRestore", "Found saved URI: " + savedUri);
                 try {
                     Uri uri = Uri.parse(savedUri);
-                    try (InputStream is = getContentResolver().openInputStream(uri);
-                         BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
-                        String line;
-                        while ((line = reader.readLine()) != null) {
-                            stringBuilder.append(line);
+                    try {
+                        InputStream is = getContentResolver().openInputStream(uri);
+                        if (is != null) {
+                            try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+                                String line;
+                                while ((line = reader.readLine()) != null) {
+                                    stringBuilder.append(line);
+                                }
+                                
+                                if (stringBuilder.length() > 0) {
+                                    Log.d("BackupRestore", "Successfully read backup from saved URI");
+                                    return stringBuilder.toString();
+                                } else {
+                                    Log.w("BackupRestore", "Backup file from saved URI is empty");
+                                }
+                            } finally {
+                                try {
+                                    is.close();
+                                } catch (IOException e) {
+                                    Log.e("BackupRestore", "Error closing input stream", e);
+                                }
+                            }
+                        } else {
+                            Log.e("BackupRestore", "Could not open input stream for URI: " + uri);
                         }
-                        return stringBuilder.toString();
                     } catch (Exception e) {
-                        // URI might be invalid, fall back to search
+                        Log.e("BackupRestore", "Error reading from saved URI: " + savedUri, e);
+                        errorMessage = "Error reading from saved URI: " + e.getMessage();
                     }
                 } catch (Exception e) {
-                    // Continue to fallback
+                    Log.e("BackupRestore", "Invalid saved URI: " + savedUri, e);
+                    errorMessage = "Invalid saved URI: " + e.getMessage();
+                    // Clear invalid URI from preferences
+                    prefs.edit().remove("backup_uri").apply();
                 }
             }
             
-            // If saved URI didn't work, search in Downloads
+            // If saved URI didn't work, try exact filename search in Downloads
+            Log.d("BackupRestore", "Searching for backup in MediaStore");
             try {
                 Uri queryUri = MediaStore.Downloads.EXTERNAL_CONTENT_URI;
                 String[] projection = {MediaStore.Downloads._ID};
+                
+                // First try exact match
                 String selection = MediaStore.Downloads.DISPLAY_NAME + "=? AND " + 
-                                  MediaStore.Downloads.RELATIVE_PATH + " LIKE ?";
+                                MediaStore.Downloads.RELATIVE_PATH + " LIKE ?";
                 String[] selectionArgs = {
                     BACKUP_FILENAME,
                     "%" + BACKUP_DIRECTORY + "%"
                 };
                 
-                try (Cursor cursor = getContentResolver().query(queryUri, projection, selection, selectionArgs, null)) {
+                Cursor cursor = null;
+                try {
+                    cursor = getContentResolver().query(queryUri, projection, selection, selectionArgs, null);
                     if (cursor != null && cursor.moveToFirst()) {
                         int idColumn = cursor.getColumnIndexOrThrow(MediaStore.Downloads._ID);
                         long id = cursor.getLong(idColumn);
                         Uri contentUri = ContentUris.withAppendedId(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id);
                         
+                        Log.d("BackupRestore", "Found backup file in MediaStore: " + contentUri);
+                        
                         // Save this URI for future use
                         prefs.edit().putString("backup_uri", contentUri.toString()).apply();
                         
-                        try (InputStream is = getContentResolver().openInputStream(contentUri);
-                             BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
-                            String line;
-                            while ((line = reader.readLine()) != null) {
-                                stringBuilder.append(line);
+                        stringBuilder.setLength(0); // Clear any previous content
+                        InputStream is = null;
+                        try {
+                            is = getContentResolver().openInputStream(contentUri);
+                            if (is != null) {
+                                byte[] buffer = new byte[1024];
+                                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                                int bytesRead;
+                                while ((bytesRead = is.read(buffer)) != -1) {
+                                    baos.write(buffer, 0, bytesRead);
+                                }
+                                
+                                String content = baos.toString("UTF-8");
+                                if (!content.isEmpty()) {
+                                    Log.d("BackupRestore", "Successfully read backup from MediaStore");
+                                    fileFound = true;
+                                    return content;
+                                } else {
+                                    Log.w("BackupRestore", "Backup file from MediaStore is empty");
+                                }
                             }
-                            return stringBuilder.toString();
+                        } catch (Exception e) {
+                            Log.e("BackupRestore", "Error reading from MediaStore URI: " + contentUri, e);
+                            errorMessage = "Error reading from MediaStore: " + e.getMessage();
+                        } finally {
+                            if (is != null) {
+                                try {
+                                    is.close();
+                                } catch (IOException e) {
+                                    Log.e("BackupRestore", "Error closing input stream", e);
+                                }
+                            }
+                        }
+                    } else {
+                        Log.d("BackupRestore", "No exact match found, trying broader search");
+                    }
+                } finally {
+                    if (cursor != null) {
+                        cursor.close();
+                    }
+                }
+                
+                // If exact match didn't work, try broader search for any similar filenames
+                if (!fileFound) {
+                    String broadSelection = MediaStore.Downloads.DISPLAY_NAME + " LIKE ? AND " + 
+                                        MediaStore.Downloads.RELATIVE_PATH + " LIKE ?";
+                    String[] broadSelectionArgs = {
+                        "%" + BACKUP_FILENAME.replace(".json", "") + "%",
+                        "%" + BACKUP_DIRECTORY + "%"
+                    };
+                    
+                    try {
+                        cursor = getContentResolver().query(queryUri, projection, broadSelection, broadSelectionArgs, null);
+                        if (cursor != null && cursor.getCount() > 0) {
+                            Log.d("BackupRestore", "Found " + cursor.getCount() + " similar backup files");
+                            
+                            // Try each file until we find one that works
+                            while (cursor.moveToNext()) {
+                                int idColumn = cursor.getColumnIndexOrThrow(MediaStore.Downloads._ID);
+                                long id = cursor.getLong(idColumn);
+                                Uri contentUri = ContentUris.withAppendedId(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id);
+                                
+                                InputStream is = null;
+                                try {
+                                    is = getContentResolver().openInputStream(contentUri);
+                                    if (is != null) {
+                                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                                        byte[] buffer = new byte[1024];
+                                        int bytesRead;
+                                        while ((bytesRead = is.read(buffer)) != -1) {
+                                            baos.write(buffer, 0, bytesRead);
+                                        }
+                                        
+                                        String content = baos.toString("UTF-8");
+                                        if (!content.isEmpty()) {
+                                            // Try to validate it's a proper backup by checking for key fields
+                                            try {
+                                                JSONObject testJson = new JSONObject(content);
+                                                if (testJson.has("journal_entries") || testJson.has("settings")) {
+                                                    Log.d("BackupRestore", "Found valid backup in similar file: " + contentUri);
+                                                    // Save this URI for future use
+                                                    prefs.edit().putString("backup_uri", contentUri.toString()).apply();
+                                                    fileFound = true;
+                                                    return content;
+                                                }
+                                            } catch (JSONException je) {
+                                                Log.w("BackupRestore", "Found file is not valid JSON: " + contentUri);
+                                                // Continue to next file
+                                            }
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    Log.e("BackupRestore", "Error reading similar backup file: " + contentUri, e);
+                                    // Continue to next file
+                                } finally {
+                                    if (is != null) {
+                                        try {
+                                            is.close();
+                                        } catch (IOException e) {
+                                            Log.e("BackupRestore", "Error closing input stream", e);
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            Log.d("BackupRestore", "No similar backup files found");
+                        }
+                    } finally {
+                        if (cursor != null) {
+                            cursor.close();
                         }
                     }
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                Log.e("BackupRestore", "Error searching MediaStore", e);
+                errorMessage = "Error searching MediaStore: " + e.getMessage();
             }
         } else {
             // For older versions, first try the saved path
             String savedPath = prefs.getString("backup_path", "");
             if (!savedPath.isEmpty()) {
+                Log.d("BackupRestore", "Trying to read from saved path: " + savedPath);
                 File backupFile = new File(savedPath);
                 if (backupFile.exists()) {
-                    try (FileInputStream fis = new FileInputStream(backupFile);
-                         BufferedReader reader = new BufferedReader(new InputStreamReader(fis))) {
-                        String line;
-                        while ((line = reader.readLine()) != null) {
-                            stringBuilder.append(line);
+                    try {
+                        String content = readFileAsString(backupFile);
+                        if (!content.isEmpty()) {
+                            Log.d("BackupRestore", "Successfully read backup from saved path");
+                            return content;
+                        } else {
+                            Log.w("BackupRestore", "Backup file from saved path is empty");
                         }
-                        return stringBuilder.toString();
+                    } catch (Exception e) {
+                        Log.e("BackupRestore", "Error reading from saved path: " + savedPath, e);
+                        errorMessage = "Error reading from saved path: " + e.getMessage();
                     }
+                } else {
+                    Log.d("BackupRestore", "Backup file at saved path doesn't exist");
                 }
             }
             
             // If saved path didn't work, try the standard location
+            Log.d("BackupRestore", "Trying standard backup location");
             File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
             File backupDir = new File(downloadsDir, BACKUP_DIRECTORY);
             File backupFile = new File(backupDir, BACKUP_FILENAME);
             
-            if (!backupFile.exists()) {
-                return null;
-            }
-            
-            try (FileInputStream fis = new FileInputStream(backupFile);
-                 BufferedReader reader = new BufferedReader(new InputStreamReader(fis))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    stringBuilder.append(line);
+            if (backupFile.exists()) {
+                try {
+                    String content = readFileAsString(backupFile);
+                    if (!content.isEmpty()) {
+                        Log.d("BackupRestore", "Successfully read backup from standard location");
+                        
+                        // Save this path for future use
+                        prefs.edit().putString("backup_path", backupFile.getAbsolutePath()).apply();
+                        
+                        return content;
+                    } else {
+                        Log.w("BackupRestore", "Backup file from standard location is empty");
+                    }
+                } catch (Exception e) {
+                    Log.e("BackupRestore", "Error reading from standard location", e);
+                    errorMessage = "Error reading from standard location: " + e.getMessage();
                 }
-                return stringBuilder.toString();
+            } else {
+                Log.d("BackupRestore", "Backup file doesn't exist at standard location");
+                
+                // Try to find any backup file in the directory
+                if (backupDir.exists() && backupDir.isDirectory()) {
+                    File[] possibleBackups = backupDir.listFiles(new FilenameFilter() {
+                        @Override
+                        public boolean accept(File dir, String name) {
+                            return name.contains(BACKUP_FILENAME.replace(".json", "")) && name.endsWith(".json");
+                        }
+                    });
+                    
+                    if (possibleBackups != null && possibleBackups.length > 0) {
+                        Log.d("BackupRestore", "Found " + possibleBackups.length + " possible backup files");
+                        
+                        // Try each file until we find one that works
+                        for (File file : possibleBackups) {
+                            try {
+                                String content = readFileAsString(file);
+                                if (!content.isEmpty()) {
+                                    // Try to validate it's a proper backup by checking for key fields
+                                    try {
+                                        JSONObject testJson = new JSONObject(content);
+                                        if (testJson.has("journal_entries") || testJson.has("settings")) {
+                                            Log.d("BackupRestore", "Found valid backup in file: " + file.getPath());
+                                            
+                                            // Save this path for future use
+                                            prefs.edit().putString("backup_path", file.getAbsolutePath()).apply();
+                                            
+                                            return content;
+                                        }
+                                    } catch (JSONException je) {
+                                        Log.w("BackupRestore", "Found file is not valid JSON: " + file.getPath());
+                                        // Continue to next file
+                                    }
+                                }
+                            } catch (Exception e) {
+                                Log.e("BackupRestore", "Error reading possible backup file: " + file.getPath(), e);
+                                // Continue to next file
+                            }
+                        }
+                    }
+                }
             }
         }
         
         // If we get here, we couldn't find a backup file
+        Log.w("BackupRestore", "No backup file found. Last error: " + errorMessage);
         return null;
     }
     
+    // Helper method to read file contents as string
+    private String readFileAsString(File file) throws IOException {
+        StringBuilder stringBuilder = new StringBuilder();
+        try (FileInputStream fis = new FileInputStream(file);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(fis))) {
+            
+            // Try reading line by line first
+            String line;
+            while ((line = reader.readLine()) != null) {
+                stringBuilder.append(line);
+            }
+            
+            if (stringBuilder.length() == 0) {
+                // If that didn't work, try reading as binary
+                fis.getChannel().position(0); // Reset position to beginning
+                byte[] buffer = new byte[1024];
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                int bytesRead;
+                while ((bytesRead = fis.read(buffer)) != -1) {
+                    baos.write(buffer, 0, bytesRead);
+                }
+                return baos.toString("UTF-8");
+            }
+        }
+        
+        return stringBuilder.toString();
+    }
+
     private void restoreJournalEntries(JSONArray entriesArray) throws JSONException {
         SQLiteDatabase db = databaseHelper.getWritableDatabase();
         

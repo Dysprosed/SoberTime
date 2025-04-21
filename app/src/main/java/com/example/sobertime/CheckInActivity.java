@@ -1,7 +1,9 @@
 package com.example.sobertime;
 
+import android.Manifest;
 import android.content.Intent;
 import android.content.DialogInterface;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -14,15 +16,20 @@ import android.content.Context;
 import android.util.Log;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import com.example.sobertime.IntrusiveCheckInActivity;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.ArrayList;
 
 import com.example.sobertime.DatabaseHelper;
 
 public class CheckInActivity extends BaseActivity {
+
+    private static final int SMS_PERMISSION_REQUEST_CODE = 101;
 
     private TextView dateTextView;
     private TextView timeTextView;
@@ -32,6 +39,8 @@ public class CheckInActivity extends BaseActivity {
     private Button debugIntrusiveButton;
 
     private DatabaseHelper databaseHelper;
+    private boolean isCheckingIn = false;
+    private boolean pendingMaintainedSobriety = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +66,9 @@ public class CheckInActivity extends BaseActivity {
 
         // Set up button listeners
         setupListeners();
+        
+        // Check SMS permission
+        checkSmsPermission();
     }
 
     private void initializeViews() {
@@ -146,6 +158,34 @@ public class CheckInActivity extends BaseActivity {
                 .show();
     }
 
+    private void checkSmsPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.SEND_SMS},
+                    SMS_PERMISSION_REQUEST_CODE);
+        }
+    }
+    
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == SMS_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d("CheckInActivity", "SMS permission granted");
+                // If we were in the middle of checking in, continue the process
+                if (isCheckingIn) {
+                    notifyBuddyIfNeeded(pendingMaintainedSobriety);
+                    isCheckingIn = false;
+                }
+            } else {
+                Toast.makeText(this, 
+                        "SMS permission denied. Buddy notifications will not be sent.", 
+                        Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
     private void recordCheckIn(boolean maintainedSobriety) {
         SobrietyTracker sobrietyTracker = SobrietyTracker.getInstance(this);
         
@@ -167,8 +207,17 @@ public class CheckInActivity extends BaseActivity {
             Toast.makeText(this, "Counter reset. Every new beginning is progress.", Toast.LENGTH_LONG).show();
         }
         
-        // Notify accountability buddy if needed
-        notifyBuddyIfNeeded(maintainedSobriety);
+        // Notify accountability buddy if needed - check permissions first
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Save the state and request permission
+            isCheckingIn = true;
+            pendingMaintainedSobriety = maintainedSobriety;
+            checkSmsPermission();
+        } else {
+            // We have permission, proceed with notification
+            notifyBuddyIfNeeded(maintainedSobriety);
+        }
         
         // Schedule the next notification
         NotificationHelper.scheduleNotifications(this);
@@ -192,6 +241,8 @@ public class CheckInActivity extends BaseActivity {
                 null
         );
     
+        boolean hasBuddiesWithNotifications = false;
+    
         while (cursor.moveToNext()) {
             String buddyName = cursor.getString(cursor.getColumnIndex("name"));
             String buddyPhone = cursor.getString(cursor.getColumnIndex("phone"));
@@ -203,6 +254,8 @@ public class CheckInActivity extends BaseActivity {
                                 (!maintainedSobriety && notifyOnRelapse);
     
             if (shouldNotify && buddyPhone != null && !buddyPhone.isEmpty()) {
+                hasBuddiesWithNotifications = true;
+                
                 // Build message
                 String message;
                 if (maintainedSobriety) {
@@ -218,11 +271,18 @@ public class CheckInActivity extends BaseActivity {
                 // Send SMS
                 try {
                     SmsManager smsManager = SmsManager.getDefault();
-                    smsManager.sendTextMessage(buddyPhone, null, message, null, null);
+                    ArrayList<String> parts = smsManager.divideMessage(message);
+                    smsManager.sendMultipartTextMessage(buddyPhone, null, parts, null, null);
+                    Log.d("CheckInActivity", "Sent notification message to buddy: " + buddyName);
                 } catch (Exception e) {
                     Log.e("CheckInActivity", "Failed to send message to buddy: " + e.getMessage());
+                    Toast.makeText(this, "Failed to send message to " + buddyName + ": " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             }
+        }
+        
+        if (hasBuddiesWithNotifications) {
+            Toast.makeText(this, "Notifications sent to your accountability buddies", Toast.LENGTH_SHORT).show();
         }
         
         cursor.close();

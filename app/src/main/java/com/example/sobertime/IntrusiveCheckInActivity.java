@@ -1,9 +1,11 @@
 package com.example.sobertime;
 
+import android.Manifest;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.media.AudioAttributes;
@@ -27,14 +29,19 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.example.sobertime.SobrietyTracker;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
 public class IntrusiveCheckInActivity extends BaseActivity {
+    
+    private static final int SMS_PERMISSION_REQUEST_CODE = 101;
     
     private MediaPlayer mediaPlayer;
     private PowerManager.WakeLock wakeLock;
@@ -48,6 +55,9 @@ public class IntrusiveCheckInActivity extends BaseActivity {
     private DatabaseHelper databaseHelper;
     private static final int NOTIFICATION_ID = 3001;
     private static final String TAG = "IntrusiveCheckIn";
+    
+    private boolean isCheckingIn = false;
+    private boolean pendingMaintainedSobriety = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,6 +106,9 @@ public class IntrusiveCheckInActivity extends BaseActivity {
         
         // Set up buttons
         setupListeners();
+        
+        // Check SMS permission
+        checkSmsPermission();
     }
     
     private void cancelNotification() {
@@ -357,7 +370,17 @@ public class IntrusiveCheckInActivity extends BaseActivity {
             Toast.makeText(this, "Counter reset. Every new beginning is progress.", Toast.LENGTH_LONG).show();
         }
         
-        notifyBuddyIfNeeded(maintainedSobriety);
+        // Notify accountability buddy if needed - check permissions first
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Save the state and request permission
+            isCheckingIn = true;
+            pendingMaintainedSobriety = maintainedSobriety;
+            checkSmsPermission();
+        } else {
+            // We have permission, proceed with notification
+            notifyBuddyIfNeeded(maintainedSobriety);
+        }
     }
     
     private void resetSobrietyCounter() {
@@ -377,6 +400,8 @@ public class IntrusiveCheckInActivity extends BaseActivity {
                 null
         );
     
+        boolean hasBuddiesWithNotifications = false;
+    
         while (cursor.moveToNext()) {
             String buddyName = cursor.getString(cursor.getColumnIndex("name"));
             String buddyPhone = cursor.getString(cursor.getColumnIndex("phone"));
@@ -388,6 +413,8 @@ public class IntrusiveCheckInActivity extends BaseActivity {
                                 (!maintainedSobriety && notifyOnRelapse);
     
             if (shouldNotify && buddyPhone != null && !buddyPhone.isEmpty()) {
+                hasBuddiesWithNotifications = true;
+                
                 // Build message
                 String message;
                 if (maintainedSobriety) {
@@ -403,15 +430,49 @@ public class IntrusiveCheckInActivity extends BaseActivity {
                 // Send SMS
                 try {
                     SmsManager smsManager = SmsManager.getDefault();
-                    smsManager.sendTextMessage(buddyPhone, null, message, null, null);
-                    Log.d("IntrusiveCheckInActivity", "Sent notification message to buddy: " + buddyName);
+                    ArrayList<String> parts = smsManager.divideMessage(message);
+                    smsManager.sendMultipartTextMessage(buddyPhone, null, parts, null, null);
+                    Log.d(TAG, "Sent notification message to buddy: " + buddyName);
                 } catch (Exception e) {
-                    Log.e("IntrusiveCheckInActivity", "Failed to send message to buddy: " + e.getMessage());
+                    Log.e(TAG, "Failed to send message to buddy: " + e.getMessage());
+                    Toast.makeText(this, "Failed to send message to " + buddyName + ": " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             }
         }
         
+        if (hasBuddiesWithNotifications) {
+            Toast.makeText(this, "Notifications sent to your accountability buddies", Toast.LENGTH_SHORT).show();
+        }
+        
         cursor.close();
+    }
+    
+    private void checkSmsPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.SEND_SMS},
+                    SMS_PERMISSION_REQUEST_CODE);
+        }
+    }
+    
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == SMS_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "SMS permission granted");
+                // If we were in the middle of checking in, continue the process
+                if (isCheckingIn) {
+                    notifyBuddyIfNeeded(pendingMaintainedSobriety);
+                    isCheckingIn = false;
+                }
+            } else {
+                Toast.makeText(this, 
+                        "SMS permission denied. Buddy notifications will not be sent.", 
+                        Toast.LENGTH_LONG).show();
+            }
+        }
     }
     
     @Override

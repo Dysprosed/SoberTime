@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import com.example.sobertime.model.SobrietyTracker; 
 
 import org.json.JSONArray;
@@ -186,7 +187,7 @@ public class BackupRestoreActivity extends BaseActivity {
                     // Add settings
                     backupData.put("settings", getSettingsJson());
                     
-                    // Add sobriety start date from SobrietyTracker instead of preferences
+                    // Add sobriety start date from SobrietyTracker
                     long startDate = sobrietyTracker.getSobrietyStartDate();
                     backupData.put("sobriety_start_date", startDate);
                     
@@ -200,6 +201,34 @@ public class BackupRestoreActivity extends BaseActivity {
                     notificationSettings.put("custom_notification_times", notifPrefs.getString("custom_notification_times", ""));
                     
                     backupData.put("notification_settings", notificationSettings);
+                    
+                    // Add dark theme settings
+                    SharedPreferences themePrefs = getSharedPreferences("ThemePreferences", MODE_PRIVATE);
+                    JSONObject themeSettings = new JSONObject();
+                    themeSettings.put("dark_mode_enabled", themePrefs.getBoolean("dark_mode_enabled", false));
+                    themeSettings.put("follow_system_theme", themePrefs.getBoolean("follow_system_theme", true));
+                    backupData.put("theme_settings", themeSettings);
+                    
+                    // Add intrusive notification settings
+                    SharedPreferences intrusivePrefs = getSharedPreferences("IntrusiveNotificationPrefs", MODE_PRIVATE);
+                    JSONObject intrusiveSettings = new JSONObject();
+                    intrusiveSettings.put("intrusive_enabled", intrusivePrefs.getBoolean("intrusive_enabled", false));
+                    intrusiveSettings.put("intrusive_frequency", intrusivePrefs.getString("intrusive_frequency", "medium"));
+                    intrusiveSettings.put("intrusive_start_hour", intrusivePrefs.getInt("intrusive_start_hour", 9));
+                    intrusiveSettings.put("intrusive_end_hour", intrusivePrefs.getInt("intrusive_end_hour", 21));
+                    backupData.put("intrusive_notification_settings", intrusiveSettings);
+                    
+                    // Add accountability buddies
+                    JSONArray buddiesArray = getAccountabilityBuddiesJson();
+                    backupData.put("accountability_buddies", buddiesArray);
+                    
+                    // Add community support resources
+                    JSONArray resourcesArray = getSupportResourcesJson();
+                    backupData.put("support_resources", resourcesArray);
+                    
+                    // Add achievements
+                    JSONArray achievementsArray = getAchievementsJson();
+                    backupData.put("achievements", achievementsArray);
                     
                     // Write to file
                     writeBackupToFile(backupData.toString());
@@ -296,6 +325,37 @@ public class BackupRestoreActivity extends BaseActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             // For Android 10+ use MediaStore
             ContentResolver resolver = getContentResolver();
+
+            // First try to find existing file
+            Uri existingFileUri = null;
+            Uri queryUri = MediaStore.Downloads.EXTERNAL_CONTENT_URI;
+            String[] projection = {MediaStore.Downloads._ID};
+            String selection = MediaStore.Downloads.DISPLAY_NAME + "=? AND " + 
+                              MediaStore.Downloads.RELATIVE_PATH + " LIKE ?";
+            String[] selectionArgs = {
+                BACKUP_FILENAME,
+                "%" + BACKUP_DIRECTORY + "%"
+            };
+            
+            try (Cursor cursor = resolver.query(queryUri, projection, selection, selectionArgs, null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int idColumn = cursor.getColumnIndexOrThrow(MediaStore.Downloads._ID);
+                    long id = cursor.getLong(idColumn);
+                    existingFileUri = ContentUris.withAppendedId(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id);
+                }
+            }
+
+            // If existing file found, try to delete it
+            if (existingFileUri != null) {
+                try {
+                    resolver.delete(existingFileUri, null, null);
+                } catch (Exception e) {
+                    Log.e("BackupRestore", "Failed to delete existing backup file", e);
+                    // Continue anyway to try to overwrite
+                }
+            }
+
+            // Create new file
             ContentValues contentValues = new ContentValues();
             contentValues.put(MediaStore.Downloads.DISPLAY_NAME, BACKUP_FILENAME);
             contentValues.put(MediaStore.Downloads.MIME_TYPE, "application/json");
@@ -325,6 +385,13 @@ public class BackupRestoreActivity extends BaseActivity {
             }
             
             File backupFile = new File(backupDir, BACKUP_FILENAME);
+            
+            // Delete existing file if it exists
+            if (backupFile.exists()) {
+                if (!backupFile.delete()) {
+                    Log.w("BackupRestore", "Failed to delete existing backup file, will try to overwrite");
+                }
+            }
             
             try (FileOutputStream fos = new FileOutputStream(backupFile);
                  OutputStreamWriter writer = new OutputStreamWriter(fos)) {
@@ -392,6 +459,59 @@ public class BackupRestoreActivity extends BaseActivity {
                         editor.putString("custom_notification_times", notificationSettings.optString("custom_notification_times", ""));
                         
                         editor.apply();
+                    }
+                    
+                    // Restore dark theme settings
+                    if (backupJson.has("theme_settings")) {
+                        JSONObject themeSettings = backupJson.getJSONObject("theme_settings");
+                        SharedPreferences themePrefs = getSharedPreferences("ThemePreferences", MODE_PRIVATE);
+                        SharedPreferences.Editor editor = themePrefs.edit();
+                        
+                        editor.putBoolean("dark_mode_enabled", themeSettings.optBoolean("dark_mode_enabled", false));
+                        editor.putBoolean("follow_system_theme", themeSettings.optBoolean("follow_system_theme", true));
+                        
+                        editor.apply();
+                        
+                        // Apply theme changes
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && themeSettings.optBoolean("follow_system_theme", true)) {
+                            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                        } else if (themeSettings.optBoolean("dark_mode_enabled", false)) {
+                            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                        } else {
+                            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                        }
+                    }
+                    
+                    // Restore intrusive notification settings
+                    if (backupJson.has("intrusive_notification_settings")) {
+                        JSONObject intrusiveSettings = backupJson.getJSONObject("intrusive_notification_settings");
+                        SharedPreferences intrusivePrefs = getSharedPreferences("IntrusiveNotificationPrefs", MODE_PRIVATE);
+                        SharedPreferences.Editor editor = intrusivePrefs.edit();
+                        
+                        editor.putBoolean("intrusive_enabled", intrusiveSettings.optBoolean("intrusive_enabled", false));
+                        editor.putString("intrusive_frequency", intrusiveSettings.optString("intrusive_frequency", "medium"));
+                        editor.putInt("intrusive_start_hour", intrusiveSettings.optInt("intrusive_start_hour", 9));
+                        editor.putInt("intrusive_end_hour", intrusiveSettings.optInt("intrusive_end_hour", 21));
+                        
+                        editor.apply();
+                    }
+                    
+                    // Restore accountability buddies
+                    if (backupJson.has("accountability_buddies")) {
+                        JSONArray buddiesArray = backupJson.getJSONArray("accountability_buddies");
+                        restoreAccountabilityBuddies(buddiesArray);
+                    }
+                    
+                    // Restore community support resources
+                    if (backupJson.has("support_resources")) {
+                        JSONArray resourcesArray = backupJson.getJSONArray("support_resources");
+                        restoreSupportResources(resourcesArray);
+                    }
+                    
+                    // Restore achievements
+                    if (backupJson.has("achievements")) {
+                        JSONArray achievementsArray = backupJson.getJSONArray("achievements");
+                        restoreAchievements(achievementsArray);
                     }
                     
                     // Reschedule notifications based on restored settings
@@ -572,6 +692,164 @@ public class BackupRestoreActivity extends BaseActivity {
                 values.put("value", value);
                 
                 db.insert("settings", null, values);
+            }
+        }
+    }
+    
+    private JSONArray getAccountabilityBuddiesJson() throws JSONException {
+        JSONArray buddiesArray = new JSONArray();
+        
+        SQLiteDatabase db = databaseHelper.getReadableDatabase();
+        Cursor cursor = db.query("accountability_buddies", null, null, null, null, null, null);
+        
+        if (cursor.moveToFirst()) {
+            do {
+                JSONObject buddy = new JSONObject();
+                buddy.put("id", cursor.getLong(cursor.getColumnIndex("id")));
+                buddy.put("name", cursor.getString(cursor.getColumnIndex("name")));
+                buddy.put("phone", cursor.getString(cursor.getColumnIndex("phone")));
+                buddy.put("notify_on_checkin", cursor.getInt(cursor.getColumnIndex("notify_on_checkin")));
+                buddy.put("notify_on_milestone", cursor.getInt(cursor.getColumnIndex("notify_on_milestone")));
+                buddy.put("notify_on_relapse", cursor.getInt(cursor.getColumnIndex("notify_on_relapse")));
+                
+                buddiesArray.put(buddy);
+            } while (cursor.moveToNext());
+        }
+        
+        cursor.close();
+        return buddiesArray;
+    }
+    
+    private void restoreAccountabilityBuddies(JSONArray buddiesArray) throws JSONException {
+        SQLiteDatabase db = databaseHelper.getWritableDatabase();
+        
+        // Clear existing buddies
+        db.delete("accountability_buddies", null, null);
+        
+        // Insert backup buddies
+        for (int i = 0; i < buddiesArray.length(); i++) {
+            JSONObject buddyJson = buddiesArray.getJSONObject(i);
+            
+            ContentValues values = new ContentValues();
+            values.put("id", buddyJson.optLong("id"));
+            values.put("name", buddyJson.optString("name"));
+            values.put("phone", buddyJson.optString("phone"));
+            values.put("notify_on_checkin", buddyJson.optInt("notify_on_checkin"));
+            values.put("notify_on_milestone", buddyJson.optInt("notify_on_milestone"));
+            values.put("notify_on_relapse", buddyJson.optInt("notify_on_relapse"));
+            
+            db.insert("accountability_buddies", null, values);
+        }
+    }
+    
+    private JSONArray getSupportResourcesJson() throws JSONException {
+        JSONArray resourcesArray = new JSONArray();
+        
+        SQLiteDatabase db = databaseHelper.getReadableDatabase();
+        Cursor cursor = db.query("support_resources", null, null, null, null, null, null);
+        
+        if (cursor.moveToFirst()) {
+            do {
+                JSONObject resource = new JSONObject();
+                resource.put("id", cursor.getLong(cursor.getColumnIndex("id")));
+                resource.put("name", cursor.getString(cursor.getColumnIndex("name")));
+                resource.put("description", cursor.getString(cursor.getColumnIndex("description")));
+                resource.put("phone", cursor.getString(cursor.getColumnIndex("phone")));
+                resource.put("website", cursor.getString(cursor.getColumnIndex("website")));
+                resource.put("category", cursor.getString(cursor.getColumnIndex("category")));
+                resource.put("is_custom", cursor.getInt(cursor.getColumnIndex("is_custom")));
+                
+                resourcesArray.put(resource);
+            } while (cursor.moveToNext());
+        }
+        
+        cursor.close();
+        return resourcesArray;
+    }
+    
+    private void restoreSupportResources(JSONArray resourcesArray) throws JSONException {
+        SQLiteDatabase db = databaseHelper.getWritableDatabase();
+        
+        // Only delete custom resources, keep default ones
+        db.delete("support_resources", "is_custom = 1", null);
+        
+        // Insert backup custom resources
+        for (int i = 0; i < resourcesArray.length(); i++) {
+            JSONObject resourceJson = resourcesArray.getJSONObject(i);
+            
+            // Only restore custom resources
+            if (resourceJson.optInt("is_custom") == 1) {
+                ContentValues values = new ContentValues();
+                values.put("name", resourceJson.optString("name"));
+                values.put("description", resourceJson.optString("description"));
+                values.put("phone", resourceJson.optString("phone"));
+                values.put("website", resourceJson.optString("website"));
+                values.put("category", resourceJson.optString("category"));
+                values.put("is_custom", 1);
+                
+                db.insert("support_resources", null, values);
+            }
+        }
+    }
+    
+    private JSONArray getAchievementsJson() throws JSONException {
+        JSONArray achievementsArray = new JSONArray();
+        
+        SQLiteDatabase db = databaseHelper.getReadableDatabase();
+        Cursor cursor = db.query("achievements", null, null, null, null, null, null);
+        
+        if (cursor.moveToFirst()) {
+            do {
+                JSONObject achievement = new JSONObject();
+                achievement.put("id", cursor.getLong(cursor.getColumnIndex("id")));
+                achievement.put("name", cursor.getString(cursor.getColumnIndex("name")));
+                achievement.put("description", cursor.getString(cursor.getColumnIndex("description")));
+                achievement.put("unlock_date", cursor.getLong(cursor.getColumnIndex("unlock_date")));
+                achievement.put("achievement_type", cursor.getString(cursor.getColumnIndex("achievement_type")));
+                achievement.put("unlocked", cursor.getInt(cursor.getColumnIndex("unlocked")));
+                
+                achievementsArray.put(achievement);
+            } while (cursor.moveToNext());
+        }
+        
+        cursor.close();
+        return achievementsArray;
+    }
+    
+    private void restoreAchievements(JSONArray achievementsArray) throws JSONException {
+        SQLiteDatabase db = databaseHelper.getWritableDatabase();
+        
+        // We'll update existing achievements rather than deleting them all
+        // This preserves any new achievements added in app updates
+        
+        for (int i = 0; i < achievementsArray.length(); i++) {
+            JSONObject achievementJson = achievementsArray.getJSONObject(i);
+            String name = achievementJson.optString("name");
+            
+            // Check if achievement exists
+            Cursor cursor = db.query("achievements", 
+                                   new String[]{"id"}, 
+                                   "name = ?", 
+                                   new String[]{name}, 
+                                   null, null, null);
+                                   
+            boolean exists = cursor.moveToFirst();
+            cursor.close();
+            
+            ContentValues values = new ContentValues();
+            values.put("name", name);
+            values.put("description", achievementJson.optString("description"));
+            values.put("unlock_date", achievementJson.optLong("unlock_date"));
+            values.put("achievement_type", achievementJson.optString("achievement_type"));
+            values.put("unlocked", achievementJson.optInt("unlocked"));
+            
+            if (exists) {
+                // Update existing achievement
+                db.update("achievements", values, "name = ?", new String[]{name});
+            } else {
+                // Insert new achievement
+                values.put("id", achievementJson.optLong("id"));
+                db.insert("achievements", null, values);
             }
         }
     }

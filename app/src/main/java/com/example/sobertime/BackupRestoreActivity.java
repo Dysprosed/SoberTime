@@ -377,8 +377,8 @@ public class BackupRestoreActivity extends BaseActivity {
             // Try to create the file with REPLACE mode if available (Android 11+)
             Uri uri;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues, 
-                                      Bundle.createFromParcelable(ContentResolver.EXTRA_MEDIA_URI));
+                // Simply create the file - no need for special handling in Android 11+
+                uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues);
             } else {
                 uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues);
             }

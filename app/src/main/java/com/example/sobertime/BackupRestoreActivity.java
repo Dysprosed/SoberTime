@@ -34,6 +34,19 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+// Add these imports at the top
+import android.os.Build;
+import android.content.ContentValues;
+import android.content.ContentResolver;
+import android.provider.MediaStore;
+import android.net.Uri;
+
+// Add this import
+import android.Manifest;
+import android.content.pm.PackageManager;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 public class BackupRestoreActivity extends BaseActivity {
 
     private Button backupButton;
@@ -45,9 +58,13 @@ public class BackupRestoreActivity extends BaseActivity {
     private SharedPreferences preferences;
     private static final String PREFS_NAME = "SobrietyTrackerPrefs";
     private static final String LAST_BACKUP_KEY = "last_backup_time";
+    private static final String BACKUP_DIRECTORY = "SoberTime_Backups";
     private static final String BACKUP_FILENAME = "sobriety_tracker_backup.json";
     private SobrietyTracker sobrietyTracker;
     
+    // Add these constants
+    private static final int PERMISSION_REQUEST_CODE = 123;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -135,6 +152,19 @@ public class BackupRestoreActivity extends BaseActivity {
     }
     
     private void createBackup() {
+        // Check for permissions first if on older Android versions
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) 
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    PERMISSION_REQUEST_CODE
+                );
+                return;
+            }
+        }
+        
         // Show progress
         progressBar.setVisibility(View.VISIBLE);
         backupButton.setEnabled(false);
@@ -184,7 +214,18 @@ public class BackupRestoreActivity extends BaseActivity {
                             backupButton.setEnabled(true);
                             restoreButton.setEnabled(true);
                             updateLastBackupText();
-                            Toast.makeText(BackupRestoreActivity.this, "Backup created successfully", Toast.LENGTH_SHORT).show();
+                            
+                            String backupLocation;
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                backupLocation = "Downloads/SoberTime_Backups folder";
+                            } else {
+                                backupLocation = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + 
+                                                 "/SoberTime_Backups";
+                            }
+                            
+                            Toast.makeText(BackupRestoreActivity.this, 
+                                          "Backup created successfully in " + backupLocation, 
+                                          Toast.LENGTH_LONG).show();
                         }
                     });
                 } catch (final Exception e) {
@@ -249,16 +290,64 @@ public class BackupRestoreActivity extends BaseActivity {
     }
     
     private void writeBackupToFile(String data) throws IOException {
-        File backupFile = new File(getExternalFilesDir(null), BACKUP_FILENAME);
-        
-        FileOutputStream fos = new FileOutputStream(backupFile);
-        OutputStreamWriter writer = new OutputStreamWriter(fos);
-        writer.write(data);
-        writer.close();
-        fos.close();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // For Android 10+ use MediaStore
+            ContentResolver resolver = getContentResolver();
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(MediaStore.Downloads.DISPLAY_NAME, BACKUP_FILENAME);
+            contentValues.put(MediaStore.Downloads.MIME_TYPE, "application/json");
+            contentValues.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/" + BACKUP_DIRECTORY);
+            
+            Uri uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues);
+            if (uri != null) {
+                try (OutputStream outputStream = resolver.openOutputStream(uri)) {
+                    if (outputStream != null) {
+                        outputStream.write(data.getBytes());
+                        
+                        // Store the URI for future reference
+                        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+                        prefs.edit().putString("backup_uri", uri.toString()).apply();
+                    }
+                }
+            }
+        } else {
+            // For older versions, write to Downloads folder
+            File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+            File backupDir = new File(downloadsDir, BACKUP_DIRECTORY);
+            
+            if (!backupDir.exists()) {
+                if (!backupDir.mkdirs()) {
+                    throw new IOException("Failed to create backup directory");
+                }
+            }
+            
+            File backupFile = new File(backupDir, BACKUP_FILENAME);
+            
+            try (FileOutputStream fos = new FileOutputStream(backupFile);
+                 OutputStreamWriter writer = new OutputStreamWriter(fos)) {
+                writer.write(data);
+                
+                // Store the path for future reference
+                SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+                prefs.edit().putString("backup_path", backupFile.getAbsolutePath()).apply();
+            }
+        }
     }
     
     private void restoreBackup() {
+        // Check for permissions first if on older Android versions
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) 
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    PERMISSION_REQUEST_CODE + 1
+                );
+                return;
+            }
+        }
+        
         // Show progress
         progressBar.setVisibility(View.VISIBLE);
         backupButton.setEnabled(false);
@@ -334,24 +423,101 @@ public class BackupRestoreActivity extends BaseActivity {
     }
     
     private String readBackupFromFile() throws IOException {
-        File backupFile = new File(getExternalFilesDir(null), BACKUP_FILENAME);
-        
-        if (!backupFile.exists()) {
-            return null;
-        }
-        
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         StringBuilder stringBuilder = new StringBuilder();
-        FileInputStream fis = new FileInputStream(backupFile);
-        InputStreamReader inputStreamReader = new InputStreamReader(fis);
-        BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
         
-        String line;
-        while ((line = bufferedReader.readLine()) != null) {
-            stringBuilder.append(line);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // For Android 10+ try to use saved URI first
+            String savedUri = prefs.getString("backup_uri", "");
+            if (!savedUri.isEmpty()) {
+                try {
+                    Uri uri = Uri.parse(savedUri);
+                    try (InputStream is = getContentResolver().openInputStream(uri);
+                         BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            stringBuilder.append(line);
+                        }
+                        return stringBuilder.toString();
+                    } catch (Exception e) {
+                        // URI might be invalid, fall back to search
+                    }
+                } catch (Exception e) {
+                    // Continue to fallback
+                }
+            }
+            
+            // If saved URI didn't work, search in Downloads
+            try {
+                Uri queryUri = MediaStore.Downloads.EXTERNAL_CONTENT_URI;
+                String[] projection = {MediaStore.Downloads._ID};
+                String selection = MediaStore.Downloads.DISPLAY_NAME + "=? AND " + 
+                                  MediaStore.Downloads.RELATIVE_PATH + " LIKE ?";
+                String[] selectionArgs = {
+                    BACKUP_FILENAME,
+                    "%" + BACKUP_DIRECTORY + "%"
+                };
+                
+                try (Cursor cursor = getContentResolver().query(queryUri, projection, selection, selectionArgs, null)) {
+                    if (cursor != null && cursor.moveToFirst()) {
+                        int idColumn = cursor.getColumnIndexOrThrow(MediaStore.Downloads._ID);
+                        long id = cursor.getLong(idColumn);
+                        Uri contentUri = ContentUris.withAppendedId(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id);
+                        
+                        // Save this URI for future use
+                        prefs.edit().putString("backup_uri", contentUri.toString()).apply();
+                        
+                        try (InputStream is = getContentResolver().openInputStream(contentUri);
+                             BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                stringBuilder.append(line);
+                            }
+                            return stringBuilder.toString();
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            // For older versions, first try the saved path
+            String savedPath = prefs.getString("backup_path", "");
+            if (!savedPath.isEmpty()) {
+                File backupFile = new File(savedPath);
+                if (backupFile.exists()) {
+                    try (FileInputStream fis = new FileInputStream(backupFile);
+                         BufferedReader reader = new BufferedReader(new InputStreamReader(fis))) {
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            stringBuilder.append(line);
+                        }
+                        return stringBuilder.toString();
+                    }
+                }
+            }
+            
+            // If saved path didn't work, try the standard location
+            File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+            File backupDir = new File(downloadsDir, BACKUP_DIRECTORY);
+            File backupFile = new File(backupDir, BACKUP_FILENAME);
+            
+            if (!backupFile.exists()) {
+                return null;
+            }
+            
+            try (FileInputStream fis = new FileInputStream(backupFile);
+                 BufferedReader reader = new BufferedReader(new InputStreamReader(fis))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    stringBuilder.append(line);
+                }
+                return stringBuilder.toString();
+            }
         }
         
-        bufferedReader.close();
-        return stringBuilder.toString();
+        // If we get here, we couldn't find a backup file
+        return null;
     }
     
     private void restoreJournalEntries(JSONArray entriesArray) throws JSONException {
@@ -407,4 +573,26 @@ public class BackupRestoreActivity extends BaseActivity {
         }
     }
     
+    // Handle permission results
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted, proceed with backup
+                createBackup();
+            } else {
+                // Permission denied
+                Toast.makeText(this, "Storage permission is required to create a backup", Toast.LENGTH_LONG).show();
+            }
+        } else if (requestCode == PERMISSION_REQUEST_CODE + 1) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted, proceed with restore
+                restoreBackup();
+            } else {
+                // Permission denied
+                Toast.makeText(this, "Storage permission is required to restore a backup", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
 }

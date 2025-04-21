@@ -327,36 +327,41 @@ public class BackupRestoreActivity extends BaseActivity {
             // For Android 10+ use MediaStore
             ContentResolver resolver = getContentResolver();
 
-            // First try to find existing file
-            Uri existingFileUri = null;
-            Uri queryUri = MediaStore.Downloads.EXTERNAL_CONTENT_URI;
-            String[] projection = {MediaStore.Downloads._ID};
-            String selection = MediaStore.Downloads.DISPLAY_NAME + "=? AND " + 
-                              MediaStore.Downloads.RELATIVE_PATH + " LIKE ?";
-            String[] selectionArgs = {
-                BACKUP_FILENAME,
-                "%" + BACKUP_DIRECTORY + "%"
-            };
-            
-            try (Cursor cursor = resolver.query(queryUri, projection, selection, selectionArgs, null)) {
-                if (cursor != null && cursor.moveToFirst()) {
-                    int idColumn = cursor.getColumnIndexOrThrow(MediaStore.Downloads._ID);
-                    long id = cursor.getLong(idColumn);
-                    existingFileUri = ContentUris.withAppendedId(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id);
+            // First try to delete all existing backup files with our filename
+            // This more aggressive approach ensures we don't get numbered files
+            try {
+                Uri queryUri = MediaStore.Files.getContentUri("external");
+                String selection = MediaStore.MediaColumns.DISPLAY_NAME + " LIKE ? AND " + 
+                                  MediaStore.MediaColumns.RELATIVE_PATH + " LIKE ?";
+                String[] selectionArgs = {
+                    BACKUP_FILENAME + "%", // Use wildcard to catch "sobriety_tracker_backup.json" and any numbered variants like "sobriety_tracker_backup (1).json"
+                    "%" + BACKUP_DIRECTORY + "%"
+                };
+                
+                // First query to find all matching files
+                try (Cursor cursor = resolver.query(queryUri, new String[] {MediaStore.Files.FileColumns._ID}, selection, selectionArgs, null)) {
+                    if (cursor != null) {
+                        // Delete each matching file one by one
+                        while (cursor.moveToNext()) {
+                            int idColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID);
+                            long id = cursor.getLong(idColumn);
+                            Uri deleteUri = ContentUris.withAppendedId(queryUri, id);
+                            
+                            try {
+                                // Delete the file
+                                int rowsDeleted = resolver.delete(deleteUri, null, null);
+                                Log.d("BackupRestore", "Deleted previous backup file: " + rowsDeleted + " rows affected");
+                            } catch (Exception e) {
+                                Log.e("BackupRestore", "Failed to delete existing backup file", e);
+                            }
+                        }
+                    }
                 }
+            } catch (Exception e) {
+                Log.e("BackupRestore", "Error while trying to delete existing backup files", e);
             }
 
-            // If existing file found, try to delete it
-            if (existingFileUri != null) {
-                try {
-                    resolver.delete(existingFileUri, null, null);
-                } catch (Exception e) {
-                    Log.e("BackupRestore", "Failed to delete existing backup file", e);
-                    // Continue anyway to try to overwrite
-                }
-            }
-
-            // Create new file
+            // Now create a new file with our desired name
             ContentValues contentValues = new ContentValues();
             contentValues.put(MediaStore.Downloads.DISPLAY_NAME, BACKUP_FILENAME);
             contentValues.put(MediaStore.Downloads.MIME_TYPE, "application/json");
@@ -385,14 +390,22 @@ public class BackupRestoreActivity extends BaseActivity {
                 }
             }
             
-            File backupFile = new File(backupDir, BACKUP_FILENAME);
+            // Delete ALL existing backup files to prevent numbering
+            File[] existingFiles = backupDir.listFiles(new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    return name.startsWith(BACKUP_FILENAME.replace(".json", ""));
+                }
+            });
             
-            // Delete existing file if it exists
-            if (backupFile.exists()) {
-                if (!backupFile.delete()) {
-                    Log.w("BackupRestore", "Failed to delete existing backup file, will try to overwrite");
+            if (existingFiles != null) {
+                for (File file : existingFiles) {
+                    boolean deleted = file.delete();
+                    Log.d("BackupRestore", "Deleted previous backup file " + file.getName() + ": " + deleted);
                 }
             }
+            
+            File backupFile = new File(backupDir, BACKUP_FILENAME);
             
             try (FileOutputStream fos = new FileOutputStream(backupFile);
                  OutputStreamWriter writer = new OutputStreamWriter(fos)) {

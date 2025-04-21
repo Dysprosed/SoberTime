@@ -29,6 +29,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -392,7 +393,7 @@ public class BackupRestoreActivity extends BaseActivity {
             
             // Delete ALL existing backup files to prevent numbering
             File[] existingFiles = backupDir.listFiles(new FilenameFilter() {
-                @Override
+                // Removed @Override annotation here
                 public boolean accept(File dir, String name) {
                     return name.startsWith(BACKUP_FILENAME.replace(".json", ""));
                 }

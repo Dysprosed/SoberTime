@@ -13,12 +13,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     
     // Database Information
     private static final String DATABASE_NAME = "sobriety_tracker.db";
-    private static final int DATABASE_VERSION = 2; // Increased from 1 to 2
+    private static final int DATABASE_VERSION = 3; // Increased from 2 to 3 for support_resources
     
     // Table Names
     private static final String TABLE_JOURNAL = "journal";
     private static final String TABLE_SETTINGS = "settings";
     private static final String TABLE_ACCOUNTABILITY_BUDDY = "accountability_buddy";
+    private static final String TABLE_SUPPORT_RESOURCES = "support_resources";
     
     // Journal Table Columns
     private static final String JOURNAL_ID = "id";
@@ -43,6 +44,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String BUDDY_NOTIFY_ON_CHECKIN = "notify_on_checkin";
     private static final String BUDDY_NOTIFY_ON_RELAPSE = "notify_on_relapse";
     private static final String BUDDY_NOTIFY_ON_MILESTONE = "notify_on_milestone";
+    
+    // Support Resources Table Columns
+    private static final String RESOURCE_ID = "id";
+    private static final String RESOURCE_NAME = "name";
+    private static final String RESOURCE_DESCRIPTION = "description";
+    private static final String RESOURCE_PHONE = "phone";
+    private static final String RESOURCE_WEBSITE = "website";
+    private static final String RESOURCE_CATEGORY = "category";
+    private static final String RESOURCE_IS_CUSTOM = "is_custom";
     
     // Create Table Statements
     private static final String CREATE_TABLE_JOURNAL = 
@@ -71,6 +81,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     + BUDDY_NOTIFY_ON_CHECKIN + " INTEGER DEFAULT 0, "
                     + BUDDY_NOTIFY_ON_RELAPSE + " INTEGER DEFAULT 1, "
                     + BUDDY_NOTIFY_ON_MILESTONE + " INTEGER DEFAULT 1);";
+
+    private static final String CREATE_TABLE_SUPPORT_RESOURCES = 
+            "CREATE TABLE " + TABLE_SUPPORT_RESOURCES + "("
+                    + RESOURCE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + RESOURCE_NAME + " TEXT NOT NULL, "
+                    + RESOURCE_DESCRIPTION + " TEXT, "
+                    + RESOURCE_PHONE + " TEXT, "
+                    + RESOURCE_WEBSITE + " TEXT, "
+                    + RESOURCE_CATEGORY + " TEXT, "
+                    + RESOURCE_IS_CUSTOM + " INTEGER DEFAULT 0);";
     
     private static DatabaseHelper instance;
     
@@ -91,6 +111,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_TABLE_JOURNAL);
         db.execSQL(CREATE_TABLE_SETTINGS);
         db.execSQL(CREATE_TABLE_ACCOUNTABILITY_BUDDY);
+        db.execSQL(CREATE_TABLE_SUPPORT_RESOURCES);
         
         // Initialize default settings
         ContentValues defaultSettings = new ContentValues();
@@ -128,8 +149,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 db.execSQL(CREATE_TABLE_ACCOUNTABILITY_BUDDY);
             }
         }
+        if (oldVersion < 3) {
+            // Create the support_resources table for existing users
+            db.execSQL(CREATE_TABLE_SUPPORT_RESOURCES);
+        }
         // Add further upgrade paths for future versions
-        // if (oldVersion < 3) { ... }
+        // if (oldVersion < 4) { ... }
     }
     
     // Journal CRUD Operations

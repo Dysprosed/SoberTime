@@ -747,6 +747,20 @@ public class BackupRestoreActivity extends BaseActivity {
         JSONArray resourcesArray = new JSONArray();
         
         SQLiteDatabase db = databaseHelper.getReadableDatabase();
+        
+        // Check if the support_resources table exists
+        Cursor tableCheck = db.rawQuery(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='support_resources'", 
+                null);
+        boolean tableExists = tableCheck.getCount() > 0;
+        tableCheck.close();
+        
+        if (!tableExists) {
+            // If table doesn't exist yet, return empty array
+            return resourcesArray;
+        }
+        
+        // If table exists, proceed with query
         Cursor cursor = db.query("support_resources", null, null, null, null, null, null);
         
         if (cursor.moveToFirst()) {

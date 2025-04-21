@@ -701,12 +701,12 @@ public class BackupRestoreActivity extends BaseActivity {
         JSONArray buddiesArray = new JSONArray();
         
         SQLiteDatabase db = databaseHelper.getReadableDatabase();
-        Cursor cursor = db.query("accountability_buddies", null, null, null, null, null, null);
+        Cursor cursor = db.query("accountability_buddy", null, null, null, null, null, null);
         
         if (cursor.moveToFirst()) {
             do {
                 JSONObject buddy = new JSONObject();
-                buddy.put("id", cursor.getLong(cursor.getColumnIndex("id")));
+                buddy.put("id", cursor.getLong(cursor.getColumnIndex("_id")));
                 buddy.put("name", cursor.getString(cursor.getColumnIndex("name")));
                 buddy.put("phone", cursor.getString(cursor.getColumnIndex("phone")));
                 buddy.put("notify_on_checkin", cursor.getInt(cursor.getColumnIndex("notify_on_checkin")));
@@ -725,21 +725,21 @@ public class BackupRestoreActivity extends BaseActivity {
         SQLiteDatabase db = databaseHelper.getWritableDatabase();
         
         // Clear existing buddies
-        db.delete("accountability_buddies", null, null);
+        db.delete("accountability_buddy", null, null);
         
         // Insert backup buddies
         for (int i = 0; i < buddiesArray.length(); i++) {
             JSONObject buddyJson = buddiesArray.getJSONObject(i);
             
             ContentValues values = new ContentValues();
-            values.put("id", buddyJson.optLong("id"));
+            values.put("_id", buddyJson.optLong("id"));
             values.put("name", buddyJson.optString("name"));
             values.put("phone", buddyJson.optString("phone"));
             values.put("notify_on_checkin", buddyJson.optInt("notify_on_checkin"));
             values.put("notify_on_milestone", buddyJson.optInt("notify_on_milestone"));
             values.put("notify_on_relapse", buddyJson.optInt("notify_on_relapse"));
             
-            db.insert("accountability_buddies", null, values);
+            db.insert("accountability_buddy", null, values);
         }
     }
     

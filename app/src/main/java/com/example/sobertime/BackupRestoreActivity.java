@@ -328,11 +328,9 @@ public class BackupRestoreActivity extends BaseActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             // For Android 10+ use MediaStore
             ContentResolver resolver = getContentResolver();
+            Uri existingUri = null;
             
-            // First, try to delete any existing backup files
-            boolean deletedExistingFiles = false;
-            
-            // More specific query to find our exact backup file
+            // Check for existing backup file
             Uri queryUri = MediaStore.Downloads.EXTERNAL_CONTENT_URI;
             String[] projection = {MediaStore.Downloads._ID};
             
@@ -344,93 +342,49 @@ public class BackupRestoreActivity extends BaseActivity {
             };
             
             try (Cursor cursor = resolver.query(queryUri, projection, selection, selectionArgs, null)) {
-                if (cursor != null && cursor.getCount() > 0) {
-                    Log.d("BackupRestore", "Found " + cursor.getCount() + " existing backup files to clean up");
-                    while (cursor.moveToNext()) {
-                        int idColumn = cursor.getColumnIndexOrThrow(MediaStore.Downloads._ID);
-                        long id = cursor.getLong(idColumn);
-                        Uri fileUri = ContentUris.withAppendedId(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id);
-                        
-                        try {
-                            int rowsDeleted = resolver.delete(fileUri, null, null);
-                            if (rowsDeleted > 0) {
-                                deletedExistingFiles = true;
-                                Log.d("BackupRestore", "Successfully deleted existing backup file: " + fileUri);
-                            } else {
-                                Log.e("BackupRestore", "Failed to delete file: " + fileUri + " (returned 0 rows deleted)");
-                            }
-                        } catch (Exception e) {
-                            Log.e("BackupRestore", "Exception while deleting existing backup file: " + fileUri, e);
-                        }
-                    }
+                if (cursor != null && cursor.moveToFirst()) {
+                    int idColumn = cursor.getColumnIndexOrThrow(MediaStore.Downloads._ID);
+                    long id = cursor.getLong(idColumn);
+                    existingUri = ContentUris.withAppendedId(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id);
+                    Log.d("BackupRestore", "Found existing backup file: " + existingUri);
                 } else {
-                    Log.d("BackupRestore", "No existing backup files found with exact name match");
-                    
-                    // Try a broader search if exact match failed
-                    String broadSelection = MediaStore.Downloads.DISPLAY_NAME + " LIKE ? AND " + 
-                                          MediaStore.Downloads.RELATIVE_PATH + " LIKE ?";
-                    String[] broadSelectionArgs = {
-                        "%" + BACKUP_FILENAME.replace(".json", "") + "%", 
-                        "%" + BACKUP_DIRECTORY + "%"
-                    };
-                    
-                    try (Cursor broadCursor = resolver.query(queryUri, projection, broadSelection, broadSelectionArgs, null)) {
-                        if (broadCursor != null && broadCursor.getCount() > 0) {
-                            Log.d("BackupRestore", "Found " + broadCursor.getCount() + " similar backup files");
-                            while (broadCursor.moveToNext()) {
-                                int idColumn = broadCursor.getColumnIndexOrThrow(MediaStore.Downloads._ID);
-                                long id = broadCursor.getLong(idColumn);
-                                Uri fileUri = ContentUris.withAppendedId(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id);
-                                
-                                try {
-                                    int rowsDeleted = resolver.delete(fileUri, null, null);
-                                    if (rowsDeleted > 0) {
-                                        deletedExistingFiles = true;
-                                        Log.d("BackupRestore", "Deleted similar backup file: " + fileUri);
-                                    }
-                                } catch (Exception e) {
-                                    Log.e("BackupRestore", "Failed to delete similar backup file: " + fileUri, e);
-                                }
-                            }
-                        } else {
-                            Log.d("BackupRestore", "No similar backup files found");
-                        }
-                    }
+                    Log.d("BackupRestore", "No existing backup file found, will create new one");
                 }
             } catch (Exception e) {
-                Log.e("BackupRestore", "Error while searching for existing backup files", e);
+                Log.e("BackupRestore", "Error checking for existing backup files", e);
             }
             
-            // Now create a new file
-            ContentValues contentValues = new ContentValues();
-            contentValues.put(MediaStore.Downloads.DISPLAY_NAME, BACKUP_FILENAME);
-            contentValues.put(MediaStore.Downloads.MIME_TYPE, "application/json");
-            contentValues.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/" + BACKUP_DIRECTORY);
-            
-            // Create a new file - use different approaches based on Android version
-            Uri uri = null;
-            
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                // Android 11+ approach
-                contentValues.put(MediaStore.MediaColumns.IS_PENDING, 1);
-                uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues);
-                Log.d("BackupRestore", "Created new file with URI: " + uri);
+            // Update existing file or create new one
+            Uri uri;
+            if (existingUri != null) {
+                uri = existingUri;
+                Log.d("BackupRestore", "Updating existing backup file: " + uri);
             } else {
-                // Android 10 approach
+                // Create a new file
+                ContentValues contentValues = new ContentValues();
+                contentValues.put(MediaStore.Downloads.DISPLAY_NAME, BACKUP_FILENAME);
+                contentValues.put(MediaStore.Downloads.MIME_TYPE, "application/json");
+                contentValues.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/" + BACKUP_DIRECTORY);
+                
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    // Android 11+ approach
+                    contentValues.put(MediaStore.MediaColumns.IS_PENDING, 1);
+                }
+                
                 uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues);
-                Log.d("BackupRestore", "Created new file with URI: " + uri);
+                Log.d("BackupRestore", "Created new backup file with URI: " + uri);
             }
             
             if (uri != null) {
-                try (OutputStream outputStream = resolver.openOutputStream(uri)) {
+                try (OutputStream outputStream = resolver.openOutputStream(uri, "wt")) { // "wt" mode to truncate existing content
                     if (outputStream != null) {
                         byte[] bytes = data.getBytes();
                         outputStream.write(bytes);
                         outputStream.flush();
                         
-                        // For Android 11+, clear the pending flag
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                            contentValues.clear();
+                        // For Android 11+, clear the pending flag if it's a new file
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && existingUri == null) {
+                            ContentValues contentValues = new ContentValues();
                             contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0);
                             resolver.update(uri, contentValues, null, null);
                         }
@@ -447,11 +401,13 @@ public class BackupRestoreActivity extends BaseActivity {
                         throw new IOException("Could not open output stream for URI: " + uri);
                     }
                 } catch (IOException e) {
-                    // If writing failed, try to delete the failed file
-                    try {
-                        resolver.delete(uri, null, null);
-                    } catch (Exception deleteEx) {
-                        Log.e("BackupRestore", "Failed to delete partially written backup file", deleteEx);
+                    if (existingUri == null) {
+                        // Only try to delete if we created a new file that failed
+                        try {
+                            resolver.delete(uri, null, null);
+                        } catch (Exception deleteEx) {
+                            Log.e("BackupRestore", "Failed to delete partially written backup file", deleteEx);
+                        }
                     }
                     throw e; // Re-throw the original exception
                 }
@@ -472,46 +428,12 @@ public class BackupRestoreActivity extends BaseActivity {
             // File to write to
             final File backupFile = new File(backupDir, BACKUP_FILENAME);
             
-            // First try to delete the exact file if it exists
-            if (backupFile.exists()) {
-                boolean deleted = backupFile.delete();
-                Log.d("BackupRestore", "Deleting existing backup file: " + deleted);
-                
-                // If deletion failed, try to ensure the file isn't locked
-                if (!deleted) {
-                    // Wait a moment and try again
-                    try {
-                        Thread.sleep(100);
-                        deleted = backupFile.delete();
-                        Log.d("BackupRestore", "Second attempt to delete file: " + deleted);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                }
-            }
-            
-            // Also clean up any files with similar names
-            File[] existingFiles = backupDir.listFiles(new FilenameFilter() {
-                @Override
-                public boolean accept(File dir, String name) {
-                    return name.startsWith(BACKUP_FILENAME.replace(".json", "")) 
-                           && !name.equals(BACKUP_FILENAME); // Skip the exact file we're creating
-                }
-            });
-            
-            if (existingFiles != null) {
-                for (File file : existingFiles) {
-                    boolean deleted = file.delete();
-                    Log.d("BackupRestore", "Deleted similar backup file " + file.getName() + ": " + deleted);
-                }
-            }
-            
             // Create parent directories if they don't exist
             if (!backupFile.getParentFile().exists()) {
                 backupFile.getParentFile().mkdirs();
             }
             
-            // Write the file - use FileOutputStream with false to overwrite
+            // Write the file - use FileOutputStream with false to overwrite existing content
             FileOutputStream fos = null;
             try {
                 fos = new FileOutputStream(backupFile, false); // false = overwrite

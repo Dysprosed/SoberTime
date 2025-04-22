@@ -351,7 +351,7 @@ public class BackupRestoreActivity extends BaseActivity {
                 }
             }
             
-            // If saved URI wasn't valid, search for any existing backup files
+            // If saved URI wasn't valid, search for any existing backup files using MediaStore
             if (existingUri == null) {
                 Uri queryUri = MediaStore.Downloads.EXTERNAL_CONTENT_URI;
                 String[] projection = {
@@ -359,40 +359,66 @@ public class BackupRestoreActivity extends BaseActivity {
                     MediaStore.Downloads.DISPLAY_NAME
                 };
                 
-                // Look for any file that starts with our backup filename prefix
-                String filenamePrefix = BACKUP_FILENAME.replace(".json", "");
-                String selection = MediaStore.Downloads.DISPLAY_NAME + " LIKE ? AND " + 
-                                  MediaStore.Downloads.RELATIVE_PATH + " LIKE ?";
-                String[] selectionArgs = {
-                    filenamePrefix + "%",
-                    "%" + BACKUP_DIRECTORY + "%"
-                };
-                
-                try (Cursor cursor = resolver.query(queryUri, projection, selection, selectionArgs, null)) {
-                    if (cursor != null && cursor.getCount() > 0) {
-                        Log.d("BackupRestore", "Found " + cursor.getCount() + " existing backup files");
-                        
-                        // Delete all existing backup files to prevent accumulation
-                        while (cursor.moveToNext()) {
+                try {
+                    // First try to find exact file name match
+                    String selection = MediaStore.Downloads.DISPLAY_NAME + "=? AND " + 
+                                    MediaStore.Downloads.RELATIVE_PATH + " LIKE ?";
+                    String[] selectionArgs = {
+                        BACKUP_FILENAME,
+                        "%" + BACKUP_DIRECTORY + "%"
+                    };
+                    
+                    try (Cursor cursor = resolver.query(queryUri, projection, selection, selectionArgs, null)) {
+                        if (cursor != null && cursor.moveToFirst()) {
                             int idColumn = cursor.getColumnIndexOrThrow(MediaStore.Downloads._ID);
                             long id = cursor.getLong(idColumn);
-                            Uri fileUri = ContentUris.withAppendedId(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id);
-                            
-                            try {
-                                int rowsDeleted = resolver.delete(fileUri, null, null);
-                                Log.d("BackupRestore", "Deleted existing backup file: " + fileUri + ", result: " + rowsDeleted);
-                            } catch (Exception e) {
-                                Log.e("BackupRestore", "Failed to delete existing backup file: " + fileUri, e);
+                            existingUri = ContentUris.withAppendedId(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id);
+                            Log.d("BackupRestore", "Found existing backup with exact name: " + existingUri);
+                        }
+                    }
+                    
+                    // If exact match not found, try broader search
+                    if (existingUri == null) {
+                        String broadSelection = MediaStore.Downloads.DISPLAY_NAME + " LIKE ? AND " + 
+                                           MediaStore.Downloads.RELATIVE_PATH + " LIKE ?";
+                        String[] broadSelectionArgs = {
+                            "%" + BACKUP_FILENAME.replace(".json", "") + "%",
+                            "%" + BACKUP_DIRECTORY + "%"
+                        };
+                        
+                        try (Cursor cursor = resolver.query(queryUri, projection, broadSelection, broadSelectionArgs, null)) {
+                            if (cursor != null && cursor.getCount() > 0) {
+                                Log.d("BackupRestore", "Found " + cursor.getCount() + " similar backup files");
+                                
+                                // Use the first valid one found
+                                while (cursor.moveToNext()) {
+                                    int idColumn = cursor.getColumnIndexOrThrow(MediaStore.Downloads._ID);
+                                    long id = cursor.getLong(idColumn);
+                                    Uri fileUri = ContentUris.withAppendedId(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id);
+                                    
+                                    try {
+                                        String content = readUriContent(fileUri);
+                                        if (isValidBackupContent(content)) {
+                                            existingUri = fileUri;
+                                            Log.d("BackupRestore", "Found valid backup at: " + existingUri);
+                                            break;
+                                        }
+                                    } catch (Exception e) {
+                                        Log.e("BackupRestore", "Error checking backup file: " + fileUri, e);
+                                    }
+                                }
+                            } else {
+                                Log.d("BackupRestore", "No existing backup files found in MediaStore");
                             }
                         }
-                    } else {
-                        Log.d("BackupRestore", "No existing backup files found");
                     }
                 } catch (Exception e) {
-                    Log.e("BackupRestore", "Error checking for existing backup files", e);
+                    Log.e("BackupRestore", "Error searching for existing backup files", e);
                 }
-            } else {
-                // If we found an existing URI, delete it to ensure we create a fresh file
+            }
+            
+            // If we found an existing URI, delete it to ensure we create a fresh file
+            if (existingUri != null) {
                 try {
                     int rowsDeleted = resolver.delete(existingUri, null, null);
                     Log.d("BackupRestore", "Deleted existing backup file with URI: " + existingUri + ", result: " + rowsDeleted);
@@ -499,6 +525,41 @@ public class BackupRestoreActivity extends BaseActivity {
                      
                 Log.i("BackupRestore", "Successfully wrote backup to: " + backupFile.getAbsolutePath());
             }
+        }
+    }
+    
+    /**
+     * Helper method to read content from a URI
+     */
+    private String readUriContent(Uri uri) throws IOException {
+        try (InputStream is = getContentResolver().openInputStream(uri)) {
+            if (is != null) {
+                ByteArrayOutputStream result = new ByteArrayOutputStream();
+                byte[] buffer = new byte[1024];
+                int length;
+                while ((length = is.read(buffer)) != -1) {
+                    result.write(buffer, 0, length);
+                }
+                return result.toString("UTF-8");
+            }
+        }
+        return "";
+    }
+    
+    /**
+     * Check if content is a valid backup by verifying it contains expected JSON fields
+     */
+    private boolean isValidBackupContent(String content) {
+        if (content == null || content.isEmpty()) {
+            return false;
+        }
+        
+        try {
+            JSONObject json = new JSONObject(content);
+            // Check for at least one of these key fields
+            return json.has("journal_entries") || json.has("settings") || json.has("sobriety_start_date");
+        } catch (JSONException e) {
+            return false;
         }
     }
     

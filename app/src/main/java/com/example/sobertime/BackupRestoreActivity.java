@@ -330,28 +330,51 @@ public class BackupRestoreActivity extends BaseActivity {
             ContentResolver resolver = getContentResolver();
             Uri existingUri = null;
             
-            // Check for existing backup file
-            Uri queryUri = MediaStore.Downloads.EXTERNAL_CONTENT_URI;
-            String[] projection = {MediaStore.Downloads._ID};
+            // First check if we have a saved URI for an existing backup file
+            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+            String savedUri = prefs.getString("backup_uri", "");
             
-            String selection = MediaStore.Downloads.DISPLAY_NAME + " = ? AND " + 
-                              MediaStore.Downloads.RELATIVE_PATH + " LIKE ?";
-            String[] selectionArgs = {
-                BACKUP_FILENAME,
-                "%" + BACKUP_DIRECTORY + "%"
-            };
-            
-            try (Cursor cursor = resolver.query(queryUri, projection, selection, selectionArgs, null)) {
-                if (cursor != null && cursor.moveToFirst()) {
-                    int idColumn = cursor.getColumnIndexOrThrow(MediaStore.Downloads._ID);
-                    long id = cursor.getLong(idColumn);
-                    existingUri = ContentUris.withAppendedId(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id);
-                    Log.d("BackupRestore", "Found existing backup file: " + existingUri);
-                } else {
-                    Log.d("BackupRestore", "No existing backup file found, will create new one");
+            if (!savedUri.isEmpty()) {
+                try {
+                    Uri uri = Uri.parse(savedUri);
+                    
+                    // Test if this URI is still valid
+                    try {
+                        resolver.openFileDescriptor(uri, "r").close();
+                        existingUri = uri;
+                        Log.d("BackupRestore", "Using saved URI for existing backup: " + existingUri);
+                    } catch (Exception e) {
+                        Log.w("BackupRestore", "Saved URI is no longer valid, will search for backup file", e);
+                    }
+                } catch (Exception e) {
+                    Log.w("BackupRestore", "Invalid saved URI: " + savedUri);
                 }
-            } catch (Exception e) {
-                Log.e("BackupRestore", "Error checking for existing backup files", e);
+            }
+            
+            // If saved URI wasn't valid, search for the file
+            if (existingUri == null) {
+                Uri queryUri = MediaStore.Downloads.EXTERNAL_CONTENT_URI;
+                String[] projection = {MediaStore.Downloads._ID};
+                
+                String selection = MediaStore.Downloads.DISPLAY_NAME + " = ? AND " + 
+                                  MediaStore.Downloads.RELATIVE_PATH + " LIKE ?";
+                String[] selectionArgs = {
+                    BACKUP_FILENAME,
+                    "%" + BACKUP_DIRECTORY + "%"
+                };
+                
+                try (Cursor cursor = resolver.query(queryUri, projection, selection, selectionArgs, null)) {
+                    if (cursor != null && cursor.moveToFirst()) {
+                        int idColumn = cursor.getColumnIndexOrThrow(MediaStore.Downloads._ID);
+                        long id = cursor.getLong(idColumn);
+                        existingUri = ContentUris.withAppendedId(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id);
+                        Log.d("BackupRestore", "Found existing backup file: " + existingUri);
+                    } else {
+                        Log.d("BackupRestore", "No existing backup file found, will create new one");
+                    }
+                } catch (Exception e) {
+                    Log.e("BackupRestore", "Error checking for existing backup files", e);
+                }
             }
             
             // Update existing file or create new one
@@ -390,7 +413,6 @@ public class BackupRestoreActivity extends BaseActivity {
                         }
                         
                         // Store the URI for future reference
-                        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
                         prefs.edit()
                              .putString("backup_uri", uri.toString())
                              .putLong("backup_timestamp", System.currentTimeMillis())
@@ -433,10 +455,15 @@ public class BackupRestoreActivity extends BaseActivity {
                 backupFile.getParentFile().mkdirs();
             }
             
+            // Log whether we're updating existing file or creating new one
+            if (backupFile.exists()) {
+                Log.d("BackupRestore", "Updating existing backup file at: " + backupFile.getAbsolutePath());
+            } else {
+                Log.d("BackupRestore", "Creating new backup file at: " + backupFile.getAbsolutePath());
+            }
+            
             // Write the file - use FileOutputStream with false to overwrite existing content
-            FileOutputStream fos = null;
-            try {
-                fos = new FileOutputStream(backupFile, false); // false = overwrite
+            try (FileOutputStream fos = new FileOutputStream(backupFile, false)) {
                 fos.write(data.getBytes());
                 fos.flush();
                 
@@ -448,14 +475,6 @@ public class BackupRestoreActivity extends BaseActivity {
                      .apply();
                      
                 Log.i("BackupRestore", "Successfully wrote backup to: " + backupFile.getAbsolutePath());
-            } finally {
-                if (fos != null) {
-                    try {
-                        fos.close();
-                    } catch (IOException e) {
-                        Log.e("BackupRestore", "Error closing output stream", e);
-                    }
-                }
             }
         }
     }

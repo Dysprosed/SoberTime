@@ -355,11 +355,17 @@ public class BackupRestoreActivity extends BaseActivity {
                     
                     backupData.put("notification_settings", notificationSettings);
                     
-                    // Add dark theme settings
+                    // Add dark theme settings from both possible locations
                     SharedPreferences themePrefs = getSharedPreferences("ThemePreferences", MODE_PRIVATE);
                     JSONObject themeSettings = new JSONObject();
                     themeSettings.put("dark_mode_enabled", themePrefs.getBoolean("dark_mode_enabled", false));
                     themeSettings.put("follow_system_theme", themePrefs.getBoolean("follow_system_theme", true));
+                    
+                    // Check alternate theme location
+                    SharedPreferences mainPrefs = getSharedPreferences("SobrietyTrackerPrefs", MODE_PRIVATE);
+                    boolean nightModeEnabled = mainPrefs.getBoolean("night_mode_enabled", false);
+                    themeSettings.put("night_mode_enabled", nightModeEnabled);
+                    
                     backupData.put("theme_settings", themeSettings);
                     
                     // Add intrusive notification settings
@@ -378,6 +384,10 @@ public class BackupRestoreActivity extends BaseActivity {
                     // Add community support resources
                     JSONArray resourcesArray = getSupportResourcesJson();
                     backupData.put("support_resources", resourcesArray);
+                    
+                    // Add emergency contacts
+                    JSONObject emergencyContacts = getEmergencyContactsJson();
+                    backupData.put("emergency_contacts", emergencyContacts);
                     
                     // Add achievements
                     JSONArray achievementsArray = getAchievementsJson();
@@ -468,21 +478,31 @@ public class BackupRestoreActivity extends BaseActivity {
                         editor.apply();
                     }
                     
-                    // Restore dark theme settings
+                    // Restore dark theme settings from both possible locations
                     final boolean followSystemTheme;
                     final boolean darkModeEnabled;
+                    boolean nightModeEnabled;
                     
                     if (backupJson.has("theme_settings")) {
                         JSONObject themeSettings = backupJson.getJSONObject("theme_settings");
+                        
+                        // Restore to ThemePreferences
                         SharedPreferences themePrefs = getSharedPreferences("ThemePreferences", MODE_PRIVATE);
-                        SharedPreferences.Editor editor = themePrefs.edit();
+                        SharedPreferences.Editor themeEditor = themePrefs.edit();
                         
                         darkModeEnabled = themeSettings.optBoolean("dark_mode_enabled", false);
                         followSystemTheme = themeSettings.optBoolean("follow_system_theme", true);
+                        nightModeEnabled = themeSettings.optBoolean("night_mode_enabled", false);
                         
-                        editor.putBoolean("dark_mode_enabled", darkModeEnabled);
-                        editor.putBoolean("follow_system_theme", followSystemTheme);
-                        editor.apply();
+                        themeEditor.putBoolean("dark_mode_enabled", darkModeEnabled);
+                        themeEditor.putBoolean("follow_system_theme", followSystemTheme);
+                        themeEditor.apply();
+                        
+                        // Restore to main preferences which may be used by some activities
+                        SharedPreferences mainPrefs = getSharedPreferences("SobrietyTrackerPrefs", MODE_PRIVATE);
+                        SharedPreferences.Editor mainEditor = mainPrefs.edit();
+                        mainEditor.putBoolean("night_mode_enabled", nightModeEnabled);
+                        mainEditor.apply();
                         
                         // Apply theme changes on the UI thread
                         runOnUiThread(new Runnable() {
@@ -514,6 +534,22 @@ public class BackupRestoreActivity extends BaseActivity {
                         editor.apply();
                     }
                     
+                    // Restore emergency contacts
+                    if (backupJson.has("emergency_contacts")) {
+                        JSONObject emergencyContacts = backupJson.getJSONObject("emergency_contacts");
+                        SharedPreferences emergencyPrefs = getSharedPreferences("EmergencyContactPrefs", MODE_PRIVATE);
+                        SharedPreferences.Editor editor = emergencyPrefs.edit();
+                        
+                        editor.putString("sponsor_name", emergencyContacts.optString("sponsor_name", ""));
+                        editor.putString("sponsor_phone", emergencyContacts.optString("sponsor_phone", ""));
+                        editor.putString("therapist_name", emergencyContacts.optString("therapist_name", ""));
+                        editor.putString("therapist_phone", emergencyContacts.optString("therapist_phone", ""));
+                        editor.putString("emergency_contact_name", emergencyContacts.optString("emergency_contact_name", ""));
+                        editor.putString("emergency_contact_phone", emergencyContacts.optString("emergency_contact_phone", ""));
+                        
+                        editor.apply();
+                    }
+                    
                     // Restore accountability buddies
                     if (backupJson.has("accountability_buddies")) {
                         JSONArray buddiesArray = backupJson.getJSONArray("accountability_buddies");
@@ -524,6 +560,9 @@ public class BackupRestoreActivity extends BaseActivity {
                     if (backupJson.has("support_resources")) {
                         JSONArray resourcesArray = backupJson.getJSONArray("support_resources");
                         restoreSupportResources(resourcesArray);
+                        
+                        // Also restore any custom resources to the SharedPreferences
+                        restoreCustomSupportResources(resourcesArray);
                     }
                     
                     // Restore achievements
@@ -1331,6 +1370,62 @@ public class BackupRestoreActivity extends BaseActivity {
             } else {
                 // Permission denied
                 Toast.makeText(this, "Storage permission is required to restore a backup", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    private JSONObject getEmergencyContactsJson() throws JSONException {
+        JSONObject emergencyContacts = new JSONObject();
+        
+        // Get emergency contacts from their SharedPreferences file
+        SharedPreferences emergencyPrefs = getSharedPreferences("EmergencyContactPrefs", MODE_PRIVATE);
+        
+        emergencyContacts.put("sponsor_name", emergencyPrefs.getString("sponsor_name", ""));
+        emergencyContacts.put("sponsor_phone", emergencyPrefs.getString("sponsor_phone", ""));
+        emergencyContacts.put("therapist_name", emergencyPrefs.getString("therapist_name", ""));
+        emergencyContacts.put("therapist_phone", emergencyPrefs.getString("therapist_phone", ""));
+        emergencyContacts.put("emergency_contact_name", emergencyPrefs.getString("emergency_contact_name", ""));
+        emergencyContacts.put("emergency_contact_phone", emergencyPrefs.getString("emergency_contact_phone", ""));
+        
+        return emergencyContacts;
+    }
+
+    /**
+     * Restores the custom support resources to the SharedPreferences file
+     * used by the CommunitySupportActivity
+     */
+    private void restoreCustomSupportResources(JSONArray resourcesArray) throws JSONException {
+        // Filter resources to just get the custom ones
+        List<SupportResource> customResources = new ArrayList<>();
+        
+        for (int i = 0; i < resourcesArray.length(); i++) {
+            JSONObject resourceJson = resourcesArray.getJSONObject(i);
+            if (resourceJson.optInt("is_custom") == 1) {
+                String name = resourceJson.optString("name", "");
+                String description = resourceJson.optString("description", "");
+                String website = resourceJson.optString("website", "");
+                
+                // Create SupportResource object and add to list
+                SupportResource resource = new SupportResource(name, description, website, true);
+                customResources.add(resource);
+            }
+        }
+        
+        // If we have custom resources, save them to SharedPreferences
+        if (!customResources.isEmpty()) {
+            try {
+                // Convert to JSON string using the SupportResource.toJson method
+                String json = SupportResource.toJson(customResources);
+                
+                // Save to the CommunitySupportActivity preferences file
+                SharedPreferences prefs = getSharedPreferences("CommunitySupportPrefs", MODE_PRIVATE);
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putString("custom_resources", json);
+                editor.apply();
+                
+                Log.d("BackupRestore", "Restored " + customResources.size() + " custom support resources");
+            } catch (Exception e) {
+                Log.e("BackupRestore", "Error saving custom resources to SharedPreferences", e);
             }
         }
     }

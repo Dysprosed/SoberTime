@@ -469,24 +469,35 @@ public class BackupRestoreActivity extends BaseActivity {
                     }
                     
                     // Restore dark theme settings
+                    final boolean followSystemTheme;
+                    final boolean darkModeEnabled;
+                    
                     if (backupJson.has("theme_settings")) {
                         JSONObject themeSettings = backupJson.getJSONObject("theme_settings");
                         SharedPreferences themePrefs = getSharedPreferences("ThemePreferences", MODE_PRIVATE);
                         SharedPreferences.Editor editor = themePrefs.edit();
                         
-                        editor.putBoolean("dark_mode_enabled", themeSettings.optBoolean("dark_mode_enabled", false));
-                        editor.putBoolean("follow_system_theme", themeSettings.optBoolean("follow_system_theme", true));
+                        darkModeEnabled = themeSettings.optBoolean("dark_mode_enabled", false);
+                        followSystemTheme = themeSettings.optBoolean("follow_system_theme", true);
                         
+                        editor.putBoolean("dark_mode_enabled", darkModeEnabled);
+                        editor.putBoolean("follow_system_theme", followSystemTheme);
                         editor.apply();
                         
-                        // Apply theme changes
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && themeSettings.optBoolean("follow_system_theme", true)) {
-                            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
-                        } else if (themeSettings.optBoolean("dark_mode_enabled", false)) {
-                            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-                        } else {
-                            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-                        }
+                        // Apply theme changes on the UI thread
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                // Apply theme changes
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && followSystemTheme) {
+                                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                                } else if (darkModeEnabled) {
+                                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                                } else {
+                                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                                }
+                            }
+                        });
                     }
                     
                     // Restore intrusive notification settings
@@ -521,8 +532,13 @@ public class BackupRestoreActivity extends BaseActivity {
                         restoreAchievements(achievementsArray);
                     }
                     
-                    // Reschedule notifications based on restored settings
-                    NotificationHelper.scheduleNotifications(BackupRestoreActivity.this);
+                    // Reschedule notifications based on restored settings - do this on UI thread
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            NotificationHelper.scheduleNotifications(BackupRestoreActivity.this);
+                        }
+                    });
                     
                     // Update UI on main thread
                     runOnUiThread(new Runnable() {

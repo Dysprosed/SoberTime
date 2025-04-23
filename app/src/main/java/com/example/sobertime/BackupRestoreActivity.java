@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.content.UriPermission;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -38,17 +39,25 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
-// Add these imports at the top
+// Add these imports for Storage Access Framework
+import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.documentfile.provider.DocumentFile;
+
+// Keep existing Android version imports
 import android.os.Build;
 import android.content.ContentValues;
 import android.content.ContentResolver;
 import android.provider.MediaStore;
-import android.net.Uri;
 import android.content.ContentUris;
 
-// Add this import
+// Keep existing permission imports
 import android.Manifest;
 import android.content.pm.PackageManager;
 import androidx.core.app.ActivityCompat;
@@ -71,6 +80,11 @@ public class BackupRestoreActivity extends BaseActivity {
     
     // Add these constants
     private static final int PERMISSION_REQUEST_CODE = 123;
+    
+    // Storage Access Framework constants
+    private static final String SAF_TREE_URI_KEY = "saf_tree_uri";
+    private ActivityResultLauncher<Intent> folderPickerLauncher;
+    private boolean isBackupOperation; // Flag to track if we're doing backup or restore
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,6 +108,43 @@ public class BackupRestoreActivity extends BaseActivity {
         restoreButton = findViewById(R.id.restoreButton);
         lastBackupText = findViewById(R.id.lastBackupText);
         progressBar = findViewById(R.id.progressBar);
+        
+        // Set up folder picker launcher
+        folderPickerLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(), 
+            result -> {
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    if (result.getData() != null) {
+                        Uri treeUri = result.getData().getData();
+                        if (treeUri != null) {
+                            // Take a persistent permission to keep access across app restarts
+                            getContentResolver().takePersistableUriPermission(
+                                treeUri,
+                                Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                            );
+                            
+                            // Save the URI
+                            SharedPreferences.Editor editor = preferences.edit();
+                            editor.putString(SAF_TREE_URI_KEY, treeUri.toString());
+                            editor.apply();
+                            
+                            Log.i("BackupRestore", "Folder permission granted and saved: " + treeUri);
+                            
+                            // Continue with operation
+                            if (isBackupOperation) {
+                                performBackup();
+                            } else {
+                                performRestore();
+                            }
+                        }
+                    }
+                } else {
+                    Toast.makeText(BackupRestoreActivity.this, "Folder access required for this operation", Toast.LENGTH_LONG).show();
+                    progressBar.setVisibility(View.GONE);
+                    backupButton.setEnabled(true);
+                    restoreButton.setEnabled(true);
+                }
+            });
         
         // Display last backup time
         updateLastBackupText();
@@ -129,7 +180,23 @@ public class BackupRestoreActivity extends BaseActivity {
     private void showBackupConfirmationDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Create Backup");
-        builder.setMessage("This will create a backup of all your data. Are you sure you want to continue?");
+        
+        String message;
+        if (hasExistingSafPermission()) {
+            String savedUriString = preferences.getString(SAF_TREE_URI_KEY, "");
+            Uri savedUri = Uri.parse(savedUriString);
+            DocumentFile folder = DocumentFile.fromTreeUri(this, savedUri);
+            String folderName = folder != null ? folder.getName() : "selected folder";
+            
+            message = "This will create a backup in the folder \"" + folderName + "\". " +
+                      "If a backup already exists, it will be overwritten.";
+        } else {
+            message = "This will create a backup of all your data. " +
+                      "You'll need to select a folder where the backup will be stored. " +
+                      "This folder will be remembered for future backups.";
+        }
+        
+        builder.setMessage(message);
         
         builder.setPositiveButton("Backup", new DialogInterface.OnClickListener() {
             @Override
@@ -145,7 +212,29 @@ public class BackupRestoreActivity extends BaseActivity {
     private void showRestoreConfirmationDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Restore Data");
-        builder.setMessage("This will replace all your current data with the data from your backup. Are you sure you want to continue?");
+        
+        String message;
+        if (hasExistingSafPermission()) {
+            String savedUriString = preferences.getString(SAF_TREE_URI_KEY, "");
+            Uri savedUri = Uri.parse(savedUriString);
+            DocumentFile folder = DocumentFile.fromTreeUri(this, savedUri);
+            DocumentFile backupFile = folder != null ? folder.findFile(BACKUP_FILENAME) : null;
+            
+            if (backupFile != null && backupFile.exists()) {
+                String folderName = folder.getName();
+                message = "This will restore your data from the backup file in \"" + folderName + "\". " +
+                          "All your current data will be replaced. Are you sure you want to continue?";
+            } else {
+                message = "No backup file was found in the previously selected folder. " +
+                          "You'll need to select a folder containing a valid backup file.";
+            }
+        } else {
+            message = "This will restore your data from a backup file. " +
+                      "You'll need to select a folder containing your backup file. " +
+                      "All your current data will be replaced. Are you sure you want to continue?";
+        }
+        
+        builder.setMessage(message);
         
         builder.setPositiveButton("Restore", new DialogInterface.OnClickListener() {
             @Override
@@ -158,25 +247,86 @@ public class BackupRestoreActivity extends BaseActivity {
         builder.show();
     }
     
-    private void createBackup() {
-        // Check for permissions first if on older Android versions
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) 
-                    != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(
-                    this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    PERMISSION_REQUEST_CODE
-                );
-                return;
+    /**
+     * Check if we already have a backup folder permission saved
+     */
+    private boolean hasExistingSafPermission() {
+        String savedUriString = preferences.getString(SAF_TREE_URI_KEY, "");
+        if (savedUriString.isEmpty()) {
+            return false;
+        }
+        
+        Uri treeUri = Uri.parse(savedUriString);
+        
+        // Verify we still have the permission
+        int flags = Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
+        List<UriPermission> permissions = getContentResolver().getPersistedUriPermissions();
+        for (UriPermission permission : permissions) {
+            if (permission.getUri().equals(treeUri) && 
+                (permission.isReadPermission() && permission.isWritePermission())) {
+                return true;
             }
         }
+        
+        return false;
+    }
+    
+    /**
+     * Launch document tree picker to get a persistable URI permission
+     */
+    private void requestSafFolderPermission() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION 
+                      | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                      | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+                      
+        folderPickerLauncher.launch(intent);
+    }
+    
+    /**
+     * Starts the backup process - either requests SAF permission or performs backup
+     */
+    private void createBackup() {
+        isBackupOperation = true;
         
         // Show progress
         progressBar.setVisibility(View.VISIBLE);
         backupButton.setEnabled(false);
         restoreButton.setEnabled(false);
         
+        if (!hasExistingSafPermission()) {
+            Log.d("BackupRestore", "No saved folder permission, requesting new one");
+            requestSafFolderPermission();
+        } else {
+            Log.d("BackupRestore", "Using existing folder permission");
+            performBackup();
+        }
+    }
+    
+    /**
+     * Starts the restore process - either requests SAF permission or performs restore
+     */
+    private void restoreBackup() {
+        isBackupOperation = false;
+        
+        // Show progress
+        progressBar.setVisibility(View.VISIBLE);
+        backupButton.setEnabled(false);
+        restoreButton.setEnabled(false);
+        
+        if (!hasExistingSafPermission()) {
+            Log.d("BackupRestore", "No saved folder permission, requesting new one");
+            requestSafFolderPermission();
+        } else {
+            Log.d("BackupRestore", "Using existing folder permission");
+            performRestore();
+        }
+    }
+    
+    /**
+     * Creates and writes the backup file using the SAF DocumentFile API
+     */
+    private void performBackup() {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -233,8 +383,8 @@ public class BackupRestoreActivity extends BaseActivity {
                     JSONArray achievementsArray = getAchievementsJson();
                     backupData.put("achievements", achievementsArray);
                     
-                    // Write to file
-                    writeBackupToFile(backupData.toString());
+                    // Write backup data to SAF document
+                    writeSafBackupFile(backupData.toString());
                     
                     // Update last backup time
                     SharedPreferences.Editor editor = preferences.edit();
@@ -249,17 +399,8 @@ public class BackupRestoreActivity extends BaseActivity {
                             backupButton.setEnabled(true);
                             restoreButton.setEnabled(true);
                             updateLastBackupText();
-                            
-                            String backupLocation;
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                backupLocation = "Downloads/SoberTime_Backups folder";
-                            } else {
-                                backupLocation = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + 
-                                                 "/SoberTime_Backups";
-                            }
-                            
                             Toast.makeText(BackupRestoreActivity.this, 
-                                          "Backup created successfully in " + backupLocation, 
+                                          "Backup created successfully", 
                                           Toast.LENGTH_LONG).show();
                         }
                     });
@@ -281,279 +422,23 @@ public class BackupRestoreActivity extends BaseActivity {
         }).start();
     }
     
-    private JSONArray getJournalEntriesJson() throws JSONException {
-        JSONArray entriesArray = new JSONArray();
-        
-        SQLiteDatabase db = databaseHelper.getReadableDatabase();
-        Cursor cursor = db.query("journal", null, null, null, null, null, null);
-        
-        if (cursor.moveToFirst()) {
-            do {
-                JSONObject entry = new JSONObject();
-                entry.put("id", cursor.getLong(cursor.getColumnIndex("id")));
-                entry.put("timestamp", cursor.getLong(cursor.getColumnIndex("timestamp")));
-                entry.put("title", cursor.getString(cursor.getColumnIndex("title")));
-                entry.put("content", cursor.getString(cursor.getColumnIndex("content")));
-                entry.put("mood", cursor.getString(cursor.getColumnIndex("mood")));
-                entry.put("craving_level", cursor.getInt(cursor.getColumnIndex("craving_level")));
-                entry.put("trigger", cursor.getString(cursor.getColumnIndex("trigger")));
-                
-                entriesArray.put(entry);
-            } while (cursor.moveToNext());
-        }
-        
-        cursor.close();
-        return entriesArray;
-    }
-    
-    private JSONObject getSettingsJson() throws JSONException {
-        JSONObject settingsObject = new JSONObject();
-        
-        SQLiteDatabase db = databaseHelper.getReadableDatabase();
-        Cursor cursor = db.query("settings", null, null, null, null, null, null);
-        
-        if (cursor.moveToFirst()) {
-            do {
-                String key = cursor.getString(cursor.getColumnIndex("key"));
-                String value = cursor.getString(cursor.getColumnIndex("value"));
-                settingsObject.put(key, value);
-            } while (cursor.moveToNext());
-        }
-        
-        cursor.close();
-        return settingsObject;
-    }
-    
-    private void writeBackupToFile(String data) throws IOException {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            // For Android 10+ use MediaStore
-            ContentResolver resolver = getContentResolver();
-            
-            // IMPORTANT: First, delete ALL existing backup files with similar names
-            // This prevents Android from creating incremental names like filename(1).json
-            try {
-                // Find and delete ALL files that match our pattern in the backup directory
-                Uri queryUri = MediaStore.Downloads.EXTERNAL_CONTENT_URI;
-                String[] projection = {MediaStore.Downloads._ID, MediaStore.Downloads.DISPLAY_NAME};
-                
-                String selection = MediaStore.Downloads.DISPLAY_NAME + " LIKE ? AND " + 
-                               MediaStore.Downloads.RELATIVE_PATH + " LIKE ?";
-                String[] selectionArgs = {
-                    "%sobriety_tracker_backup%", // Use wildcard to catch any incremental versions
-                    "%" + BACKUP_DIRECTORY + "%"
-                };
-                
-                int deletedFiles = 0;
-                
-                try (Cursor cursor = resolver.query(queryUri, projection, selection, selectionArgs, null)) {
-                    if (cursor != null && cursor.getCount() > 0) {
-                        Log.d("BackupRestore", "Found " + cursor.getCount() + " backup files to clean up");
-                        
-                        while (cursor.moveToNext()) {
-                            int idColumn = cursor.getColumnIndexOrThrow(MediaStore.Downloads._ID);
-                            long id = cursor.getLong(idColumn);
-                            Uri fileUri = ContentUris.withAppendedId(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id);
-                            
-                            try {
-                                int result = resolver.delete(fileUri, null, null);
-                                if (result > 0) {
-                                    deletedFiles++;
-                                    Log.d("BackupRestore", "Successfully deleted: " + fileUri);
-                                }
-                            } catch (Exception e) {
-                                Log.e("BackupRestore", "Error deleting file: " + fileUri, e);
-                            }
-                        }
-                    }
-                }
-                
-                Log.d("BackupRestore", "Deleted " + deletedFiles + " backup files");
-                
-                // Give the system a moment to process the deletions
-                // This helps prevent the system from creating incremented filenames
-                if (deletedFiles > 0) {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        // Ignore
-                    }
-                }
-            } catch (Exception e) {
-                Log.e("BackupRestore", "Error cleaning up existing backup files", e);
-            }
-            
-            // Create a new file with exact name we want
-            ContentValues contentValues = new ContentValues();
-            contentValues.put(MediaStore.Downloads.DISPLAY_NAME, BACKUP_FILENAME); // Exact name without any incrementing numbers
-            contentValues.put(MediaStore.Downloads.MIME_TYPE, "application/json");
-            contentValues.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/" + BACKUP_DIRECTORY);
-            
-            // For Android 11+, use IS_PENDING flag to prevent other apps from seeing file until it's ready
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                contentValues.put(MediaStore.MediaColumns.IS_PENDING, 1);
-            }
-            
-            Uri uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues);
-            Log.d("BackupRestore", "Created new backup file with URI: " + uri);
-            
-            if (uri != null) {
-                try (OutputStream outputStream = resolver.openOutputStream(uri, "wt")) {
-                    if (outputStream != null) {
-                        byte[] bytes = data.getBytes();
-                        outputStream.write(bytes);
-                        outputStream.flush();
-                        
-                        // For Android 11+, clear the pending flag
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                            contentValues.clear();
-                            contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0);
-                            resolver.update(uri, contentValues, null, null);
-                        }
-                        
-                        // Store the URI for future reference
-                        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-                        prefs.edit()
-                             .putString("backup_uri", uri.toString())
-                             .putLong("backup_timestamp", System.currentTimeMillis())
-                             .apply();
-                             
-                        Log.i("BackupRestore", "Successfully wrote " + bytes.length + " bytes to backup file at: " + uri);
-                    } else {
-                        throw new IOException("Could not open output stream for URI: " + uri);
-                    }
-                } catch (IOException e) {
-                    // If writing failed, try to delete the failed file
-                    try {
-                        resolver.delete(uri, null, null);
-                    } catch (Exception deleteEx) {
-                        Log.e("BackupRestore", "Failed to delete partially written backup file", deleteEx);
-                    }
-                    throw e; // Re-throw the original exception
-                }
-            } else {
-                throw new IOException("Failed to create backup file in MediaStore");
-            }
-        } else {
-            // For pre-Android 10, use direct file access
-            File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-            File backupDir = new File(downloadsDir, BACKUP_DIRECTORY);
-            
-            if (!backupDir.exists()) {
-                if (!backupDir.mkdirs()) {
-                    throw new IOException("Failed to create backup directory");
-                }
-            }
-            
-            // *** IMPORTANT: Delete ALL files that start with our backup filename base to prevent duplicates ***
-            File[] existingFiles = backupDir.listFiles(new FilenameFilter() {
-                @Override
-                public boolean accept(File dir, String name) {
-                    return name.startsWith(BACKUP_FILENAME.replace(".json", ""));
-                }
-            });
-            
-            int deletedCount = 0;
-            if (existingFiles != null) {
-                for (File file : existingFiles) {
-                    if (file.delete()) {
-                        deletedCount++;
-                        Log.d("BackupRestore", "Deleted existing file " + file.getName());
-                    } else {
-                        Log.w("BackupRestore", "Failed to delete " + file.getName());
-                    }
-                }
-            }
-            
-            Log.d("BackupRestore", "Deleted " + deletedCount + " existing backup files");
-            
-            // File to write to - always use the exact filename we want
-            final File backupFile = new File(backupDir, BACKUP_FILENAME);
-            
-            // Create parent directories if they don't exist
-            if (!backupFile.getParentFile().exists()) {
-                backupFile.getParentFile().mkdirs();
-            }
-            
-            // Write the file
-            try (FileOutputStream fos = new FileOutputStream(backupFile)) {
-                fos.write(data.getBytes());
-                fos.flush();
-                
-                // Store the path for future reference
-                SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-                prefs.edit()
-                     .putString("backup_path", backupFile.getAbsolutePath())
-                     .putLong("backup_timestamp", System.currentTimeMillis())
-                     .apply();
-                     
-                Log.i("BackupRestore", "Successfully wrote backup to: " + backupFile.getAbsolutePath());
-            }
-        }
-    }
-    
     /**
-     * Helper method to read content from a URI
+     * Performs a restore operation using the SAF DocumentFile API
      */
-    private String readUriContent(Uri uri) throws IOException {
-        try (InputStream is = getContentResolver().openInputStream(uri)) {
-            if (is != null) {
-                ByteArrayOutputStream result = new ByteArrayOutputStream();
-                byte[] buffer = new byte[1024];
-                int length;
-                while ((length = is.read(buffer)) != -1) {
-                    result.write(buffer, 0, length);
-                }
-                return result.toString("UTF-8");
-            }
-        }
-        return "";
-    }
-    
-    /**
-     * Check if content is a valid backup by verifying it contains expected JSON fields
-     */
-    private boolean isValidBackupContent(String content) {
-        if (content == null || content.isEmpty()) {
-            return false;
-        }
-        
-        try {
-            JSONObject json = new JSONObject(content);
-            // Check for at least one of these key fields
-            return json.has("journal_entries") || json.has("settings") || json.has("sobriety_start_date");
-        } catch (JSONException e) {
-            return false;
-        }
-    }
-    
-    private void restoreBackup() {
-        // Check for permissions first if on older Android versions
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) 
-                    != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(
-                    this,
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                    PERMISSION_REQUEST_CODE + 1
-                );
-                return;
-            }
-        }
-        
-        // Show progress
-        progressBar.setVisibility(View.VISIBLE);
-        backupButton.setEnabled(false);
-        restoreButton.setEnabled(false);
-        
+    private void performRestore() {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    // Read backup file
-                    String backupData = readBackupFromFile();
+                    // Read backup data from SAF document
+                    String backupData = readSafBackupFile();
                     
                     if (backupData == null || backupData.isEmpty()) {
                         throw new IOException("Backup file is empty or not found");
+                    }
+                    
+                    if (!isValidBackupContent(backupData)) {
+                        throw new IOException("Invalid backup file format");
                     }
                     
                     JSONObject backupJson = new JSONObject(backupData);
@@ -665,6 +550,188 @@ public class BackupRestoreActivity extends BaseActivity {
                 }
             }
         }).start();
+    }
+    
+    /**
+     * Write backup data to a document file using SAF
+     */
+    private void writeSafBackupFile(String data) throws IOException {
+        String savedUriString = preferences.getString(SAF_TREE_URI_KEY, "");
+        if (savedUriString.isEmpty()) {
+            throw new IOException("No saved document tree URI");
+        }
+        
+        Uri treeUri = Uri.parse(savedUriString);
+        DocumentFile tree = DocumentFile.fromTreeUri(this, treeUri);
+        
+        if (tree == null || !tree.exists() || !tree.canWrite()) {
+            throw new IOException("Cannot access or write to the selected folder");
+        }
+        
+        // Delete existing backup file if it exists
+        DocumentFile existing = tree.findFile(BACKUP_FILENAME);
+        if (existing != null) {
+            if (!existing.delete()) {
+                Log.w("BackupRestore", "Could not delete existing backup file, but continuing anyway");
+            }
+        }
+        
+        // Create new backup file
+        DocumentFile newFile = tree.createFile("application/json", BACKUP_FILENAME);
+        if (newFile == null) {
+            throw new IOException("Failed to create backup file");
+        }
+        
+        // Write data to the file
+        OutputStream out = null;
+        try {
+            out = getContentResolver().openOutputStream(newFile.getUri());
+            if (out == null) {
+                throw new IOException("Failed to open output stream");
+            }
+            out.write(data.getBytes());
+            out.flush();
+            
+            Log.i("BackupRestore", "Successfully wrote backup to SAF file: " + newFile.getUri());
+        } finally {
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (IOException e) {
+                    Log.e("BackupRestore", "Error closing output stream", e);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Read backup data from a document file using SAF
+     */
+    private String readSafBackupFile() throws IOException {
+        String savedUriString = preferences.getString(SAF_TREE_URI_KEY, "");
+        if (savedUriString.isEmpty()) {
+            throw new IOException("No saved document tree URI");
+        }
+        
+        Uri treeUri = Uri.parse(savedUriString);
+        DocumentFile tree = DocumentFile.fromTreeUri(this, treeUri);
+        
+        if (tree == null || !tree.exists() || !tree.canRead()) {
+            throw new IOException("Cannot access or read from the selected folder");
+        }
+        
+        // Find backup file
+        DocumentFile backupFile = tree.findFile(BACKUP_FILENAME);
+        if (backupFile == null || !backupFile.exists()) {
+            throw new IOException("Backup file not found");
+        }
+        
+        // Read data from the file
+        InputStream in = null;
+        try {
+            in = getContentResolver().openInputStream(backupFile.getUri());
+            if (in == null) {
+                throw new IOException("Failed to open input stream");
+            }
+            
+            ByteArrayOutputStream result = new ByteArrayOutputStream();
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = in.read(buffer)) != -1) {
+                result.write(buffer, 0, length);
+            }
+            
+            String content = result.toString("UTF-8");
+            Log.i("BackupRestore", "Successfully read backup from SAF file: " + backupFile.getUri());
+            
+            return content;
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    Log.e("BackupRestore", "Error closing input stream", e);
+                }
+            }
+        }
+    }
+    
+    private JSONArray getJournalEntriesJson() throws JSONException {
+        JSONArray entriesArray = new JSONArray();
+        
+        SQLiteDatabase db = databaseHelper.getReadableDatabase();
+        Cursor cursor = db.query("journal", null, null, null, null, null, null);
+        
+        if (cursor.moveToFirst()) {
+            do {
+                JSONObject entry = new JSONObject();
+                entry.put("id", cursor.getLong(cursor.getColumnIndex("id")));
+                entry.put("timestamp", cursor.getLong(cursor.getColumnIndex("timestamp")));
+                entry.put("title", cursor.getString(cursor.getColumnIndex("title")));
+                entry.put("content", cursor.getString(cursor.getColumnIndex("content")));
+                entry.put("mood", cursor.getString(cursor.getColumnIndex("mood")));
+                entry.put("craving_level", cursor.getInt(cursor.getColumnIndex("craving_level")));
+                entry.put("trigger", cursor.getString(cursor.getColumnIndex("trigger")));
+                
+                entriesArray.put(entry);
+            } while (cursor.moveToNext());
+        }
+        
+        cursor.close();
+        return entriesArray;
+    }
+    
+    private JSONObject getSettingsJson() throws JSONException {
+        JSONObject settingsObject = new JSONObject();
+        
+        SQLiteDatabase db = databaseHelper.getReadableDatabase();
+        Cursor cursor = db.query("settings", null, null, null, null, null, null);
+        
+        if (cursor.moveToFirst()) {
+            do {
+                String key = cursor.getString(cursor.getColumnIndex("key"));
+                String value = cursor.getString(cursor.getColumnIndex("value"));
+                settingsObject.put(key, value);
+            } while (cursor.moveToNext());
+        }
+        
+        cursor.close();
+        return settingsObject;
+    }
+    
+    /**
+     * Helper method to read content from a URI
+     */
+    private String readUriContent(Uri uri) throws IOException {
+        try (InputStream is = getContentResolver().openInputStream(uri)) {
+            if (is != null) {
+                ByteArrayOutputStream result = new ByteArrayOutputStream();
+                byte[] buffer = new byte[1024];
+                int length;
+                while ((length = is.read(buffer)) != -1) {
+                    result.write(buffer, 0, length);
+                }
+                return result.toString("UTF-8");
+            }
+        }
+        return "";
+    }
+    
+    /**
+     * Check if content is a valid backup by verifying it contains expected JSON fields
+     */
+    private boolean isValidBackupContent(String content) {
+        if (content == null || content.isEmpty()) {
+            return false;
+        }
+        
+        try {
+            JSONObject json = new JSONObject(content);
+            // Check for at least one of these key fields
+            return json.has("journal_entries") || json.has("settings") || json.has("sobriety_start_date");
+        } catch (JSONException e) {
+            return false;
+        }
     }
     
     private String readBackupFromFile() throws IOException {
